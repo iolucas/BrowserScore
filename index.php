@@ -21,7 +21,6 @@
             <nav id="cavacoMenu"></nav>
             <div id="scorePage">
                 <object type="image/svg+xml" data="score/scorePage.svg">Error</object>
-                <object type="image/svg+xml" data="score/scorePage.svg">Error</object>
             </div>
         </section>
     </body>   

@@ -26,6 +26,7 @@ header {
     width: 300px;
     float:left;
     height: 100%;
+    position: fixed;
 }
 
 #cavaco {
@@ -46,4 +47,13 @@ header {
 /*    height: calc(100% - 100px);*/
     text-align: center;
     margin-top: 110px;
+}
+
+svg {
+    cursor: pointer;
+}
+            
+svg:hover {
+    -webkit-filter: drop-shadow( -0px -0px 3px #000 );
+    filter: drop-shadow( -0px -0px 0px #000 ); /* Same syntax as box-shadow */
 }
