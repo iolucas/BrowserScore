@@ -15,5 +15,6 @@
     <script xlink:href="List.js" type="text/javascript" />
     <script xlink:href="score/ScoreElements.js" type="text/javascript" />
     <script xlink:href="cavaco.js" type="text/javascript" />
+    <script xlink:href="main.js" type="text/javascript" />
     
 </svg>
