@@ -34,9 +34,10 @@ function DrawScoreLinesElement(scoreElement) {
             
         //Element to draw simple bars in the score
         case ScoreElement.SimpleBar:
-            scoreElement = document.createElementNS(xmlns, "line");  //create new line
-            scoreElement.setAttribute("y2", 60);
-            scoreElement.setAttribute("stroke", "#000");
+            scoreElement = document.createElementNS(xmlns, "rect");  //create new line
+            scoreElement.setAttribute("width", 1);
+            scoreElement.setAttribute("height", 60);
+            //scoreElement.setAttribute("stroke", "#000");
             break;  
             
         default:

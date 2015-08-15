@@ -34,34 +34,22 @@ function AppendCavacoMembers(element) {
 function CreateCavacoContainer(width, height) {
     //Group to keep the container elements
     var container = document.createElementNS(xmlns, "g");
-    
+
+    //Rectangle to set container size and border
+    var contBorder = document.createElementNS(xmlns, "rect");
+    contBorder.setAttribute("height", height);
+    contBorder.setAttribute("width", width);
+    contBorder.setAttribute("fill", "none");
+    container.appendChild(contBorder);
+
     //Append all cavaco.js needed members
     AppendCavacoMembers(container);
-    //Got to overflow due to G tag doesn't have fixed size
-    container.cavaco.height = height;
-    container.cavaco.width = width;
-
-    //----------------------------------------------------
-    //-------------- BORDER RECTANGLE --------------------
-    //----------------------------------------------------
-    //Rectangle for container border
-    var contBorder = document.createElementNS(xmlns, "rect");
-    contBorder.style.display = "none";
-    container.appendChild(contBorder);
 
     //Function to set the containers border
     container.cavaco.SetBorder = function (borderWidth, borderColor) {
-        var borderRect = container.getElementsByTagNameNS(xmlns, "rect")[0];
-        borderRect.setAttribute("height", container.cavaco.height);
-        borderRect.setAttribute("width", container.cavaco.width);
-        borderRect.setAttribute("fill", "none");
-        borderRect.style.display = "block";
-        if (borderColor) borderRect.setAttribute("stroke", borderColor);
-        if (borderWidth) borderRect.setAttribute("stroke-width", borderWidth);
+        if (borderColor) contBorder.setAttribute("stroke", borderColor);
+        if (borderWidth) contBorder.setAttribute("stroke-width", borderWidth);
     }
-    //----------------------------------------------------
-    //----------------------------------------------------
-    //----------------------------------------------------
     
     //Object to hold the elements of the Container
     container.membersList = new List();
@@ -170,7 +158,7 @@ function CreateCavacoContainer(width, height) {
         if(index == -1)     //if not found, return false
             return null;
         
-        return container.RemoveAt(index);//otherwise, remove the element        
+        return container.cavaco.RemoveAt(index);//otherwise, remove the element        
     }
     
     return container;
