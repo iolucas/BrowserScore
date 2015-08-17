@@ -1,32 +1,22 @@
-xmlns = "http://www.w3.org/2000/svg";
+ xmlns = "http://www.w3.org/2000/svg";
 xlink = "http://www.w3.org/1999/xlink";  
 
-var ScoreClef = { G:0, F:1, C:2 };
-
-/*function ScoreGroup(lineLength) {    
-    
-    this.NewScoreLine = function(clef) {
-                
-        
-        
-        
-    }
-}*/
 
 function CreateScoreLine(lineLength, x, y) {
 
     var lineHeight = 300;   //score line height
 
     var scoreLine = document.createElementNS(xmlns, "g");   //group to organize score lines member
-    scoreLine.setAttribute("transform", "translate(" + x + " " + y + ")");  //translate the group to its specified position
+    SetTransform(scoreLine, { translate: [x, y] });  //translate the group to its specified position
 
     scoreLine.scoreY = y; //set this new member to verify exact position of mousemove events
     
     var lines = DrawScoreLines(lineLength); //create score lines
     scoreLine.appendChild(lines);   //append lines to the group
     //Calculate coordinates to place the lines at the center of the group
-    lines.setAttribute("transform", "translate(0 " + ((lineHeight - 60) / 2) + ")");
+    SetTransform(lines, { translate: [0, (lineHeight - 60) / 2] });
 
+    //Create container to fit all objects
     var mainContainer = CreateCavacoContainer(lineLength, lineHeight);
     mainContainer.cavaco.SetBorder(1, "#000");
     scoreLine.appendChild(mainContainer);
@@ -55,9 +45,9 @@ function CreateSymbolsSpace() {
     space.setAttribute("width", 30);
     space.setAttribute("height", 300);
     space.setAttribute("stroke", "#000");
-    space.setAttribute("fill", "rgba(0,0,0,.0)");
+    space.setAttribute("fill", "rgba(0,0,0,.2)");
     //space.setAttribute("fill", "none");
-    space.setAttribute("stroke-width", 0);
+    space.setAttribute("stroke-width", 1);
     symbolsGroup.appendChild(space);
 
     var mark1 = mark2();

@@ -22,9 +22,10 @@ function AppendCavacoMembers(element) {
 
     //Function to translate the object in referecen to point 0,0
     cavaco.MoveTo = function (x, y) {
-        element.setAttribute("transform", "translate(" +
+        SetTransform(element, {translate:[bBox.x * (-1) + x, bBox.y * (-1) + y]});
+        /*element.setAttribute("transform", "translate(" +
                 (bBox.x * (-1) + x) + " " +
-                (bBox.y * (-1) + y) + ")");
+                (bBox.y * (-1) + y) + ")");*/
         cavaco.x = x;
         cavaco.y = y;
     }
@@ -162,4 +163,41 @@ function CreateCavacoContainer(width, height) {
     }
     
     return container;
+}
+
+//SVG transform option parser
+function SetTransform(element, values) {
+    //get the transform string
+    var oldValues = element.getAttribute("transform");
+    if (!oldValues) //if the string were not found
+        oldValues = "";//clear variable
+    else
+        oldValues += " ";
+    
+    for(member in values) {
+        //generate transform string
+        var tString = member + "(";
+                
+        //if the member is not a valid array, proceed next iteration
+        if(!values[member].length)
+            continue;
+        
+        for(var i = 0; i < values[member].length; i++) {
+            tString += values[member][i];
+            tString += (i+1) == values[member].length ? ")" : " ";
+        }
+        
+        //get the start index of the current transform prop
+        var sIndex = oldValues.indexOf(member);
+        
+        if(sIndex > -1) {
+            var eIndex = oldValues.indexOf(")", sIndex);  //get the end index
+            //Clear the old value for the given transform
+            oldValues = oldValues.replace(oldValues.substring(sIndex, eIndex + 1), "");
+        }
+        
+        oldValues += tString + " ";
+    }
+    //console.log(oldValues);
+    element.setAttribute("transform", oldValues.substr(0, oldValues.length-1));
 }
