@@ -5,13 +5,20 @@ xlink = "http://www.w3.org/1999/xlink";
 
 var $Aria = new function() {
 
-    this.Parser = function(svgElement) { return new AriaElement(svgElement); }
+    this.Parse = function(svgElement) { return new AriaElement(svgElement); }
     this.CreateContainer = function(properties) { return new AriaContainer(properties); }
     this.CreateCircle = function(radius, color) {
         var circle = document.createElementNS(xmlns, "circle");
         circle.setAttribute("r", radius);
         circle.setAttribute("fill", color);
-        return this.Parser(circle);
+        return this.Parse(circle);
+    }
+    this.CreateRectangle = function(width, height, color) {
+        var rect = document.createElementNS(xmlns, "rect");
+        rect.setAttribute("width", width);
+        rect.setAttribute("height", height);
+        rect.setAttribute("fill", color);
+        return this.Parse(rect);
     }
 };
 
@@ -25,7 +32,7 @@ function AriaContainer(properties) {
         height = properties.height;
     
     var containerGroup = document.createElementNS(xmlns, "g"),  //Group to keep the container elements
-        ariaContainer = $Aria.Parser(containerGroup);   //parse the group to a ariaElement    
+        ariaContainer = $Aria.Parse(containerGroup);   //parse the group to a ariaElement    
 
     //Inherit aria element members
     this.GetX = function() { return ariaContainer.GetX(); }
@@ -103,9 +110,9 @@ function AriaContainer(properties) {
             //update elem currPos width object
             var newX = currElem.GetX() + ariaElement.GetWidth();
 
-            //if a overflow flag or a overflow just occured, 
+            //if a overflow flag or a width or maxWidth has been defined and overflow just occured,  
             //remove next element and put it in the overflow array and move the next iteration
-            if (overflow || newX + currElem.GetWidth() > (width || maxWidth)) {
+            if (overflow || ((width || maxWidth) && newX + currElem.GetWidth() > (width || maxWidth))) {
 
                 overflow = true;//set the overflow flag
                 overflowObjects.push(this.RemoveAt(j));
