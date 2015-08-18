@@ -5,8 +5,16 @@ xlink = "http://www.w3.org/1999/xlink";
 var rect = document.createElementNS(xmlns, "circle");
 rect.setAttribute("r", 50);
 rect.setAttribute("fill", "yellow");
-document.documentElement.appendChild(rect);
+
 var oi = new AriaElement(rect);
+var container = document.createElementNS(xmlns, "g");
+container.appendChild(oi.Build());
+var test = new AriaElement(container);
+console.log(test.GetHeight());
+document.documentElement.appendChild(test.Build());
+
+var cont = new AriaHContainer(100, 100);
+cont.SetBorder(1, "#000");
 
 //Framework to manipulate svg elements
 
@@ -15,17 +23,17 @@ function AriaElement(svgElement) {
     //Public members
     this.GetX = function () {
         var currTranslateValues = GetTransform(svgElement, "translate");
-        if (!currTranslateValues //if no translate has been applied to this objector it is invalid,  
-            || (typeof currTranslateValues[0]) != "number")
-        return getBoxValues().x;    //return its raw x coord
+        //if no translate has been applied to this objector it is invalid,  
+        if (!currTranslateValues || (typeof currTranslateValues[0]) != "number")
+            return getBoxValues().x;    //return its raw x coord
 
         return getBoxValues().x + currTranslateValues[0];
     }
 
     this.GetY = function () {
         var currTranslateValues = GetTransform(svgElement, "translate");
-        if (!currTranslateValues //if no translate has been applied to this objector it is invalid,  
-            || (typeof currTranslateValues[1]) != "number")
+        //if no translate has been applied to this objector it is invalid,
+        if (!currTranslateValues || (typeof currTranslateValues[1]) != "number")
             return getBoxValues().y;    //return its raw y coord
 
         return getBoxValues().y + currTranslateValues[1];
@@ -36,8 +44,8 @@ function AriaElement(svgElement) {
 
     //Function to translate the object in referecen to point 0,0
     this.MoveTo = function (x, y) {
-        var newX = (typeof x) == "number" ? -getBoxValues().x + x : this.GetX() - getBoxValues().x,
-            newY = (typeof y) == "number" ? -getBoxValues().y + y : this.GetY() - getBoxValues().y;
+        var newX = (typeof x) == "number" ? x - getBoxValues().x : this.GetX() - getBoxValues().x,
+            newY = (typeof y) == "number" ? y - getBoxValues().y : this.GetY() - getBoxValues().y;
 
         //Set the translate values for new x and y
         SetTransform(svgElement, { translate: [newX, newY] });
@@ -61,9 +69,12 @@ function AriaElement(svgElement) {
     this.MoveTo(0, 0);  //move the just created object to the origin
 }
 
-function AriaHContainer(width, height) {
+
+
+function createAriaHContainer(width, height) {
     //Group to keep the container elements
-    var container = document.createElementNS(xmlns, "g");
+    var container = document.createElementNS(xmlns, "g"),
+        ariaContainer = new AriaElement(container);    
 
     //Rectangle to set container size and border
     var contBorder = document.createElementNS(xmlns, "rect");
@@ -73,10 +84,10 @@ function AriaHContainer(width, height) {
     container.appendChild(contBorder);
 
     //Append all cavaco.js needed members
-    AppendCavacoMembers(container);
+    //AppendCavacoMembers(container);
 
     //Function to set the containers border
-    this.SetBorder = function (borderWidth, borderColor) {
+    container.cavaco.SetBorder = function (borderWidth, borderColor) {
         if (borderColor) contBorder.setAttribute("stroke", borderColor);
         if (borderWidth) contBorder.setAttribute("stroke-width", borderWidth);
     }
@@ -192,10 +203,6 @@ function AriaHContainer(width, height) {
     }
 
     return container;
-
-
-
-
 }
 
 function SetTransform(element, values) {
