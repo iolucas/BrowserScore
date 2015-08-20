@@ -1,4 +1,56 @@
-var scoreLine = $Aria.CreateContainer({
+var cont = $Aria.CreateContainer({
+	//maxWidth: 400,
+	//minWidth: 200,
+	height: 120
+});
+
+cont.addEventListener("resize", function() {
+	log("container resized!");
+
+});
+
+cont.MoveTo(10.5, 10.5);
+cont.SetBorder(1, "#000");
+document.documentElement.appendChild(cont.Build());
+
+//log(cont.GetFreeLength());
+
+cont.AddElement(getRect("blue"));
+//log(cont.GetFreeLength());
+cont.AddElement(getRect("yellow"));
+//log(cont.GetFreeLength());
+var r = getRect("red")
+cont.InsertAt(1, r);
+//log(cont.GetFreeLength());
+
+r.Build().addEventListener("click", function() {
+	r.SetSize(r.GetWidth() + 20);
+
+});
+
+
+
+
+
+function getRect(color) {
+	var rect = $Aria.CreateRectangle(100, 100, color);
+
+	/*rect.Build().addEventListener("click", function(){
+		if(rect.SetSize)
+			rect.SetSize(rect.GetWidth() + 20);		
+	});*/
+
+	return rect;
+}
+
+
+
+
+
+
+
+
+/*var scoreLine = $Aria.CreateContainer({
 	width: 1200,
 	height: 120
 });
@@ -13,14 +65,14 @@ var lucas = createScoreMeasure("red");
 
 scoreLine.AddElement(lucas);
 scoreLine.AddElement(createScoreMeasure("yellow"));
-scoreLine.AddElement(createScoreMeasure("green"));
+scoreLine.AddElement(createScoreMeasure("green"));*/
 
 /*var obj = createScoreMeasure("yellow");
 obj.MoveTo(50.5, 50.5);*/
 
 //document.documentElement.appendChild(obj.Build());
 
-function createScoreMeasure(color) {
+/*function createScoreMeasure(color) {
 	var scoreMeasure = $Aria.CreateContainer({
 		minWidth: 300,
 		maxWidth: 1200,
@@ -49,7 +101,7 @@ function createScoreMeasure(color) {
 
 
 	return scoreMeasure;
-}
+}*/
 
 
 

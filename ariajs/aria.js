@@ -5,20 +5,33 @@ xlink = "http://www.w3.org/1999/xlink";
 
 var $Aria = new function() {
 
-    this.Parse = function(svgElement) { return new AriaElement(svgElement); }
+    var selfRef = this;
+
+    this.Parse = function(svgElement, setSizeInterface) { return new AriaElement(svgElement, setSizeInterface); }
     this.CreateContainer = function(properties) { return new AriaContainer(properties); }
     this.CreateCircle = function(radius, color) {
         var circle = document.createElementNS(xmlns, "circle");
         circle.setAttribute("r", radius);
         circle.setAttribute("fill", color);
-        return this.Parse(circle);
+        return selfRef.Parse(circle, function(newWidth, newHeight){
+            if(newWidth)
+                circle.setAttribute("r", newWidth);
+            else if(newHeight)
+                circle.setAttribute("r", newHeight);
+        });
     }
     this.CreateRectangle = function(width, height, color) {
         var rect = document.createElementNS(xmlns, "rect");
         rect.setAttribute("width", width);
         rect.setAttribute("height", height);
         rect.setAttribute("fill", color);
-        return this.Parse(rect);
+        return selfRef.Parse(rect, function(newWidth, newHeight){
+            if(newWidth)
+                rect.setAttribute("width", newWidth);
+            if(newHeight)
+                rect.setAttribute("width", newHeight);
+
+        });
     }
 };
 
@@ -28,13 +41,18 @@ function AriaContainer(properties) {
     var selfRef = this;
 
     //Register the container dimensions
-    var width = properties.width,
-        minWidth = properties.minWidth || 0,    //if the minWidth is not valid, set it value as 0
-        maxWidth = properties.maxWidth,
-        height = properties.height;
+    var contWidth = properties.width,
+        contMinWidth = properties.minWidth || 0,    //if the minWidth is not valid, set it value as 0
+        contMaxWidth = properties.maxWidth,
+        contHeight = properties.height;
     
     var containerGroup = document.createElementNS(xmlns, "g"),  //Group to keep the container elements
-        ariaContainer = $Aria.Parse(containerGroup);   //parse the group to a ariaElement    
+        ariaContainer = $Aria.Parse(containerGroup, function(newWidth, newHeight) {
+            //function to be used to changed the group size
+            //for a while, just update the rectangle area in case variable width
+            areaRect.setAttribute("width", newWidth);    //set rectangle min width
+
+        });   //parse the group to a ariaElement    
 
     //Inherit aria element members
     this.GetX = function() { return ariaContainer.GetX(); }
@@ -51,16 +69,11 @@ function AriaContainer(properties) {
         });
     }
     this.removeEventListener = function(eventHandler) { return ariaContainer.removeEventListener(eventHandler); }
-    //Function to verify if some resized occurred, private due to for containers it are called automatically
-    function CheckResize() { return ariaContainer.CheckResize(); }  
 
     //Rectangle to set container size and border
     var areaRect = document.createElementNS(xmlns, "rect");
-    areaRect.setAttribute("height", height);    //set rectangle fixed height
-    if(width)//if the width dimension has been passed, means container has a fixed width
-        areaRect.setAttribute("width", width);    //set rectangle fixed width
-    else  //if not, it has a variable width
-        areaRect.setAttribute("width", minWidth);    //set rectangle min width
+    areaRect.setAttribute("height", contHeight);    //set area rectangle height
+    areaRect.setAttribute("width", contWidth || contMinWidth);    //set area rectangle width or min width
 
     areaRect.setAttribute("fill", "none");  //fill the area rectangle with opacity 0
     containerGroup.appendChild(areaRect);   //append it to the containers group
@@ -76,6 +89,9 @@ function AriaContainer(properties) {
     //Object to hold the elements of the Container
     var childs = new List();
 
+    //Variable to compute the current occuped space
+    var occupedLength = 0;
+
     //Function to insert element in the container
     this.InsertAt = function (position, ariaElement) {
         //if the position is out of the array bounds, return null
@@ -84,7 +100,7 @@ function AriaContainer(properties) {
             return null;
 
         //if the element height is greater than the container's, return null
-        if (ariaElement.GetHeight() > height)
+        if (ariaElement.GetHeight() > contHeight)
             return null;
 
         //get the length sum of the elements before the position specified        
@@ -94,7 +110,7 @@ function AriaContainer(properties) {
 
         //If a fixed width or a max width has been specified and
         //the container width or max width minus the members width is lesser than the element width, return the element as an overflow
-        if ((width || maxWidth) && (ariaElement.GetWidth() > ((width || maxWidth) - elementsBeforeSum)))
+        if ((contWidth || contMaxWidth) && (ariaElement.GetWidth() > ((contWidth || contMaxWidth) - elementsBeforeSum)))
             return [ariaElement];    
 
         //if the position is the size of the list
@@ -103,11 +119,14 @@ function AriaContainer(properties) {
         else
             childs.Insert(position, ariaElement); //insert element reference at the position to the list
 
-        //Variable to store element's original width to be used when it is removed
+        //Variable to store element's original width to be used for translation
         ariaElement.originalWidth = ariaElement.GetWidth();
 
+        //Increase the occuped space variable
+        occupedLength += ariaElement.originalWidth;
+
         //Calculate the center position for the given element
-        var centerPos = (height - ariaElement.GetHeight()) / 2;
+        var centerPos = (contHeight - ariaElement.GetHeight()) / 2;
 
         //translate the element to its position at the container
         ariaElement.MoveTo(elementsBeforeSum, centerPos);
@@ -115,22 +134,22 @@ function AriaContainer(properties) {
         //Add a resize listener to the appended element to update its dimension at the container whenever is needed
         //record the resize event handler to be used for remove this event when this element is removed
         ariaElement.resizeEventHandler = ariaElement.addEventListener("resize", function(e) {
-            UpdateElementDimension.call(selfRef, ariaElement);
+            updateElementDimension.call(selfRef, ariaElement);
         });
 
         var overflowObjects = [],   //array to store elements that overflow the container after insertion of new element
             overflow = false;   //flag to signalize when a overflow occurs
 
-        //iterate thru all the container members since the removed and translate their positions
+        //iterate thru all the container members since the new one position and translate their positions
         for (var j = position + 1 ; j < childs.Count() ; j++) {
             var currElem = childs.GetItem(j); //get the item ref
 
             //update elem currPos width object
-            var newX = currElem.GetX() + ariaElement.GetWidth();
+            var newX = currElem.GetX() + ariaElement.originalWidth;
 
             //if a overflow flag or a width or maxWidth has been defined and overflow just occured,  
             //remove next element and put it in the overflow array and move the next iteration
-            if (overflow || ((width || maxWidth) && newX + currElem.GetWidth() > (width || maxWidth))) {
+            if (overflow || ((contWidth || contMaxWidth) && newX + currElem.originalWidth > (contWidth || contMaxWidth))) {
 
                 overflow = true;//set the overflow flag
                 overflowObjects.push(selfRef.RemoveAt(j));
@@ -143,15 +162,17 @@ function AriaContainer(properties) {
 
         containerGroup.appendChild(ariaElement.Build());  //append the element at the container object
 
-        if(!width) {  //if no width has been informed,
-            //if the min width has been informed and the current length is less than this min width
-            if(minWidth && this.GetWidth() < minWidth) 
-                areaRect.setAttribute("width", minWidth);    //set rectangle min width
-            else //if not, 
-                areaRect.setAttribute("width", this.GetWidth());    //set rectangle width as the group width
-        }
+        //Must update containers area rectangle size if any size change
 
-        CheckResize(); 
+        if(!contWidth) {  //if no width has been informed,
+            //if the min width has been informed and the current length is less than this min width
+            if(contMinWidth && this.GetWidth() < contMinWidth) 
+                ariaContainer.SetSize(contMinWidth);
+                //areaRect.setAttribute("width", contMinWidth);    //set rectangle min width
+            else //if not, 
+                ariaContainer.SetSize(this.GetWidth());
+                //areaRect.setAttribute("width", this.GetWidth());    //set rectangle width as the group width
+        }
 
         return overflowObjects; //return the overflowed objects
     }
@@ -160,37 +181,6 @@ function AriaContainer(properties) {
     this.AddElement = function (ariaElement) {
         return selfRef.InsertAt(childs.Count(), ariaElement);
     }
-
-    //function to update the area rectangle
-    //TO BE FIXED AND IMPLEMENTED
-    /*function updateRectWidth(newOffset) {
-        if(width)   //if any width has been specified
-            return; //return
-
-    //if the min width has been informed and the current length is less than this min widt
-        if(minWidth && this.GetWidth() - elem.originalWidth < minWidth)
-            areaRect.setAttribute("width", minWidth);    //set rectangle min width
-        else //if not, 
-            areaRect.setAttribute("width", this.GetWidth() - elem.originalWidth);    //set rectangle width as the group width
-
-
-
-
-        log(selfRef.GetWidth());
-        //get the rectangle current width
-        var currRectWidth = parseInt(areaRect.getAttribute("width"));
-        if(currRectWidth == selfRef.GetWidth()) //if the area rectangle is already the size of the rectangle
-            return;
-
-        //if the min width has been informed and the current length is less than this min width
-        if(minWidth && selfRef.GetWidth() < minWidth) 
-            areaRect.setAttribute("width", minWidth);    //set rectangle min width
-        else //if not, 
-            areaRect.setAttribute("width", selfRef.GetWidth());    //set rectangle width as the group width
-
-        //execute the function to check a resize on this element to update whowever subscribed to its resize event
-        CheckResize();  
-    }*/
 
     //Function to Remove element at certain position
     this.RemoveAt = function (position) {
@@ -202,10 +192,13 @@ function AriaContainer(properties) {
         var elem = childs.GetItem(position);
 
         //remove the resize event listener 
-        log(elem.removeEventListener(elem.resizeEventHandler));
+        elem.removeEventListener(elem.resizeEventHandler);
 
         //remove the element from the container
         containerGroup.removeChild(elem.Build());
+
+        //subtract the elem size from the occuped space var
+        occupedLength -= elem.originalWidth;
 
         var listSize = childs.Count();   //get list size
 
@@ -218,15 +211,17 @@ function AriaContainer(properties) {
             currElem.MoveTo(currElem.GetX() - elem.originalWidth);
         }
 
-        if(!width) {  //if no width has been informed,
-            //if the min width has been informed and the current length is less than this min widt
-            if(minWidth && this.GetWidth() - elem.originalWidth < minWidth)
-                areaRect.setAttribute("width", minWidth);    //set rectangle min width
-            else //if not, 
-                areaRect.setAttribute("width", this.GetWidth() - elem.originalWidth);    //set rectangle width as the group width
-        }
+        //Must update containers area rectangle size if any size change
 
-        CheckResize(); 
+        if(!contWidth) {  //if no width has been informed,
+            //if the min width has been informed and the current length is less than this min widt
+            if(contMinWidth && this.GetWidth() - elem.originalWidth < contMinWidth)
+                ariaContainer.SetSize(contMinWidth);
+                //areaRect.setAttribute("width", contMinWidth);    //set rectangle min width
+            else //if not, 
+                ariaContainer.SetSize(this.GetWidth() - elem.originalWidth);
+                //areaRect.setAttribute("width", this.GetWidth() - elem.originalWidth);    //set rectangle width as the group width
+        }
 
         //remove the element from the element list
         childs.RemoveAt(position);
@@ -252,25 +247,55 @@ function AriaContainer(properties) {
     //Function to get the number of childs at this container
     this.Count = function() { return childs.Count(); }
 
+
     //Private function to update target element dimensions at the container
-    function UpdateElementDimension (ariaElement) {
-        //If the width hasn't changed, returt null
-        //if(ariaElement.originalWidth == ariaElement.GetWidth())
-          //  return null;
+    function updateElementDimension(ariaElement) {
 
-        var position = selfRef.GetElementPosition(ariaElement);
-        if(position == -1) return null;    //if the element is not found, return null
+        //get target element position
+        var position = childs.Find(ariaElement);
 
-        selfRef.RemoveAt(position);   //Remove the element from the container
-        return selfRef.InsertAt(position, ariaElement);    //put it back and return overflow elements
-/*
-        //Get the distance to be offset
-        var newOffset = ariaElement.GetWidth() - ariaElement.originalWidth;
+        //If element doesn't belong to this container or the width hasn't changed, returt null
+        if(position == -1 || ariaElement.originalWidth == ariaElement.GetWidth())
+            return null;
 
-        var overflowObjects = [],   //array to store elements that overflow the container after element translation
+        //if the element height has become greater than the container's, remove it and return it
+        if (ariaElement.GetHeight() > contHeight)
+            return this.RemoveAt(position);
+
+        //get the length sum of the elements before the position specified        
+        var elementsBeforeSum = 0;
+        for (var i = 0 ; i < position ; i++)
+            elementsBeforeSum += childs.GetItem(i).GetWidth();
+
+        var overflowObjects = [],   //array to store elements that overflow the container after insertion of new element
         overflow = false;   //flag to signalize when a overflow occurs
 
-        //iterate thru all the container members since the removed and translate their positions
+        //If a fixed width or a max width has been specified and
+        //the container width or max width minus the members width is lesser than the element width,
+        if ((contWidth || contMaxWidth) && (ariaElement.GetWidth() > ((contWidth || contMaxWidth) - elementsBeforeSum))) {
+            //if this happen we got to removed all the subsequent elements aswell
+            return this.RemoveAt(position); 
+
+        }
+
+        //get the offset the element has resized the its width
+        var newOffset = ariaElement.GetWidth() - ariaElement.originalWidth;
+
+        //update occuped length var
+        occupedLength += newOffset;
+
+        //Update element's original width to be used for translation
+        ariaElement.originalWidth = ariaElement.GetWidth();
+
+        //Calculate the center position for the given element
+        var centerPos = (contHeight - ariaElement.GetHeight()) / 2;
+
+        //translate the element to its new position at the container
+        ariaElement.MoveTo(elementsBeforeSum, centerPos);
+
+        var listSize = childs.Count();   //get list size
+
+        //iterate thru all the container members since the new one position and translate their positions
         for (var j = position + 1 ; j < childs.Count() ; j++) {
             var currElem = childs.GetItem(j); //get the item ref
 
@@ -279,7 +304,7 @@ function AriaContainer(properties) {
 
             //if a overflow flag or a width or maxWidth has been defined and overflow just occured,  
             //remove next element and put it in the overflow array and move the next iteration
-            if (overflow || ((width || maxWidth) && newX + currElem.GetWidth() > (width || maxWidth))) {
+            if (overflow || ((contWidth || contMaxWidth) && newX + currElem.originalWidth > (contWidth || contMaxWidth))) {
 
                 overflow = true;//set the overflow flag
                 overflowObjects.push(selfRef.RemoveAt(j));
@@ -290,31 +315,46 @@ function AriaContainer(properties) {
             currElem.MoveTo(newX);
         }
 
-        updateRectWidth();  //update area rectangle width
+        //Must update containers area rectangle size if any size change
 
-        return overflowObjects; //return the overflowed objects*/
+        if(!contWidth) {  //if no width has been informed,
+            //if the min width has been informed and the current length is less than this min width
+            if(contMinWidth && this.GetWidth() + newOffset < contMinWidth) 
+                ariaContainer.SetSize(contMinWidth);    //set rectangle min width  
+            else //if not, 
+                ariaContainer.SetSize(this.GetWidth());//set rectangle width as the group width
+        }
+
+        return overflowObjects; //return the overflowed objects
+               
+        //OLD BRUTUS MODE FOR THIS FUNCTION
+        //selfRef.RemoveAt(position);   //Remove the element from the container
+        //return selfRef.InsertAt(position, ariaElement);    //put it back and return overflow elements
+
     }
 
-    //var occupedSpace = 0;   //variable to store the occuped space at this container (TO BE IMPLEMENTED)
-
     //Function to get the free space available at the container
-    this.GetFreeSpace = function() {
-        if(!width)  //if no width for the container has been specified
-            return -1;  //return -1
+    this.GetFreeLength = function() {
+        if(contWidth || contMaxWidth)   //if a width or maxwidth has been informed for the container has been specified
+            return (contWidth || contMaxWidth) - occupedLength;
 
-        var childsCount = childs.Count();   //get the number of elements at the container
-        var occupedLength = 0; //variable to accumulate the members width
-        for(var i = 0; i < childsCount; i++)    //iterate thru all the container members 
-            occupedLength += childs.GetItem(i).GetWidth(); //get their length
-
-        return width - occupedLength; //return the free length
+        return -1;  //if no width or max width has been informed, return -1
     }
 }
 
 
-function AriaElement(svgElement) {
+function AriaElement(svgElement, setSizeInterface) {
 
     var selfRef = this;
+
+    //Implement SetSize interface
+    if(setSizeInterface) {    //if a setSizeInterface has been informed, implement it 
+        this.SetSize = function(width, height) {
+            //invokes the interface with this object as "this" reference
+            setSizeInterface.call(selfRef, width, height);
+            CheckResize();  //execute the function to verify whether a resize has ocurred
+        }
+    }
 
     //Public members
     this.GetX = function () {
@@ -376,7 +416,7 @@ function AriaElement(svgElement) {
     var currWidth = selfRef.GetWidth();
 
     //Function to check if a resize has occured, if so, fire the resize event
-    this.CheckResize = function() {
+    function CheckResize() {
         //If any change has occurred
         if(currHeight != selfRef.GetHeight() || currWidth != selfRef.GetWidth()) {
             //Update current height and width variables
