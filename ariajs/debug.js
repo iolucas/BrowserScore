@@ -1,8 +1,14 @@
-var cont = $Aria.CreateContainer({
-	//maxWidth: 400,
-	//minWidth: 200,
+/*var cont = $Aria.CreateContainer({
+	width: 500,
+	maxWidth: 400,
+	minWidth: 200,
 	height: 120
 });
+
+cont.OnOverflow = function(overflowObjects) {
+	log(overflowObjects);
+	cont.AddElement(getRect("green"));
+};
 
 cont.addEventListener("resize", function() {
 	log("container resized!");
@@ -20,11 +26,11 @@ cont.AddElement(getRect("blue"));
 cont.AddElement(getRect("yellow"));
 //log(cont.GetFreeLength());
 var r = getRect("red")
-cont.InsertAt(1, r);
+cont.InsertAt(0, r);
 //log(cont.GetFreeLength());
 
 r.Build().addEventListener("click", function() {
-	r.SetSize(r.GetWidth() + 20);
+	r.SetSize(r.GetWidth() + 2000);
 
 });
 
@@ -40,22 +46,37 @@ function getRect(color) {
 			rect.SetSize(rect.GetWidth() + 20);		
 	});*/
 
-	return rect;
-}
+//	return rect;
+//}
 
 
 
-
-
-
-
-
-/*var scoreLine = $Aria.CreateContainer({
+var scoreLine = $Aria.CreateContainer({
 	width: 1200,
 	height: 120
 });
 scoreLine.MoveTo(10.5, 10.5);
 document.documentElement.appendChild(scoreLine.Build());
+
+scoreLine.OnOverflow = function(overflowObjects) {
+	//log(overflowObjects);
+	scoreLine2.InsertAt(0, overflowObjects[0]);
+}
+
+scoreLine.SetBorder(1, "#000");
+
+var scoreLine2 = $Aria.CreateContainer({
+	width: 1500,
+	height: 120
+});
+scoreLine2.MoveTo(10.5, 200.5);
+document.documentElement.appendChild(scoreLine2.Build());
+scoreLine2.SetBorder(1, "#000");
+scoreLine2.OnOverflow = function(overflowObjects) {
+	log(overflowObjects);
+	//scoreLine2.InsertAt(0, overflowObjects[0]);
+}
+
 
 scoreLine.SetBorder(1, "#000");
 
@@ -65,17 +86,17 @@ var lucas = createScoreMeasure("red");
 
 scoreLine.AddElement(lucas);
 scoreLine.AddElement(createScoreMeasure("yellow"));
-scoreLine.AddElement(createScoreMeasure("green"));*/
+scoreLine.AddElement(createScoreMeasure("green"));
 
 /*var obj = createScoreMeasure("yellow");
 obj.MoveTo(50.5, 50.5);*/
 
 //document.documentElement.appendChild(obj.Build());
 
-/*function createScoreMeasure(color) {
+function createScoreMeasure(color) {
 	var scoreMeasure = $Aria.CreateContainer({
 		minWidth: 300,
-		maxWidth: 1200,
+		maxWidth: 1251,
 		height: 120
 	});
 	scoreMeasure.SetBackgroundColor(color);
@@ -89,19 +110,20 @@ obj.MoveTo(50.5, 50.5);*/
 
 		var width = parseInt(e.target.getAttribute("width"));
 		width += 50;
-		e.target.setAttribute("width", width);
-		log(rect.CheckResize());
+		rect.SetSize(width);
+		//e.target.setAttribute("width", width);
+		//log(rect.CheckResize());
 
 		//log(scoreMeasure.UpdateElementDimension(rect));
 		//log(scoreLine.UpdateElementDimension(scoreMeasure));
 	});
 
-	log(scoreMeasure.AddElement(rect));
+	scoreMeasure.AddElement(rect);
 
 
 
 	return scoreMeasure;
-}*/
+}
 
 
 

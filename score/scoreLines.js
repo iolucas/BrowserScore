@@ -4,7 +4,7 @@ xlink = "http://www.w3.org/1999/xlink";
 
 function ScoreLine(lineLength) {
 
-    var lineHeight = 240,   //score line height
+    var lineHeight = 300,   //score line height
 
     //group to organize score lines member
         scoreLineGroup = document.createElementNS(xmlns, "g"),
@@ -52,7 +52,7 @@ function ScoreLine(lineLength) {
     var symbolSpace = CreateSymbolsSpace();
     mainContainer.AddElement($Aria.Parse(symbolSpace));
 
-    log(mainContainer.GetFreeSpace());
+    //log(mainContainer.GetFreeSpace());
 
     //smainContainer.cavaco.AddElement(CreateSymbolsSpace());
 }
@@ -62,7 +62,7 @@ function CreateSymbolsSpace() {
 
     var space = document.createElementNS(xmlns, "rect");  //create new line
     space.setAttribute("width", 30);
-    space.setAttribute("height", 240);
+    space.setAttribute("height", 300);
     space.setAttribute("stroke", "#000");
     space.setAttribute("fill", "rgba(0,0,0,.2)");
     //space.setAttribute("fill", "none");

@@ -69,6 +69,14 @@ function AriaContainer(properties) {
         });
     }
     this.removeEventListener = function(eventHandler) { return ariaContainer.removeEventListener(eventHandler); }
+    //Function to adjust containers size
+    this.SetSize = function(width, height) { 
+        if(!contWidth)  //if it has a variable width
+            ariaContainer.SetSize(selfRef, width, height); 
+    };
+
+    //Overflow event
+    this.OnOverflow;
 
     //Rectangle to set container size and border
     var areaRect = document.createElementNS(xmlns, "rect");
@@ -94,24 +102,42 @@ function AriaContainer(properties) {
 
     //Function to insert element in the container
     this.InsertAt = function (position, ariaElement) {
-        //if the position is out of the array bounds, return null
-        //if the desired to include element already exists, return null
-        if (position < 0 || position > childs.Count() || childs.Exists(ariaElement))
-            return null;
+        //if the position is out of the array bounds, return ERROR
+        
+        if (position < 0 || position > childs.Count())
+            return "ERROR_POSITION_OUT_OF_BOUNDS";
 
-        //if the element height is greater than the container's, return null
+        //if the desired to include element already exists, return ERROR
+        if(childs.Exists(ariaElement))
+            return "ERROR_ELEMENT_ALREADY_PLACED";
+
+        //if the element height is greater than the container's, return ERROR
         if (ariaElement.GetHeight() > contHeight)
-            return null;
+            return "ERROR_ELEMENT_TOO_HIGH";
 
         //get the length sum of the elements before the position specified        
         var elementsBeforeSum = 0;
         for (var i = 0 ; i < position ; i++)
             elementsBeforeSum += childs.GetItem(i).GetWidth();
 
+        var overflowObjects = [],   //array to store elements that overflow the container after insertion of new element
+        overflow = false;   //flag to signalize when a overflow occurs
+
         //If a fixed width or a max width has been specified and
-        //the container width or max width minus the members width is lesser than the element width, return the element as an overflow
-        if ((contWidth || contMaxWidth) && (ariaElement.GetWidth() > ((contWidth || contMaxWidth) - elementsBeforeSum)))
-            return [ariaElement];    
+        //the container width or max width minus the members width is lesser than the element width,
+        // dispatch an overflow event and return ERROR
+        if ((contWidth || contMaxWidth) && (ariaElement.GetWidth() > ((contWidth || contMaxWidth) - elementsBeforeSum))){
+            overflowObjects.push(ariaElement);
+            
+            for (var j = position + 1 ; j < childs.Count() ; j++) { //iterate thru all subsequente elements
+                overflowObjects.push(selfRef.RemoveAt(j));
+                j--;    //subtracts one unit from the position var
+            }
+            if(selfRef.OnOverflow)  //if the overflow event has been signed
+                selfRef.OnOverflow.call(selfRef, overflowObjects);
+
+            return "OVERFLOW_1_OCCURRED"; 
+        }               
 
         //if the position is the size of the list
         if (position == childs.Count())
@@ -131,14 +157,14 @@ function AriaContainer(properties) {
         //translate the element to its position at the container
         ariaElement.MoveTo(elementsBeforeSum, centerPos);
 
+        //if the the element have a set size implemented, 
         //Add a resize listener to the appended element to update its dimension at the container whenever is needed
         //record the resize event handler to be used for remove this event when this element is removed
-        ariaElement.resizeEventHandler = ariaElement.addEventListener("resize", function(e) {
-            updateElementDimension.call(selfRef, ariaElement);
-        });
-
-        var overflowObjects = [],   //array to store elements that overflow the container after insertion of new element
-            overflow = false;   //flag to signalize when a overflow occurs
+        if(ariaElement.SetSize) {
+            ariaElement.resizeEventHandler = ariaElement.addEventListener("resize", function(e) {
+                updateElementDimension.call(selfRef, ariaElement);
+            });
+        }
 
         //iterate thru all the container members since the new one position and translate their positions
         for (var j = position + 1 ; j < childs.Count() ; j++) {
@@ -167,14 +193,17 @@ function AriaContainer(properties) {
         if(!contWidth) {  //if no width has been informed,
             //if the min width has been informed and the current length is less than this min width
             if(contMinWidth && this.GetWidth() < contMinWidth) 
-                ariaContainer.SetSize(contMinWidth);
-                //areaRect.setAttribute("width", contMinWidth);    //set rectangle min width
+                ariaContainer.SetSize(contMinWidth);    //set rectangle min width  
             else //if not, 
-                ariaContainer.SetSize(this.GetWidth());
-                //areaRect.setAttribute("width", this.GetWidth());    //set rectangle width as the group width
+                ariaContainer.SetSize(this.GetWidth()); //set rectangle width as the group width
         }
 
-        return overflowObjects; //return the overflowed objects
+        if(overflowObjects.length > 0 && selfRef.OnOverflow) { //if the overflow event has been signed
+            selfRef.OnOverflow.call(selfRef, overflowObjects);  //dispatch an event with them
+            return "OVERFLOW_2_OCCURRED";
+        }
+
+        return "SUCCESSFUL"; //return true for sucessfull
     }
 
     //Function to add elements to the container
@@ -186,13 +215,15 @@ function AriaContainer(properties) {
     this.RemoveAt = function (position) {
         //if the position is out of the array bounds, return false
         if (position < 0 || position >= childs.Count())
-            return null;
+            return "ERROR_POSITION_OUT_OF_BOUNDS";
 
         //get the elem ref and its width to translate the others
         var elem = childs.GetItem(position);
 
+        //if the element have a resize event handler implemented 
         //remove the resize event listener 
-        elem.removeEventListener(elem.resizeEventHandler);
+        if(elem.resizeEventHandler)
+            elem.removeEventListener(elem.resizeEventHandler);
 
         //remove the element from the container
         containerGroup.removeChild(elem.Build());
@@ -216,11 +247,9 @@ function AriaContainer(properties) {
         if(!contWidth) {  //if no width has been informed,
             //if the min width has been informed and the current length is less than this min widt
             if(contMinWidth && this.GetWidth() - elem.originalWidth < contMinWidth)
-                ariaContainer.SetSize(contMinWidth);
-                //areaRect.setAttribute("width", contMinWidth);    //set rectangle min width
+                ariaContainer.SetSize(contMinWidth);    //set rectangle min width  
             else //if not, 
-                ariaContainer.SetSize(this.GetWidth() - elem.originalWidth);
-                //areaRect.setAttribute("width", this.GetWidth() - elem.originalWidth);    //set rectangle width as the group width
+                ariaContainer.SetSize(this.GetWidth() - elem.originalWidth);//set rectangle width as the group width    
         }
 
         //remove the element from the element list
@@ -234,7 +263,7 @@ function AriaContainer(properties) {
     this.RemoveElement = function (ariaElement) {
         var index = childs.Find(ariaElement);    //find the element in the list
         if (index == -1)     //if not found, return false
-            return null;
+            return "ERROR_ELEMENT_NOT_FOUND";
 
         return selfRef.RemoveAt(index);//otherwise, remove the element        
     }
@@ -273,9 +302,15 @@ function AriaContainer(properties) {
         //If a fixed width or a max width has been specified and
         //the container width or max width minus the members width is lesser than the element width,
         if ((contWidth || contMaxWidth) && (ariaElement.GetWidth() > ((contWidth || contMaxWidth) - elementsBeforeSum))) {
-            //if this happen we got to removed all the subsequent elements aswell
-            return this.RemoveAt(position); 
+            
+            for (var j = position; j < childs.Count() ; j++) { //iterate thru all subsequente elements
+                overflowObjects.push(selfRef.RemoveAt(j));
+                j--;    //subtracts one unit from the position var
+            }
+            if(selfRef.OnOverflow)  //if the overflow event has been signed
+                selfRef.OnOverflow.call(selfRef, overflowObjects);
 
+            return "OVERFLOW_1_OCCURRED"; 
         }
 
         //get the offset the element has resized the its width
@@ -325,7 +360,12 @@ function AriaContainer(properties) {
                 ariaContainer.SetSize(this.GetWidth());//set rectangle width as the group width
         }
 
-        return overflowObjects; //return the overflowed objects
+        if(overflowObjects.length > 0 && selfRef.OnOverflow) { //if the overflow event has been signed
+            selfRef.OnOverflow.call(selfRef, overflowObjects);  //dispatch an event with them
+            return "OVERFLOW_2_OCCURRED";
+        }
+
+        return "SUCCESSFUL"; //return true for sucessfull
                
         //OLD BRUTUS MODE FOR THIS FUNCTION
         //selfRef.RemoveAt(position);   //Remove the element from the container
