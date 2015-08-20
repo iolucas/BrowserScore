@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="100%" width="100%">
+        <style type="text/css" ><![CDATA[
+
+        .scoreElement:hover {
+            -webkit-filter: drop-shadow( -0px -0px 3px #000 );
+            filter: drop-shadow( -0px -0px 0px #000 ); /* Same syntax as box-shadow */
+            fill:   #007;
+            stroke: #000;
+            stroke-width: 1px;
+            cursor: pointer;
+        }
+
+        ]]></style>
+    <script xlink:href="ariajs/List.js" type="text/javascript" />
+    <script xlink:href="ariajs/Aria.js" type="text/javascript" />
+    <script xlink:href="score/ScoreElements.js" type="text/javascript" />
+    <script xlink:href="score/ScoreLines.js" type="text/javascript" />
+    <script xlink:href="score/ScoreBuilder.js" type="text/javascript" />
+    <script xlink:href="debug.js" type="text/javascript" />   
+</svg>

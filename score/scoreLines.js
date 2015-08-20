@@ -2,40 +2,59 @@ xmlns = "http://www.w3.org/2000/svg";
 xlink = "http://www.w3.org/1999/xlink";  
 
 
-function CreateScoreLine(lineLength, x, y) {
+function ScoreLine(lineLength) {
 
-    var lineHeight = 300;   //score line height
+    var lineHeight = 240,   //score line height
 
-    var scoreLine = document.createElementNS(xmlns, "g");   //group to organize score lines member
-    SetTransform(scoreLine, { translate: [x, y] });  //translate the group to its specified position
+    //group to organize score lines member
+        scoreLineGroup = document.createElementNS(xmlns, "g"),
+        scoreLine = $Aria.Parse(scoreLineGroup);
 
-    scoreLine.scoreY = y; //set this new member to verify exact position of mousemove events
-    
-    var lines = DrawScoreLines(lineLength); //create score lines
-    scoreLine.appendChild(lines);   //append lines to the group
+    scoreLineGroup.scoreY = 0; //set this new member to verify exact y position for mousemove events 
+
+    //Wrap aria element functions
+    this.MoveTo = function(x, y) { 
+        scoreLineGroup.scoreY = y;  //update the current y value
+        return scoreLine.MoveTo(x, y); 
+    }
+
+
+    //ADD EVENT LISTENER TO ELASTIC CONTAINERS BE FITTED PARENT AND CHILDREN OBJECTS
+
+    //Return the group reference
+    this.Build = function() { return scoreLineGroup; }
+
+    //Create score lines
+    var lines = DrawScoreLines(lineLength); 
     //Calculate coordinates to place the lines at the center of the group
     SetTransform(lines, { translate: [0, (lineHeight - 60) / 2] });
+    //Append lines to the group
+    scoreLineGroup.appendChild(lines);   
 
     //Create container to fit all objects
-    var mainContainer = CreateCavacoContainer(lineLength, lineHeight);
-    mainContainer.cavaco.SetBorder(1, "#000");
-    scoreLine.appendChild(mainContainer);
+    var mainContainer = $Aria.CreateContainer({ width: lineLength, height: lineHeight });
 
-    mainContainer.cavaco.AddElement(createSpace(10));
+    mainContainer.SetBorder(1, "#000");
 
-    var clef = DrawScoreLinesElement(ScoreElement.GClef);
-    mainContainer.cavaco.AddElement(clef);
-    clef.cavaco.MoveTo(clef.cavaco.x, clef.cavaco.y + 4);
+    scoreLineGroup.appendChild(mainContainer.Build());
 
-    mainContainer.cavaco.AddElement(createSpace(10));
-    mainContainer.cavaco.AddElement(DrawScoreLinesElement(ScoreElement.TimeSig44));
-    mainContainer.cavaco.AddElement(createSpace(30));
+    mainContainer.AddElement(createSpace(10));
+
+    var clef = $Aria.Parse(DrawScoreLinesElement(ScoreElement.GClef));
+    mainContainer.AddElement(clef);
+
+    clef.MoveTo(null, clef.GetY() + 4);
+    
+    mainContainer.AddElement(createSpace(10));
+    mainContainer.AddElement($Aria.Parse(DrawScoreLinesElement(ScoreElement.TimeSig44)));
+    mainContainer.AddElement(createSpace(30));
 
     var symbolSpace = CreateSymbolsSpace();
-    mainContainer.cavaco.AddElement(symbolSpace);
-    //mainContainer.cavaco.AddElement(CreateSymbolsSpace());
+    mainContainer.AddElement($Aria.Parse(symbolSpace));
 
-    return scoreLine;
+    log(mainContainer.GetFreeSpace());
+
+    //smainContainer.cavaco.AddElement(CreateSymbolsSpace());
 }
 
 function CreateSymbolsSpace() {
@@ -43,7 +62,7 @@ function CreateSymbolsSpace() {
 
     var space = document.createElementNS(xmlns, "rect");  //create new line
     space.setAttribute("width", 30);
-    space.setAttribute("height", 300);
+    space.setAttribute("height", 240);
     space.setAttribute("stroke", "#000");
     space.setAttribute("fill", "rgba(0,0,0,.2)");
     //space.setAttribute("fill", "none");
@@ -139,14 +158,11 @@ function mark2() {
 
 //function to create spaces to be used 
 function createSpace(length) {
-    var space = document.createElementNS(xmlns, "rect");  //create new line
-    space.setAttribute("width", length);
-    space.setAttribute("height", 1);
-    return space;
+    return $Aria.CreateRectangle(length, 10, "blue");
 }
 
 
-function ScoreLine(lineLength, x, y) {
+/*function ScoreLine(lineLength, x, y) {
     var lineFull = false,   //flag to sinalize when this line is full  
         scoreLine = document.createElementNS(xmlns, "g"),
         clef,
@@ -191,4 +207,4 @@ function ScoreLine(lineLength, x, y) {
         
         
     }
-}
+}*/

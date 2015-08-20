@@ -23,7 +23,9 @@ var $Aria = new function() {
 };
 
 //Horizontal container
-function AriaContainer(properties) {
+function AriaContainer(properties) {  
+
+    var selfRef = this;
 
     //Register the container dimensions
     var width = properties.width,
@@ -40,7 +42,17 @@ function AriaContainer(properties) {
     this.GetHeight = function() { return ariaContainer.GetHeight(); }   
     this.GetWidth = function() { return ariaContainer.GetWidth(); }
     this.MoveTo = function(x, y) { return ariaContainer.MoveTo(x, y); } 
-    this.Build = function() { return ariaContainer.Build(); }         
+    this.Build = function() { return ariaContainer.Build(); }
+    //Wrapper for fire events but with modified args
+    this.addEventListener = function(event, callback) {
+        return ariaContainer.addEventListener(event, function(e) {
+            e.target = selfRef;    //modify the target value
+            callback.call(selfRef, e); //fire the callback function
+        });
+    }
+    this.removeEventListener = function(eventHandler) { return ariaContainer.removeEventListener(eventHandler); }
+    //Function to verify if some resized occurred, private due to for containers it are called automatically
+    function CheckResize() { return ariaContainer.CheckResize(); }  
 
     //Rectangle to set container size and border
     var areaRect = document.createElementNS(xmlns, "rect");
@@ -100,6 +112,12 @@ function AriaContainer(properties) {
         //translate the element to its position at the container
         ariaElement.MoveTo(elementsBeforeSum, centerPos);
 
+        //Add a resize listener to the appended element to update its dimension at the container whenever is needed
+        //record the resize event handler to be used for remove this event when this element is removed
+        ariaElement.resizeEventHandler = ariaElement.addEventListener("resize", function(e) {
+            UpdateElementDimension.call(selfRef, ariaElement);
+        });
+
         var overflowObjects = [],   //array to store elements that overflow the container after insertion of new element
             overflow = false;   //flag to signalize when a overflow occurs
 
@@ -115,7 +133,7 @@ function AriaContainer(properties) {
             if (overflow || ((width || maxWidth) && newX + currElem.GetWidth() > (width || maxWidth))) {
 
                 overflow = true;//set the overflow flag
-                overflowObjects.push(this.RemoveAt(j));
+                overflowObjects.push(selfRef.RemoveAt(j));
                 j--;    //subtracts one unit from the position var
                 continue;   //proceed next iteration
             }
@@ -133,13 +151,46 @@ function AriaContainer(properties) {
                 areaRect.setAttribute("width", this.GetWidth());    //set rectangle width as the group width
         }
 
+        CheckResize(); 
+
         return overflowObjects; //return the overflowed objects
     }
 
     //Function to add elements to the container
     this.AddElement = function (ariaElement) {
-        return this.InsertAt(childs.Count(), ariaElement);
+        return selfRef.InsertAt(childs.Count(), ariaElement);
     }
+
+    //function to update the area rectangle
+    //TO BE FIXED AND IMPLEMENTED
+    /*function updateRectWidth(newOffset) {
+        if(width)   //if any width has been specified
+            return; //return
+
+    //if the min width has been informed and the current length is less than this min widt
+        if(minWidth && this.GetWidth() - elem.originalWidth < minWidth)
+            areaRect.setAttribute("width", minWidth);    //set rectangle min width
+        else //if not, 
+            areaRect.setAttribute("width", this.GetWidth() - elem.originalWidth);    //set rectangle width as the group width
+
+
+
+
+        log(selfRef.GetWidth());
+        //get the rectangle current width
+        var currRectWidth = parseInt(areaRect.getAttribute("width"));
+        if(currRectWidth == selfRef.GetWidth()) //if the area rectangle is already the size of the rectangle
+            return;
+
+        //if the min width has been informed and the current length is less than this min width
+        if(minWidth && selfRef.GetWidth() < minWidth) 
+            areaRect.setAttribute("width", minWidth);    //set rectangle min width
+        else //if not, 
+            areaRect.setAttribute("width", selfRef.GetWidth());    //set rectangle width as the group width
+
+        //execute the function to check a resize on this element to update whowever subscribed to its resize event
+        CheckResize();  
+    }*/
 
     //Function to Remove element at certain position
     this.RemoveAt = function (position) {
@@ -149,6 +200,9 @@ function AriaContainer(properties) {
 
         //get the elem ref and its width to translate the others
         var elem = childs.GetItem(position);
+
+        //remove the resize event listener 
+        log(elem.removeEventListener(elem.resizeEventHandler));
 
         //remove the element from the container
         containerGroup.removeChild(elem.Build());
@@ -172,6 +226,8 @@ function AriaContainer(properties) {
                 areaRect.setAttribute("width", this.GetWidth() - elem.originalWidth);    //set rectangle width as the group width
         }
 
+        CheckResize(); 
+
         //remove the element from the element list
         childs.RemoveAt(position);
 
@@ -185,7 +241,7 @@ function AriaContainer(properties) {
         if (index == -1)     //if not found, return false
             return null;
 
-        return this.RemoveAt(index);//otherwise, remove the element        
+        return selfRef.RemoveAt(index);//otherwise, remove the element        
     }
 
     //Function to get the element current position at the container
@@ -196,18 +252,69 @@ function AriaContainer(properties) {
     //Function to get the number of childs at this container
     this.Count = function() { return childs.Count(); }
 
-    //Function to update target element dimensions at the container
-    this.UpdateElementDimension = function(ariaElement) {
-        var index = this.GetElementPosition(ariaElement);
-        if(index == -1) return null;    //if the element is not found, return null
+    //Private function to update target element dimensions at the container
+    function UpdateElementDimension (ariaElement) {
+        //If the width hasn't changed, returt null
+        //if(ariaElement.originalWidth == ariaElement.GetWidth())
+          //  return null;
 
-        this.RemoveAt(index);   //Remove the element from the container
-        return this.InsertAt(index, ariaElement);    //put it back and return overflow elements
+        var position = selfRef.GetElementPosition(ariaElement);
+        if(position == -1) return null;    //if the element is not found, return null
+
+        selfRef.RemoveAt(position);   //Remove the element from the container
+        return selfRef.InsertAt(position, ariaElement);    //put it back and return overflow elements
+/*
+        //Get the distance to be offset
+        var newOffset = ariaElement.GetWidth() - ariaElement.originalWidth;
+
+        var overflowObjects = [],   //array to store elements that overflow the container after element translation
+        overflow = false;   //flag to signalize when a overflow occurs
+
+        //iterate thru all the container members since the removed and translate their positions
+        for (var j = position + 1 ; j < childs.Count() ; j++) {
+            var currElem = childs.GetItem(j); //get the item ref
+
+            //update elem currPos width object
+            var newX = currElem.GetX() + newOffset;
+
+            //if a overflow flag or a width or maxWidth has been defined and overflow just occured,  
+            //remove next element and put it in the overflow array and move the next iteration
+            if (overflow || ((width || maxWidth) && newX + currElem.GetWidth() > (width || maxWidth))) {
+
+                overflow = true;//set the overflow flag
+                overflowObjects.push(selfRef.RemoveAt(j));
+                j--;    //subtracts one unit from the position var
+                continue;   //proceed next iteration
+            }
+
+            currElem.MoveTo(newX);
+        }
+
+        updateRectWidth();  //update area rectangle width
+
+        return overflowObjects; //return the overflowed objects*/
+    }
+
+    //var occupedSpace = 0;   //variable to store the occuped space at this container (TO BE IMPLEMENTED)
+
+    //Function to get the free space available at the container
+    this.GetFreeSpace = function() {
+        if(!width)  //if no width for the container has been specified
+            return -1;  //return -1
+
+        var childsCount = childs.Count();   //get the number of elements at the container
+        var occupedLength = 0; //variable to accumulate the members width
+        for(var i = 0; i < childsCount; i++)    //iterate thru all the container members 
+            occupedLength += childs.GetItem(i).GetWidth(); //get their length
+
+        return width - occupedLength; //return the free length
     }
 }
 
 
 function AriaElement(svgElement) {
+
+    var selfRef = this;
 
     //Public members
     this.GetX = function () {
@@ -233,8 +340,8 @@ function AriaElement(svgElement) {
 
     //Function to translate the object in referece to point 0,0
     this.MoveTo = function (x, y) {
-        var newX = (typeof x) == "number" ? x - getBoxValues().x : this.GetX() - getBoxValues().x,
-            newY = (typeof y) == "number" ? y - getBoxValues().y : this.GetY() - getBoxValues().y;
+        var newX = (typeof x) == "number" ? x - getBoxValues().x : selfRef.GetX() - getBoxValues().x,
+            newY = (typeof y) == "number" ? y - getBoxValues().y : selfRef.GetY() - getBoxValues().y;
 
         //Set the translate values for new x and y
         SetTransform(svgElement, { translate: [newX, newY] });
@@ -245,16 +352,75 @@ function AriaElement(svgElement) {
         return svgElement;
     }
 
+    //Wrapper to get a element valid bbox
     function getBoxValues() {
-        if (svgElement.parentElement)  //if the element is already appended
-            return svgElement.getBBox();   //get element bBox
-        document.documentElement.appendChild(svgElement);  //append element to be able to get its bbox
         var bBox = svgElement.getBBox();   //get element bBox
-        document.documentElement.removeChild(svgElement);  //remove element from its parent
+        if(bBox.x || bBox.y || bBox.width || bBox.height) { //if any of the members are valid, 
+            return bBox;    //return the gotten bbox cause it is valid
+        }
+        
+        //if it is not valid,
+        var elementParent = svgElement.parentElement;   //got the element parent if any
+        document.documentElement.appendChild(svgElement);  //append element to a valid aux parent to be able to get its bbox
+        bBox = svgElement.getBBox();   //get element bBox
+        if(elementParent) //if the element had a parent
+            elementParent.appendChild(svgElement);    //put the element back to its parent
+        else //if not, 
+            document.documentElement.removeChild(svgElement);  //remove element from its aux parent          
+        
         return bBox;
+    }
+
+    //Private variables to check whether a object resize has occurred
+    var currHeight = selfRef.GetHeight();
+    var currWidth = selfRef.GetWidth();
+
+    //Function to check if a resize has occured, if so, fire the resize event
+    this.CheckResize = function() {
+        //If any change has occurred
+        if(currHeight != selfRef.GetHeight() || currWidth != selfRef.GetWidth()) {
+            //Update current height and width variables
+            currHeight = selfRef.GetHeight();
+            currWidth = selfRef.GetWidth();
+
+            dispatchEvent("resize");    //fire the resize event
+            return true;    //return true to simbolize a resize
+        }
+        return false;   //return false to simblize not resize
+    }
+
+    //Events
+    var events = new Object();    //Object to store the subscribed the events subscribed
+    this.addEventListener = function(event, callback) {
+        if(!events[event])  //if the specified event collection has not been created, 
+            events[event] = []; //create it
+        //register the callback for the event
+        events[event][events[event].length] = callback;
+        //return a event handler to be used for remove the event listener
+        return { event: event, position: events[event].length - 1}
+    }
+
+    this.removeEventListener = function(eventHandler) {
+        //if the specified event handler exists
+        if(events[eventHandler.event] && events[eventHandler.event][eventHandler.position]) {
+            events[eventHandler.event][eventHandler.position] = null;   //clear the event handler
+            return true;    //return true if remove is sucessfull
+        }
+        return false;   //return false if the event were not found
+    }
+
+    //Function to fire the specified event
+    function dispatchEvent(event) {
+        if(events[event]) { //if the event exists
+            var subsCount = events[event].length;
+            for(var i = 0; i < subsCount; i++)   //iterate thru 
+                if(events[event][i])    //if the callback is valid, 
+                    events[event][i].call(selfRef, {target: selfRef});    //fire it
+        }
     }
 }
 
+//Function to set the transform attributes of a given element
 function SetTransform(element, values) {
     //get the transform string
     var oldValues = element.getAttribute("transform");
@@ -289,6 +455,7 @@ function SetTransform(element, values) {
     element.setAttribute("transform", oldValues.substr(0, oldValues.length - 1));
 }
 
+//Function to get the transform attribute for a given element
 function GetTransform(element, property) {
     var tString = element.getAttribute("transform");
     if (!tString) return null;  //if no transform has been applied
