@@ -83,8 +83,8 @@ function AriaContainer(properties) {
     this.OnOverflow;
 
     //Rectangle to set container size and border
-    var areaRect = document.createElementNS(xmlns, "rect"),
-        areaRectAria = $Aria.Parse(areaRect);   //object to get area rect properties easily
+    var areaRect = document.createElementNS(xmlns, "rect");
+
     areaRect.setAttribute("height", contHeight);    //set area rectangle height
     areaRect.setAttribute("width", contWidth || contMinWidth);    //set area rectangle width or min width
 

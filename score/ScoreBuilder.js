@@ -2,7 +2,7 @@
 
 var ScoreBuilder = new function() {
 
-	this.CreateLine = function(length) { return new ScoreLine(length); }
+	this.CreateLine = function(length, headerProperties) { return createScoreLine(length, headerProperties); }
 
 
 

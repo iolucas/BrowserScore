@@ -4,20 +4,11 @@ xlink = "http://www.w3.org/1999/xlink";
 var lineHeight = 300;   //score line height
 
 
-function ScoreLine(lineLength) {
+function createScoreLine(lineLength, headerProperties) {
 
     //Create container to fit all objects
     var lineContainer = $Aria.CreateContainer({ minWidth: lineLength, height: lineHeight });
-
-    lineContainer.SetBorder(1, "blue");
-
-    //Wrap aria element functions
-    this.MoveTo = function(x, y) { 
-        return lineContainer.MoveTo(x, y); 
-    }
-
-    //Return the group reference
-    this.Build = function() { return lineContainer.Build(); }
+    //lineContainer.SetBorder(1, "blue");
 
     //Create score lines
     var lines = DrawScoreLines(lineLength); 
@@ -27,109 +18,72 @@ function ScoreLine(lineLength) {
     lineContainer.Build().appendChild(lines);   
 
     //AddScore header
-    lineContainer.AddElement(createScoreLineHeader({ GClef: true, TimeSig44: true}));
-    //log(lineContainer.GetFreeLength());
+    lineContainer.AddElement(createScoreLineHeader(headerProperties));
 
-    this.InsertMeasure = function(position) {
+    //Append function to be used for insert a measure @ the score line
+    lineContainer.InsertMeasure = function(position) {
         //if the position were not specified, assume it is the last one
         if(!position) position = lineContainer.Count();
-
         //create new score measure, passing a function to be used to get the current number of symbols spaces on this line
         var measure = createScoreMeasure();
-
         //insert it in the specified position
         lineContainer.InsertAt(position, measure);
 
-        measure.AddSymbolSpace(1);
-        //updateSymbolsSpace();   //update the symbol space elements
-        measure.AddSymbolSpace(2);
-        //oi.SetWidth(1000);
-        //oi.SetWidth(200);
-        //updateSymbolsSpace();   //update the symbol space elements
-
+        return measure; //return the just created measure
     }
 
-    //function to update the symbols spaces to adjust the score line correctly
-    function updateSymbolsSpace() {
+    //append function to update the symbols spaces to adjust the score line correctly
+    lineContainer.UpdateSpaces = function() {
 
         var symbolSpaceCount = 0,   //var to sum the number of symbols space
             fixedSymbolsLength = 0; //var to sum the length of all fixed symbols at the score line
 
-            //Got to iterate thry all the line to get the fixed symbols total length and how many symbols space there is
+        //Got to iterate thry all the line to get the fixed symbols total length and how many symbols space there is
 
-            lineContainer.ForEach(function(lineElement)  {   //iterate thru all elements at the line container           
-                if(lineElement.toString() == "ScoreMeasure") {  //check whether the element is a score measure
-                    lineElement.ForEach(function(measureElement) {    //if it is, iterate thru all its element 
-                        if(measureElement.toString() == "SymbolSpace")   //if the element is a symbol space
-                            symbolSpaceCount += 1 / measureElement.denominator;   //gets its denominator and sum its fraction value
-                        else //if not
-                            fixedSymbolsLength += measureElement.GetWidth();   //get its width and sum
-                    });
-                } else //if it is not a score measure
-                    fixedSymbolsLength += lineElement.GetWidth();   //get its width and sum
-            });
+        lineContainer.ForEach(function(lineElement)  {   //iterate thru all elements at the line container           
+            if(lineElement.toString() == "ScoreMeasure") {  //check whether the element is a score measure
+                lineElement.ForEach(function(measureElement) {    //if it is, iterate thru all its element 
+                    if(measureElement.toString() == "SymbolSpace")   //if the element is a symbol space
+                        symbolSpaceCount += 1 / measureElement.denominator;   //gets its denominator and sum its fraction value
+                    else //if not
+                        fixedSymbolsLength += measureElement.GetWidth();   //get its width and sum
+                });
+            } else //if it is not a score measure
+                fixedSymbolsLength += lineElement.GetWidth();   //get its width and sum
+        });
 
-            //now we got the values, we can adjust their sizes
-            var unitSpaceSize = (lineLength - fixedSymbolsLength) / symbolSpaceCount;   //calc the unitSpace size
+        //now we got the values, we can adjust their sizes
+        var unitSpaceSize = (lineLength - fixedSymbolsLength) / symbolSpaceCount;   //calc the unitSpace size
 
-            lineContainer.ForEach(function(lineElement)  {   //iterate thru all elements at the line container           
-                if(lineElement.toString() == "ScoreMeasure") {  //check whether the element is a score measure
-                    lineElement.ForEach(function(measureElement) {    //if it is, iterate thru all its element 
-                        if(measureElement.toString() == "SymbolSpace")   //if the element is a symbol space
-                            measureElement.SetWidth(unitSpaceSize); //set this space symbol new width
-                    });
-                } 
-            });
-
-
-            //alert("oi");
-            log(symbolSpaceCount);
-            log(fixedSymbolsLength);
+        lineContainer.ForEach(function(lineElement)  {   //iterate thru all elements at the line container           
+            if(lineElement.toString() == "ScoreMeasure") {  //check whether the element is a score measure
+                lineElement.ForEach(function(measureElement) {    //if it is, iterate thru all its element 
+                    if(measureElement.toString() == "SymbolSpace")   //if the element is a symbol space
+                        measureElement.SetWidth(unitSpaceSize); //set this space symbol new width
+                });
+            } 
+        });
     }
 
-    this.InsertMeasure();
-    //updateSymbolsSpace();   //update the symbol space elements
-    this.InsertMeasure();
-    
-this.InsertMeasure();
-this.InsertMeasure();
-updateSymbolsSpace();   //update the symbol space elements
-    //var measureSize = mainContainer.GetFreeLength()/4;
-
-/*
-    var measure = new ScoreMeasure(measureSize);
-    mainContainer.AddElement(measure.Build());
-    measure.AddSymbol();
-
-        var measure1 = new ScoreMeasure(measureSize);
-    mainContainer.AddElement(measure1.Build());
-
-        var measure2 = new ScoreMeasure(measureSize);
-    mainContainer.AddElement(measure2.Build());
-
-        var measure3 = new ScoreMeasure(measureSize);
-    mainContainer.AddElement(measure3.Build());
-
-    log(measureSize);*/
-
-    //var symbolSpace = CreateSymbolsSpace();
-    //mainContainer.AddElement($Aria.Parse(symbolSpace));
-
-    //log(mainContainer.GetFreeSpace());
-
-    //smainContainer.cavaco.AddElement(CreateSymbolsSpace());
+    return lineContainer;   //return the create line container
 }
 
 //Function to create a ScoreMeasure object inherited from Aria rectangle
 function createScoreMeasure() {
     var measure = $Aria.CreateContainer(({ minWidth: 10, height: lineHeight }));
-    measure.SetBackgroundColor("rgba(0,0,64,.5)");
-    measure.SetBorder(4, "red");
-    /*this.AddSymbol = function() {
+    measure.SetBorder(1, "#000");
+    //measure.SetBackgroundColor("rgba(0,0,64,.5)");
+
+    measure.AddSymbol = function() {
         var symbol = $Aria.CreateCircle( 50, "#333");
-        measureChilds.Add(symbol);
-        scoreContainer.AddElement(symbol);
-    }*/
+        measure.AddElement(symbol);
+        return symbol;
+    }
+
+    measure.AddScoreElement = function(scoreElement) {
+        //var elemCont = 
+
+    }
 
     measure.AddSymbolSpace = function(sizeDenominator) {
         var s = createSymbolSpace(sizeDenominator);
@@ -144,9 +98,12 @@ function createScoreMeasure() {
 }
 
 function createSymbolSpace(denominator) {
-    var space = $Aria.CreateRectangle(150, 100, "rgba(0, 64, 0, .5)"); //create the rectangle to fill the space
-    space.Build().setAttribute("stroke", "yellow");
-    space.Build().setAttribute("stroke-width", 1);
+    if(!denominator || denominator < 1)
+        throw "Invalid denominator";
+
+    var space = $Aria.CreateRectangle(10, 50, "rgba(0,128,255,.7)"); //create the rectangle to fill the space
+    //space.Build().setAttribute("stroke", "#000");
+    //space.Build().setAttribute("stroke-width", 1);
     //var to hold the denominator value of this space
     space.denominator = denominator;
 
@@ -162,11 +119,11 @@ function createSymbolSpace(denominator) {
 }
 
 function createScoreLineHeader(properties){
-    var lineHeaderContainer = $Aria.CreateContainer({ height: lineHeight });    //header container
-    lineHeaderContainer.AddElement(createSpace(10));    //header margin
-    lineHeaderContainer.SetBackgroundColor("rgba(0,0,0,.2)");
+    var lineHeaderContainer = $Aria.CreateContainer({ height: lineHeight });    //header container  
+    lineHeaderContainer.SetBackgroundColor("rgba(0,128,0,.2)");
     
     if(properties.GClef) {
+        lineHeaderContainer.AddElement(createSpace(10));    //header margin
         var clef = $Aria.Parse(DrawScoreLinesElement(ScoreElement.GClef));
         lineHeaderContainer.AddElement(clef);
         clef.MoveTo(null, clef.GetY() + 4);

@@ -1,8 +1,27 @@
 
-var score = ScoreBuilder.CreateLine(1500);   //create a scoreline with 890 length
-document.documentElement.appendChild(score.Build());
 
-score.MoveTo(150.5, 10.5);
+var score1 = ScoreBuilder.CreateLine(1500, { GClef: true, TimeSig44: true});   //create a scoreline with 890 length
+document.documentElement.appendChild(score1.Build());
+
+score1.MoveTo(10.5, 10.5);
+
+score1.InsertMeasure().AddSymbolSpace(1);
+score1.InsertMeasure().AddSymbolSpace(1);
+
+score1.UpdateSpaces();
+
+var score2 = ScoreBuilder.CreateLine(1500, { GClef: true, TimeSig44: false});   //create a scoreline with 890 length
+document.documentElement.appendChild(score2.Build());
+
+score2.MoveTo(10.5, score1.GetHeight() + 21.5);
+
+score2.InsertMeasure().AddSymbolSpace(1);
+var m = score2.InsertMeasure();
+m.AddSymbol();
+m.AddSymbolSpace(2);
+
+score2.UpdateSpaces();
+
 //document.documentElement.appendChild(CreateScoreLine(890, 10.5, 312.5));
 
 
