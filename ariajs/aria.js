@@ -79,7 +79,8 @@ function AriaContainer(properties) {
     this.OnOverflow;
 
     //Rectangle to set container size and border
-    var areaRect = document.createElementNS(xmlns, "rect");
+    var areaRect = document.createElementNS(xmlns, "rect"),
+        areaRectAria = $Aria.Parse(areaRect);   //object to get area rect properties easily
     areaRect.setAttribute("height", contHeight);    //set area rectangle height
     areaRect.setAttribute("width", contWidth || contMinWidth);    //set area rectangle width or min width
 
@@ -99,6 +100,11 @@ function AriaContainer(properties) {
 
     //Variable to compute the current occuped space
     var occupedLength = 0;
+
+    //Function to list all objects at the container
+    this.ForEach = function(action) {
+        childs.ForEach(action);
+    }
 
     //Function to insert element in the container
     this.InsertAt = function (position, ariaElement) {
@@ -187,6 +193,7 @@ function AriaContainer(properties) {
         }
 
         containerGroup.appendChild(ariaElement.Build());  //append the element at the container object
+        ariaElement.parentContainer = containerGroup;   //set the parent container for this element
 
         //Must update containers area rectangle size if any size change
 
@@ -227,6 +234,7 @@ function AriaContainer(properties) {
 
         //remove the element from the container
         containerGroup.removeChild(elem.Build());
+        elem.parentContainer = null;    //clear element parent container
 
         //subtract the elem size from the occuped space var
         occupedLength -= elem.originalWidth;
@@ -354,10 +362,17 @@ function AriaContainer(properties) {
 
         if(!contWidth) {  //if no width has been informed,
             //if the min width has been informed and the current length is less than this min width
-            if(contMinWidth && this.GetWidth() + newOffset < contMinWidth) 
+
+            /*  OLD METHOD THAT HAD A BUG IN CASE NEGATIVE RESIZE, THE NEW ONE IS NOT PROPERLY VALIDATED YET
+            if(contMinWidth && this.GetWidth() + newOffset < contMinWidth)
                 ariaContainer.SetSize(contMinWidth);    //set rectangle min width  
-            else //if not, 
-                ariaContainer.SetSize(this.GetWidth());//set rectangle width as the group width
+            else//if not,                
+                ariaContainer.SetSize(this.GetWidth());//set rectangle width as the group width*/
+
+            if(contMinWidth && areaRectAria.GetWidth() + newOffset < contMinWidth)
+                ariaContainer.SetSize(contMinWidth);    //set rectangle min width  
+            else//if not,                
+                ariaContainer.SetSize(areaRectAria.GetWidth() + newOffset);//set rectangle width as the group width
         }
 
         if(overflowObjects.length > 0 && selfRef.OnOverflow) { //if the overflow event has been signed
