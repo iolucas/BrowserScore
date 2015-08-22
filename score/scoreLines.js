@@ -40,9 +40,9 @@ function ScoreLine(lineLength) {
         //insert it in the specified position
         lineContainer.InsertAt(position, measure);
 
-        var oi = measure.AddSymbolSpace(1);
+        measure.AddSymbolSpace(1);
         //updateSymbolsSpace();   //update the symbol space elements
-        //measure.AddSymbolSpace(2);
+        measure.AddSymbolSpace(2);
         //oi.SetWidth(1000);
         //oi.SetWidth(200);
         //updateSymbolsSpace();   //update the symbol space elements
@@ -88,10 +88,12 @@ function ScoreLine(lineLength) {
     }
 
     this.InsertMeasure();
-    
-    //this.InsertMeasure();
     //updateSymbolsSpace();   //update the symbol space elements
-
+    this.InsertMeasure();
+    
+this.InsertMeasure();
+this.InsertMeasure();
+updateSymbolsSpace();   //update the symbol space elements
     //var measureSize = mainContainer.GetFreeLength()/4;
 
 /*
