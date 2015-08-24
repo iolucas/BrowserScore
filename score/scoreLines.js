@@ -3,7 +3,6 @@ xlink = "http://www.w3.org/1999/xlink";
 
 var lineHeight = 300;   //score line height
 
-
 function createScoreLine(lineLength, headerProperties) {
 
     //Create container to fit all objects
@@ -71,22 +70,23 @@ function createScoreLine(lineLength, headerProperties) {
 //Function to create a ScoreMeasure object inherited from Aria rectangle
 function createScoreMeasure() {
     var measure = $Aria.CreateContainer(({ minWidth: 10, height: lineHeight }));
-    measure.SetBorder(1, "#000");
+    //measure.SetBorder(1, "#000");
     //measure.SetBackgroundColor("rgba(0,0,64,.5)");
 
-    measure.AddSymbol = function() {
-        var symbol = $Aria.CreateCircle( 50, "#333");
-        measure.AddElement(symbol);
-        return symbol;
+    measure.AddSymbol = function(scoreElement) {
+        //var symbol = $Aria.CreateCircle(50, "#333");
+        
+        //return symbol;
     }
 
-    measure.AddScoreElement = function(scoreElement) {
-        //var elemCont = 
-
+    measure.AddMeasureElement = function(scoreElement) {
+        var elem = $Aria.Parse(scoreElement)
+        measure.AddElement(elem);
+        return elem;
     }
 
-    measure.AddSymbolSpace = function(sizeDenominator) {
-        var s = createSymbolSpace(sizeDenominator);
+    measure.AddNoteSpace = function(sizeDenominator) {
+        var s = createNoteSpace(sizeDenominator);
         measure.AddElement(s);
         return s;
     }
@@ -94,14 +94,117 @@ function createScoreMeasure() {
     //Overwrite the current toString method
     measure.toString = function() { return "ScoreMeasure"; }
 
+
+    //----------For every new measure, set the standard elements
+    measure.AddMeasureElement(DrawMeasureElement(MeasureElement.Margin)); //margin
+
+    //whole pause (note for debug)
+    var noteCollection = createNotesCollection();
+    //noteCollection.AddNote(1, 20);
+    noteCollection.AddPause(1);//symbol space
+    measure.AddMeasureElement(noteCollection);
+
+    measure.AddNoteSpace(1);//symbol space
+    
+
+    measure.AddMeasureElement(DrawMeasureElement(MeasureElement.SimpleBar)); //line end bar
+
     return measure;
 }
 
-function createSymbolSpace(denominator) {
+//Place where notes, pause, attributes will be placed
+function createNotesCollection() {
+    var group = document.createElementNS(xmlns, "g");
+
+    var area = document.createElementNS(xmlns, "rect");  //create new line
+    area.setAttribute("width", 10);
+    area.setAttribute("height", lineHeight);
+    area.setAttribute("fill", "rgba(0,0,0,.1)");
+    group.appendChild(area);
+
+    group.AddNote = function(denominator, position) {
+        var startPosition = 0,  //var to store the start position where the specified position will be counted
+            offset = 7.5,   //var to store the offset which the position will be steped
+
+            note = createNote(denominator);
+
+        group.appendChild(note.Build());
+        //Add this verification due to notes greater than quarter have a gap to be fixed
+        if(denominator >= 4 && position > 0)
+            note.MoveTo(null, startPosition + position*offset - 1);
+        else
+            note.MoveTo(null, startPosition + position*offset);
+        return note;
+    }
+
+    group.AddPause = function(denominator) {
+        var pause = createPause(denominator);
+
+        group.appendChild(pause.Build());
+        
+        switch(denominator) {
+            case 1:
+                pause.MoveTo(null, 135);
+                break;
+            case 2:
+                pause.MoveTo(null, 142.5);
+                break;
+        }
+        
+
+        return pause;
+    }
+
+    return group;
+}
+
+//function to create a note, with its attributes, etc...
+function createNote(denominator) {
+    var note;
+
+    switch(denominator) {
+        case 1:
+            note = $Aria.Parse(DrawMeasureElement(MeasureElement.WholeNote));
+            break;
+
+        case 4:
+            note = $Aria.Parse(DrawMeasureElement(MeasureElement.QuarterNote));
+            break;
+
+        default: 
+            //note = $Aria.Parse(DrawMeasureElement(MeasureElement.WholeNote));
+    }
+
+    note.setNoteAttribute = function(){}
+    note.getNoteAttribute = function(){}
+
+    return note;
+}
+
+function createPause(denominator) {
+    var pause;
+
+    switch(denominator) {
+        case 1:
+            pause = $Aria.Parse(DrawMeasureElement(MeasureElement.WholePause));
+            break;
+
+        case 2:
+            pause = $Aria.Parse(DrawMeasureElement(MeasureElement.WholePause));
+            break;
+
+        default: 
+            //pause = $Aria.Parse(DrawMeasureElement(MeasureElement.WholePause));
+    }
+
+    return pause;
+}
+
+function createNoteSpace(denominator) {
     if(!denominator || denominator < 1)
         throw "Invalid denominator";
 
-    var space = $Aria.CreateRectangle(10, 50, "rgba(0,128,255,.7)"); //create the rectangle to fill the space
+    var space = $Aria.CreateRectangle(10, 50, "rgba(0,128,255,.3)"); //create the rectangle to fill the space
     //space.Build().setAttribute("stroke", "#000");
     //space.Build().setAttribute("stroke-width", 1);
     //var to hold the denominator value of this space

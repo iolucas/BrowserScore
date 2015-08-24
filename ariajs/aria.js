@@ -197,7 +197,7 @@ function AriaContainer(properties) {
         }
 
         containerGroup.appendChild(ariaElement.Build());  //append the element at the container object
-        ariaElement.parentContainer = containerGroup;   //set the parent container for this element
+        ariaElement.parentContainer = selfRef;   //set the parent container for this element
 
         //Must update containers area rectangle size if any size change
 
@@ -431,7 +431,6 @@ function AriaElement(svgElement, setSizeInterface) {
         //if no translate has been applied to this object or it is invalid,  
         if (!currTranslateValues || (typeof currTranslateValues[0]) != "number")
             return getBoxValues().x;    //return its raw x coord
-
         return getBoxValues().x + currTranslateValues[0];
     }
 
@@ -440,7 +439,6 @@ function AriaElement(svgElement, setSizeInterface) {
         //if no translate has been applied to this objector it is invalid,
         if (!currTranslateValues || (typeof currTranslateValues[1]) != "number")
             return getBoxValues().y;    //return its raw y coord
-
         return getBoxValues().y + currTranslateValues[1];
     }
 
@@ -454,6 +452,14 @@ function AriaElement(svgElement, setSizeInterface) {
 
         //Set the translate values for new x and y
         SetTransform(svgElement, { translate: [newX, newY] });
+    }
+
+    //Function to detach this element from whenever container it is attached
+    this.Detach = function() {
+        if(selfRef.parentContainer)//if it has any parent element
+            return selfRef.parentContainer.RemoveElement(selfRef);   //remove this element from it
+
+        return null;    //if not, return null
     }
 
     //Function to return the svg element to be appended
@@ -571,13 +577,13 @@ function GetTransform(element, property) {
 
     var pIndex = tString.indexOf(property);
     if (pIndex == -1) return null;  //if the prop is not found, return null
-        
+
     var sIndex = tString.indexOf("(", pIndex),
         eIndex = tString.indexOf(")", pIndex);
 
     vArray = tString.substring(sIndex + 1, eIndex).split(" ");
     for (var i = 0; i < vArray.length; i++)
-        vArray[i] = parseInt(vArray[i], 10);
+        vArray[i] = parseFloat(vArray[i], 10);
 
     return vArray;
 }
