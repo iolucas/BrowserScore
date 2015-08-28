@@ -20,16 +20,21 @@ function createScoreLine(lineLength, headerProperties) {
     lineContainer.AddElement(createScoreLineHeader(headerProperties));
 
     //Append function to be used for insert a measure @ the score line
-    lineContainer.InsertMeasure = function(position) {
+    lineContainer.InsertMeasure = function(position, measure) {
         //if the position were not specified, assume it is the last one
         if(!position) position = lineContainer.Count();
-        //create new score measure, passing a function to be used to get the current number of symbols spaces on this line
-        var measure = createScoreMeasure();
+        //if the measure is not specified, create new score measure, passing a function to be used to get the current number of symbols spaces on this line
+        if(!measure) measure = createScoreMeasure();
         //insert it in the specified position
         lineContainer.InsertAt(position, measure);
 
         return measure; //return the just created measure
     }
+
+    //Propertie to hold the next line handler
+    var nextLine = null;
+    lineContainer.SetNextLine = function(line) { nextLine = line; }
+    lineContainer.GetNextLine = function(line) { return nextLine; }
 
     //append function to update the symbols spaces to adjust the score line correctly
     lineContainer.UpdateSpaces = function() {
@@ -79,6 +84,12 @@ function createScoreMeasure() {
         //return symbol;
     }
 
+    measure.InsertSymbolsCollection = function(position, collection) {
+        var coll = createSymbolCollection();
+        measure.AddElement(coll);
+        return coll;
+    }
+
     measure.AddMeasureElement = function(scoreElement) {
         var elem = $Aria.Parse(scoreElement)
         measure.AddElement(elem);
@@ -101,26 +112,264 @@ function createScoreMeasure() {
     //whole pause (note for debug)
     var noteCollection = createNotesCollection();
     //noteCollection.AddNote(1, 20);
-    noteCollection.AddPause(1);//symbol space
+    noteCollection.AddPause(2);//symbol space
     measure.AddMeasureElement(noteCollection);
 
-    measure.AddNoteSpace(1);//symbol space
-    
+    measure.AddNoteSpace(1);//symbol space  
 
     measure.AddMeasureElement(DrawMeasureElement(MeasureElement.SimpleBar)); //line end bar
 
     return measure;
 }
 
-//Place where notes, pause, attributes will be placed
+//Pseudo Namespace to fit score objects classes
+var ScoreBeta = new function() {
+    ///create notes, chords, measures and score class to manage all the score features
+    ///lets begin with the note element placing at a chord
+
+    this.Note = function(properties) {
+        var selfRef = this,
+
+            note = properties.note, //current note of the note object (A, B, C, D, E, F, G)
+            octave = properties.octave,
+            accident = properties.accident ? properties.accident : "none",  //current accident of the note (none (default), flat, sharp, cancel)
+            denominator = properties.denominator,   //get the denominator of the note
+            aria;   // aria element to place the note current visual object
+        
+        //Draw object
+        //for now just draw the note, later add accidents, dots, etc
+        switch(denominator) {
+            case 1:
+                aria= $Aria.Parse(DrawMeasureElement(MeasureElement.WholeNote));
+                break;
+
+            case 2:
+                aria = $Aria.Parse(DrawMeasureElement(MeasureElement.HalfNote));
+                break;
+
+            case 4:
+                aria = $Aria.Parse(DrawMeasureElement(MeasureElement.QuarterNote));
+                break;
+
+            default: 
+                aria = $Aria.CreateCircle(7.5, "blue");  //if a invalid denominator has been set, put a blue circle at it
+        }
+
+        aria.MoveTo(0, 0);  //put the element at the reset position
+
+        this.GetProperties = function() { 
+            return { 
+                note: note,
+                octave: octave,
+                accident: accident,
+                denominator: denominator
+            }
+        }
+
+        //this.Transpose = function() {}  //function to be implemented for transpose the note determined number of steps
+
+        this.MoveTo = function() { return aria.MoveTo.apply(this, arguments); }
+        this.Draw = function() { return aria.Build(); }
+        this.getAria = function() { return aria; }
+    }
+
+    //group to fit moer than one note
+    this.Chord = function(properties) {
+        var selfRef = this,
+
+            notes = [], //Array to set the notes at this chord
+            offset = 7.5,   //offset of each note at the visual object
+            denominator,    //chord general denominator
+            group = document.createElementNS(xmlns, "g"),
+
+        //for debug, not really necessary due to group grows, but coodinates origin remains the same
+            refRect = document.createElementNS(xmlns, "rect");  //reference rectangle to be used as a fixed reference point
+
+        refRect.setAttribute("fill", "blue");
+        refRect.setAttribute("height", 10); 
+        refRect.setAttribute("width", 10);    
+
+        group.appendChild(refRect);
+
+        this.Draw = function() { return group; }
+
+        this.MoveTo = function() {
+
+
+        }
+
+        //Function to iterate thru all elements
+        this.ForEach = function(action) {
+            for(var i = 0; i < notes.length; i++) //iterate thru all the notes
+                if(notes[i])    //if the note is valid
+                    action(notes[i]);   //apply the specified action to it
+        }
+
+        this.AddNote = function(note) {
+            
+            if(notes.indexOf(note) != -1) return "NOTE_ALREADY_ON_CHORD"; //if the note object already exists at this chord, return false
+
+            var noteProp = note.GetProperties();    //get the note properties values
+
+            for(var i = 0; i < notes.length; i++) { //iterate thru all the notes
+                if(notes[i]) {   //if the note is valid
+                    var currProp = notes[i].GetProperties();
+
+                    if((currProp.note == noteProp.note && currProp.octave == noteProp.octave))
+                        return "SAME_NOTE_AND_OCTAVE";
+
+                    //do not need to verify if the denominator is set, cause to get here, the notes cant be empty
+                    if(denominator != noteProp.denominator)
+                        return "NOTE_WITH_DIFFERENT_DENOMINATOR: " + denominator + " " + noteProp.denominator;
+                }
+            }
+
+            //Object validation successful
+
+            if(!denominator) //if denominator not defined, set it
+                denominator = noteProp.denominator;
+
+            notes.push(note);   //add the new note object to the notes array
+
+            //append the object to the group
+            group.appendChild(note.Draw());
+
+            //put it in the desired place, 
+            //Note E octave 5 must be 0,0
+            //E letter code is 69
+            //negative offset due to notes grow up but coodinates grow down
+
+            var yCoord = -offset * ((noteProp.note.charCodeAt(0) - 69) + (noteProp.octave - 5) * 7);
+            note.MoveTo(null, yCoord);
+
+            return "SUCCESS";
+        }
+
+        this.RemoveNote = function() {
+
+        }
+
+        this.GetDenominator = function() { return denominator; }
+    }
+
+    this.Measure = function() {
+
+
+    }
+
+    this.Score = function() {
+
+
+
+    }  
+}
+
+
+
+
+
+
+
+
+//Function to accomodate symbols area and symbols space to fit at the measure at the score
+function createSymbolCollection() {
+    //container to fit the notes and the space 
+    var collectionContainer = $Aria.CreateContainer(({ minWidth: 10, height: lineHeight }));
+    collectionContainer.SetBackgroundColor("yellow");
+
+    
+    
+
+    collectionContainer.SetDenominator = function(denominator) {
+
+    }
+
+    collectionContainer.AddNote = function(position) {
+
+    }
+
+    collectionContainer.RemoveNote = function(position) {
+
+    }
+
+    collectionContainer.AddPause = function() {
+
+    }
+
+    return collectionContainer; //return the container
+}
+
+function createSymbolsArea() {
+    var group = document.createElementNS(xmlns, "g"),
+        symbolsArea = $Aria.Parse(group, function() {});    //Parse the group as a aria element with a empty function for setsize
+
+    symbolsArea._denominator = 1;   //set the standard value for the symbols area
+    symbolsArea._pause = true;  
+    symbolsArea._notesArray = [];
+
+    symbolArea.SetDenominator = function(denominator) {
+        symbolsArea._denominator = denominator; //set the new denominator
+    }
+
+    symbolsArea.AddNote = function(position) {
+        var startPosition = 0,  //var to store the start position where the specified position will be counted
+            offset = 7.5,   //var to store the offset which the position will be steped
+
+            note = createNote(symbolsArea._denominator);
+
+        group.appendChild(note.Build());
+        //Add this verification due to notes greater than quarter have a gap to be fixed
+        if(symbolsArea._denominator >= 4 && position > 0)
+            note.MoveTo(null, startPosition + position * offset - 1);
+        else
+            note.MoveTo(null, startPosition + position * offset);
+
+        symbolsArea._notesArray.push(note); //push the note to the noteList
+
+        return note;
+    }
+
+    symbolsArea.RemoveNote = function(position) {
+
+    }
+
+    symbolsArea.AddPause = function() {
+        var pause = createPause(symbolsArea._denominator);
+
+        group.appendChild(pause.Build());
+        
+        switch(symbolsArea._denominator) {
+            case 1:
+                pause.MoveTo(null, 135);
+                break;
+            case 2:
+                pause.MoveTo(null, 142.5);
+                break;
+        }       
+
+        return pause;
+    }
+
+    return symbolsArea; //return the symbol area element
+}
+
+
+//Place where notes, pause, attributes will be placed with the correpondent note space
 function createNotesCollection() {
+
     var group = document.createElementNS(xmlns, "g");
 
     var area = document.createElementNS(xmlns, "rect");  //create new line
     area.setAttribute("width", 10);
     area.setAttribute("height", lineHeight);
-    area.setAttribute("fill", "rgba(0,0,0,.1)");
+    area.setAttribute("fill", "rgba(0,0,0,.2)");
     group.appendChild(area);
+
+    area.addEventListener("click", function(){
+        alert("Oi!!!");
+        area.setAttribute("width", 100);
+        score1.UpdateSpaces();
+    });
 
     group.AddNote = function(denominator, position) {
         var startPosition = 0,  //var to store the start position where the specified position will be counted

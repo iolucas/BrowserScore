@@ -11,8 +11,10 @@ var ScoreElement = {
 var MeasureElement = {
     SimpleBar: 0,
     Margin: 1,
-    WholeNote: 2, 
-    WholePause: 3,
+    WholeNote: 2,
+    HalfNote: 3, 
+    QuarterNote: 4, 
+    WholePause: 5,
 
     DebugNote: 1000
 };
@@ -72,15 +74,33 @@ function DrawMeasureElement(measureElement) {
 
         case MeasureElement.QuarterNote:
             mElem = document.createElementNS(xmlns, "path");  //create new path
-            //draw in the created path the whole note
-            mElem.setAttribute("d","M13.233,12.788c4.43-2.373,6.791-6.671,5.338-9.906c-1.549-3.447-6.869-4.42-11.877-2.172C1.686,2.96-1.122,7.585,0.427,11.034c1.548,3.445,6.87,4.42,11.879,2.172C12.618,13.063,12.938,12.946,13.233,12.788z");  
-            mElem.setAttribute("transform", "translate(0 2)");    
+            //draw in the created path the quarter note
+            mElem.setAttribute("d","M33.54,88.152c1.469,3.373-1.165,8.054-5.881,10.455c-4.716,2.401-9.73,1.614-11.199-1.76c-1.468-3.372,1.165-8.053,5.881-10.453c3.924-1.998,8.174-1.827,10.306,0.414");     
+            break;
+
+        case MeasureElement.HalfNote:
+            mElem = document.createElementNS(xmlns, "path");  //create new path
+            //draw in the created path the half note
+            mElem.setAttribute("d","M17.486,3.148c1.469,3.373-1.164,8.055-5.881,10.455c-4.715,2.401-9.729,1.615-11.199-1.76C-1.061,8.473,1.572,3.791,6.287,1.391c3.925-1.998,8.175-1.826,10.306,0.414 M3.581,12.276c2.597,0,5.219-1.139,7.865-3.414c2.694-2.275,4.042-3.968,4.042-5.081c0-0.709-0.293-1.063-0.883-1.063c-1.812,0-4.313,1.088-7.496,3.263C3.973,8.104,2.406,9.874,2.406,11.29C2.406,11.948,2.797,12.276,3.581,12.276");  
             break;
 
         case MeasureElement.WholeNote:
+            //mElem = document.createElementNS(xmlns, "g");  //create new path
+
             mElem = document.createElementNS(xmlns, "path");  //create new path
             //draw in the created path the whole note
-            mElem.setAttribute("d","M12.352,0.108 C5.461,0.355,0,3.604,0,7.555C0,11.664,5.913,15,13.198,15c7.287,0,13.198-3.336,13.198-7.445c0-4.111-5.911-7.447-13.198-7.447C12.914,0.108,12.632,0.099,12.352,0.108z M10.152,1.547c1.838-0.188,4.153,0.664,6.091,2.411c2.904,2.616,3.888,6.286,2.201,8.208l-0.042,0.042c-1.722,1.908-5.5,1.319-8.419-1.312s-3.877-6.341-2.157-8.25C8.404,2.006,9.222,1.643,10.152,1.547z");          
+            //check point
+            mElem.setAttribute("d","M6.185,14.017        C2.728,12.954    0,10.062   0,7.461                C0,0.1  15.81,-2.814    22.34,3.344        C29.4,10.005    17.877,17.618     6.185,14.017z M16.729,12.169c1.924-2.938,0.086-8.752-3.246-10.271C8.589-0.33,5.59,3.468,7.628,9.314C9.039,13.355,14.772,15.157,16.729,12.169z");  //M16.729,12.169c1.924-2.938,0.086-8.752-3.246-10.271C8.589-0.33,5.59,3.468,7.628,9.314C9.039,13.355,14.772,15.157,16.729,12.169z     
+
+            /*mElem2 = document.createElementNS(xmlns, "ellipse");
+            mElem2.setAttribute("cx","10");
+            mElem2.setAttribute("cy","7.5");
+            mElem2.setAttribute("rx","12.75");
+            mElem2.setAttribute("ry","7.5");
+            mElem2.setAttribute("fill","yellow");
+
+            mElem.appendChild(mElem2);
+            mElem.appendChild(mElem1);*/
             break;
 
         case MeasureElement.WholePause:

@@ -3,8 +3,6 @@
 var ScoreBuilder = new function() {
 
 	this.CreateLine = function(length, headerProperties) { return createScoreLine(length, headerProperties); }
-
-
-
+	this.CreateMeasure = function() { return createScoreMeasure(); }
 
 }
