@@ -193,9 +193,12 @@ var ScoreBeta = new function() {
 
         this.Draw = function() { return group; }
 
-        this.MoveTo = function() {
+        this.MoveTo = function(x, y) {
+            SetTransform(group, { translate: [x, y] });
+        }
 
-
+        this.GetWidth = function() {
+            return GetBBox(group).width;    
         }
 
         //Function to iterate thru all elements
@@ -207,7 +210,7 @@ var ScoreBeta = new function() {
 
         this.AddNote = function(note) {
             
-            if(notes.indexOf(note) != -1) return "NOTE_ALREADY_ON_CHORD"; //if the note object already exists at this chord, return false
+            if(notes.indexOf(note) != -1) return "NOTE_ALREADY_ON_CHORD"; //if the note object already exists at this chord, return message
 
             var noteProp = note.GetProperties();    //get the note properties values
 
@@ -254,18 +257,237 @@ var ScoreBeta = new function() {
 
     this.Measure = function() {
 
+        var group = document.createElementNS(xmlns, "g"),   //group to fit all the measure members
+            
+            //for debug, not really necessary due to group grows, but coodinates origin remains the same
+            refRect = document.createElementNS(xmlns, "rect"),  //reference rectangle to be used as a fixed reference point
+            measureEndBar = $Aria.Parse(DrawMeasureElement(MeasureElement.SimpleBar)),
+            chords = new List();    //ordered list to fit all the chords @ this measure
 
+        refRect.setAttribute("fill", "red");
+        refRect.setAttribute("height", 15); 
+        refRect.setAttribute("width", 15);    
+
+        group.appendChild(refRect); //append debug square
+
+        group.appendChild(measureEndBar.Build()); //append measure end bar   
+
+        this.Draw = function() { return group; }
+
+        this.MoveTo = function(x, y) {
+            SetTransform(group, { translate: [x, y] });
+        }
+
+        this.GetWidth = function() {
+            return GetBBox(group).width;    
+        }
+
+        //function to get the fixed elements total length
+        this.GetElemLength = function() {
+            var length = 0;
+            chords.ForEach(function(chord) {
+                length += chord.GetWidth();
+            });
+        }
+
+        this.ForEach = function(action) {
+            chords.ForEach(action);//iterate thru all the chords and apply the specified action to it
+        }
+
+        //Function to update the spaces of the measure and organize chords
+        this.UpdateGaps = function(spaceUnitLength) {
+            var nextPos = 0;    //the start position for the first chord
+
+            chords.ForEach(function(chord) {
+                chord.MoveTo(nextPos, 0);  //move the chord X pos to current nextposition keeping the Y value
+                nextPos += chord.GetWidth() + spaceUnitLength / chord.GetDenominator();    //get the gap value and add it to the next position
+            });
+            measureEndBar.MoveTo(nextPos, 0);  //put the end bar at the end of the measure
+        }
+
+        this.InsertChord = function(chord, position) {
+            //if the chord object already exists at this measure, return a message
+            if(chords.Find(chord) != -1) return "CHORD_ALREADY_ON_MEASURE"; 
+            //implement timing verification in the future
+            //Object validation successful
+
+            //if the type of the position variable is different from number or the position is bigger or the size of the list
+            if(typeof position != "number" || position >= chords.Count())    
+                chords.Add(chord);    //insert with add method at the last position
+            else //otherwise
+                childs.Insert(position, chord); //insert element reference at the position to the list
+
+            //append the object to the group
+            group.appendChild(chord.Draw());
+
+            return "SUCCESS";
+        }
+
+        this.RemoveChord = function() {
+
+        }
     }
 
-    this.Score = function() {
+    this.Score = function(lineLength, minMeasureLength, properties) {
+        //Creates a new score passing the line length and the minimum measure length to be kept in a line, otherwise a new one is created to fit it
+
+        var group = document.createElementNS(xmlns, "g"),   //group to fit all the score members
+            
+            //for debug, not really necessary due to group grows, but coodinates origin remains the same
+            refRect = document.createElementNS(xmlns, "rect"),  //reference rectangle to be used as a fixed reference point
+            header = document.createElementNS(xmlns, "g"),  //create the score header group, to hold the score elements
+            lines = DrawScoreLines(lineLength),   //score lines draw
+            measures = new List();    //ordered list to fit all the measures @ this score
+
+        refRect.setAttribute("fill", "yellow");
+        refRect.setAttribute("height", 20); 
+        refRect.setAttribute("width", 20);    
+
+        group.appendChild(refRect); //append debug square
+
+        group.appendChild(lines);
+
+        group.appendChild(header);  //append score header
+        setScoreProperties(properties); //set the score properties
+
+        this.Draw = function() { return group; }
+
+        this.MoveTo = function(x, y) {
+            SetTransform(group, { translate: [x, y] });
+        }
+
+        //Get the current width of this score (must be appended to work)
+        this.GetWidth = function() { 
+            return group.getBBox().width; 
+        }
+
+        this.ForEach = function(action) {
+            measures.ForEach(action);//iterate thru all the measures and apply the specified action to it
+        }
+
+        //Function to update the spaces and dimensions of the measures inside the score
+        this.UpdateDimensions = function() {
+            //Get total fixed elements length
+            var headerBox = GetBBox(header),
+                elemTotalLength = headerBox.width + headerBox.x,    //fixed elements length
+                denSum = 0; //denominators sum
+
+            measures.ForEach(function(measure) {    
+                measure.ForEach(function(chord){
+                    denSum += 1 / chord.GetDenominator();   //get denominator value
+                    elemTotalLength += chord.GetWidth();    //get chord length
+                });
+            });
+
+            //set measures denominators unit size
+            var unitSize = (lineLength - elemTotalLength) / denSum;
+
+            //update the denominator unit size for every measure
+            measures.ForEach(function(measure) {    
+                measure.UpdateGaps(unitSize);
+            });
+
+            //update measure positions
+            var nextPos = headerBox.width + headerBox.x;
+
+            measures.ForEach(function(measure) {    
+                measure.MoveTo(nextPos, 0);
+                nextPos += measure.GetWidth();
+            });
+        }
+
+        function setScoreProperties(properties) {
+            var nextPos = 10;
+
+            if(properties.GClef) {
+                var clef = DrawScoreLinesElement(ScoreElement.GClef);
+                header.appendChild(clef);
+                SetTransform(clef, { translate: [22 + nextPos, 13] });
+                nextPos += GetBBox(clef).width + 10;
+            }
+            
+            if(properties.TimeSig44) {
+                var timeSig = DrawScoreLinesElement(ScoreElement.TimeSig44);
+                header.appendChild(timeSig);
+                SetTransform(timeSig, { translate: [nextPos, 0] });
+                nextPos += GetBBox(timeSig).width + 10;
+            }
+
+            var finalMargin = document.createElementNS(xmlns, "rect");
+            finalMargin.setAttribute("fill", "#333");
+            finalMargin.setAttribute("height", 10); 
+            finalMargin.setAttribute("width", 10);
+            header.appendChild(finalMargin);
+            SetTransform(finalMargin, { translate: [nextPos + 20, 0] });    
 
 
+            /*var lineHeaderContainer = $Aria.CreateContainer({ height: 60 });    //header container  
+            lineHeaderContainer.SetBackgroundColor("rgba(0,128,0,.2)");
+    
+            if(properties.GClef) {
+                lineHeaderContainer.AddElement(createSpace(10));    //header margin
+                var clef = $Aria.Parse(DrawScoreLinesElement(ScoreElement.GClef));
+                lineHeaderContainer.AddElement(clef);
+                clef.MoveTo(null, clef.GetY() + 4);
+            }
 
-    }  
+            if(properties.TimeSig44) {
+                lineHeaderContainer.AddElement(createSpace(10));
+                lineHeaderContainer.AddElement($Aria.Parse(DrawScoreLinesElement(ScoreElement.TimeSig44)));
+            }
+
+            lineHeaderContainer.AddElement(createSpace(30));
+
+            lineHeaderContainer.toString = function() { return "LineHeaderContainer"; }
+
+            header.appendChild(lineHeaderContainer.Build());*/
+            //return lineHeaderContainer;
+        }
+
+        this.InsertMeasure = function(measure, position) {
+            //if the measure object already exists at this measure, return a message
+            if(measures.Find(measure) != -1) return "MEASURE_ALREADY_ON_MEASURE"; 
+            //implement timing verification in the future
+            //Object validation successful
+
+            //if the type of the position variable is different from number or the position is bigger or the size of the list
+            if(typeof position != "number" || position >= measures.Count())    
+                measures.Add(measure);    //insert with add method at the last position
+            else //otherwise
+                measures.Insert(position, measure); //insert element reference at the position to the list
+
+            //append the object to the group
+            group.appendChild(measure.Draw());
+
+            return "SUCCESS";
+        }
+
+        this.RemoveMeasure = function() {
+
+        }
+
+
+    }
 }
 
 
-
+function GetBBox(element) {
+    var bBox = element.getBBox();   //get element bBox
+    if(bBox.x || bBox.y || bBox.width || bBox.height) { //if any of the members are valid, 
+        return bBox;    //return the gotten bbox cause it is valid
+    }
+        
+    //if it is not valid,
+    var elementParent = element.parentElement;   //got the element parent if any
+    document.documentElement.appendChild(element);  //append element to a valid aux parent to be able to get its bbox
+    bBox = element.getBBox();   //get element bBox
+    if(elementParent) //if the element had a parent
+        elementParent.appendChild(element);    //put the element back to its parent
+    else //if not, 
+        document.documentElement.removeChild(element);  //remove element from its aux parent          
+        
+    return bBox;
+}
 
 
 
