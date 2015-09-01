@@ -147,12 +147,16 @@ var ScoreBeta = new function() {
                 aria = $Aria.Parse(DrawMeasureElement(MeasureElement.HalfNote));
                 break;
 
-            case 4:
-                aria = $Aria.Parse(DrawMeasureElement(MeasureElement.QuarterNote));
-                break;
+            //case 4:
+                //aria = $Aria.Parse(DrawMeasureElement(MeasureElement.QuarterNote));
+                //break;
 
-            default: 
-                aria = $Aria.CreateCircle(7.5, "blue");  //if a invalid denominator has been set, put a blue circle at it
+            //if the denominator is greater than 4, set the note drawing for greater than 4
+            default:
+                if(denominator >= 4) 
+                    aria = $Aria.Parse(DrawMeasureElement(MeasureElement.QuarterNote));
+                else
+                    aria = $Aria.CreateCircle(7.5, "blue");  //if a invalid denominator has been set, put a blue circle at it
         }
 
         aria.MoveTo(0, 0);  //put the element at the reset position
@@ -179,8 +183,9 @@ var ScoreBeta = new function() {
 
             notes = [], //Array to set the notes at this chord
             offset = 7.5,   //offset of each note at the visual object
-            denominator,    //chord general denominator
+            denominator = properties.denominator,    //chord general denominator
             group = document.createElementNS(xmlns, "g"),
+            pause,  //pause element
 
         //for debug, not really necessary due to group grows, but coodinates origin remains the same
             refRect = document.createElementNS(xmlns, "rect");  //reference rectangle to be used as a fixed reference point
@@ -190,6 +195,28 @@ var ScoreBeta = new function() {
         refRect.setAttribute("width", 10);    
 
         group.appendChild(refRect);
+
+        setPause(); //set the chord pause
+
+        function setPause() {
+            if(!denominator) return;
+
+            switch(denominator) {
+                case 1:
+                    pause = DrawMeasureElement(MeasureElement.WholePause);
+                    SetTransform(pause, { translate: [0, 15]}); //put the element at the right position
+                    break;
+
+                case 2:
+                    pause = DrawMeasureElement(MeasureElement.WholePause);
+                    SetTransform(pause, { translate: [0, 23]}); //put the element at the right position
+                    break;
+
+                default:
+                    pause = $Aria.CreateRectangle(10, 10, "purple").Build();
+            }
+            group.appendChild(pause);
+        }
 
         this.Draw = function() { return group; }
 
@@ -232,6 +259,9 @@ var ScoreBeta = new function() {
             if(!denominator) //if denominator not defined, set it
                 denominator = noteProp.denominator;
 
+            if(pause.parentElement)
+                pause.parentElement.removeChild(pause);
+
             notes.push(note);   //add the new note object to the notes array
 
             //append the object to the group
@@ -248,8 +278,18 @@ var ScoreBeta = new function() {
             return "SUCCESS";
         }
 
-        this.RemoveNote = function() {
+        this.RemoveNote = function(note) {
 
+            //MUST PLACE A ROUTINE TO PUT THE PAUSE DRAW WHEN ALL THE NOTES HAVE BEEN REMOVED
+
+            var noteIndex = notes.indexOf(note);
+            if(noteIndex == -1)   //IF THE NOTE OBJECT WERE NOT FOUND
+                return "ERROR_NOTE_OBJECT_NOT_VALID"; //if not return error
+
+            notes[noteIndex] = null;    //clear the note ref at the array
+            group.removeChild(note.Draw()); //remove the note from the visual object
+
+            return note;    //return the removed not
         }
 
         this.GetDenominator = function() { return denominator; }
@@ -257,7 +297,9 @@ var ScoreBeta = new function() {
 
     this.Measure = function() {
 
-        var group = document.createElementNS(xmlns, "g"),   //group to fit all the measure members
+        var selfRef = this,
+
+            group = document.createElementNS(xmlns, "g"),   //group to fit all the measure members
             
             //for debug, not really necessary due to group grows, but coodinates origin remains the same
             refRect = document.createElementNS(xmlns, "rect"),  //reference rectangle to be used as a fixed reference point
@@ -296,7 +338,8 @@ var ScoreBeta = new function() {
 
         //Function to update the spaces of the measure and organize chords
         this.UpdateGaps = function(spaceUnitLength) {
-            var nextPos = 0;    //the start position for the first chord
+            //the start position for the first chord
+            var nextPos = 20;       //30 for the measure left margin 
 
             chords.ForEach(function(chord) {
                 chord.MoveTo(nextPos, 0);  //move the chord X pos to current nextposition keeping the Y value
@@ -323,20 +366,40 @@ var ScoreBeta = new function() {
             return "SUCCESS";
         }
 
-        this.RemoveChord = function() {
+        this.RemoveAt = function(position) {
+            if(position < 0 || position >= chords.Count()) return "ERROR_POSITION_OUT_OF_BOUNDS";
 
+            var removedChord = chords.GetItem(position);    //get the chord handler from the list
+            group.removeChild(removedChord.Draw());  //remove it from the line
+            chords.RemoveAt(position);    //remove the chord from the list
+
+            return removedChord;
+        }
+
+        this.RemoveChord = function(chord) {
+            var position = chords.Find(chord);
+            if(position == -1) 
+                return "ERROR_CHORD_NOT_FOUND";
+            else 
+                return selfRef.RemoveAt(position);
         }
     }
 
-    this.Score = function(lineLength, minMeasureLength, properties) {
-        //Creates a new score passing the line length and the minimum measure length to be kept in a line, otherwise a new one is created to fit it
+    this.ScoreLine = function(lineLength, properties) {
+        //Creates a new score line passing the line length and the minimum measure length to be kept in a line, otherwise it will overflow
 
-        var group = document.createElementNS(xmlns, "g"),   //group to fit all the score members
-            
+        var selfRef = this,
+
+            group = document.createElementNS(xmlns, "g"),   //group to fit all the score members
+            //got to make a list of score lines
+
+            //GOT THE RESOLVE HOW MAKE SCORE LINES LIST, TO MAKE A SCORE LINE INDIVIDUAL OR A GENERAL WITH AN ARRAY TO CONTORLE THE GROUPS OF ELEMENTS
+
+
             //for debug, not really necessary due to group grows, but coodinates origin remains the same
             refRect = document.createElementNS(xmlns, "rect"),  //reference rectangle to be used as a fixed reference point
             header = document.createElementNS(xmlns, "g"),  //create the score header group, to hold the score elements
-            lines = DrawScoreLines(lineLength),   //score lines draw
+            linesDrawing = DrawScoreLines(lineLength),   //score lines draw
             measures = new List();    //ordered list to fit all the measures @ this score
 
         refRect.setAttribute("fill", "yellow");
@@ -345,7 +408,7 @@ var ScoreBeta = new function() {
 
         group.appendChild(refRect); //append debug square
 
-        group.appendChild(lines);
+        group.appendChild(linesDrawing);
 
         group.appendChild(header);  //append score header
         setScoreProperties(properties); //set the score properties
@@ -366,87 +429,68 @@ var ScoreBeta = new function() {
         }
 
         //Function to update the spaces and dimensions of the measures inside the score
-        this.UpdateDimensions = function() {
+        this.UpdateDimensions = function(minLength) {
             //Get total fixed elements length
             var headerBox = GetBBox(header),
                 elemTotalLength = headerBox.width + headerBox.x,    //fixed elements length
                 denSum = 0; //denominators sum
 
-            measures.ForEach(function(measure) {    
+            measures.ForEach(function(measure) { 
+                elemTotalLength += 20;  //sum the measure left margin   
                 measure.ForEach(function(chord){
+                    //PROBABLY IN THE FUTURE WILL HAVE TO VERIFY THE DENOMINATOR FOR ELEM TOTAL LENGTH FOR THE FINAL FINISH OF THE NOTES
                     denSum += 1 / chord.GetDenominator();   //get denominator value
                     elemTotalLength += chord.GetWidth();    //get chord length
                 });
             });
 
             //set measures denominators unit size
-            var unitSize = (lineLength - elemTotalLength) / denSum;
+            var unitSize = (lineLength - elemTotalLength) / denSum,
+            //update measure positions
+                nextPos = headerBox.width + headerBox.x;
 
             //update the denominator unit size for every measure
             measures.ForEach(function(measure) {    
-                measure.UpdateGaps(unitSize);
-            });
-
-            //update measure positions
-            var nextPos = headerBox.width + headerBox.x;
-
-            measures.ForEach(function(measure) {    
-                measure.MoveTo(nextPos, 0);
-                nextPos += measure.GetWidth();
+                measure.UpdateGaps(unitSize);   //update the gaps of the chords at the measure
+                measure.MoveTo(nextPos, 0); //move the measure to the next position available
+                nextPos += measure.GetWidth();  //generate the next position
+                console.log(measure.GetWidth());
             });
         }
 
-        function setScoreProperties(properties) {
+        function setScoreProperties(props) {
             var nextPos = 10;
 
-            if(properties.GClef) {
+            if(props.GClef) {
                 var clef = DrawScoreLinesElement(ScoreElement.GClef);
                 header.appendChild(clef);
                 SetTransform(clef, { translate: [22 + nextPos, 13] });
                 nextPos += GetBBox(clef).width + 10;
             }
             
-            if(properties.TimeSig44) {
+            if(props.TimeSig44) {
                 var timeSig = DrawScoreLinesElement(ScoreElement.TimeSig44);
                 header.appendChild(timeSig);
                 SetTransform(timeSig, { translate: [nextPos, 0] });
                 nextPos += GetBBox(timeSig).width + 10;
             }
 
-            var finalMargin = document.createElementNS(xmlns, "rect");
-            finalMargin.setAttribute("fill", "#333");
-            finalMargin.setAttribute("height", 10); 
-            finalMargin.setAttribute("width", 10);
-            header.appendChild(finalMargin);
-            SetTransform(finalMargin, { translate: [nextPos + 20, 0] });    
+            //DEBUG RECT MARK
+            //var finalMargin = document.createElementNS(xmlns, "rect");
+            //finalMargin.setAttribute("fill", "#333");
+            //finalMargin.setAttribute("height", 10); 
+            //finalMargin.setAttribute("width", 10);
+            //header.appendChild(finalMargin);
+            //SetTransform(finalMargin, { translate: [nextPos, 0] });    
+        }
 
-
-            /*var lineHeaderContainer = $Aria.CreateContainer({ height: 60 });    //header container  
-            lineHeaderContainer.SetBackgroundColor("rgba(0,128,0,.2)");
-    
-            if(properties.GClef) {
-                lineHeaderContainer.AddElement(createSpace(10));    //header margin
-                var clef = $Aria.Parse(DrawScoreLinesElement(ScoreElement.GClef));
-                lineHeaderContainer.AddElement(clef);
-                clef.MoveTo(null, clef.GetY() + 4);
-            }
-
-            if(properties.TimeSig44) {
-                lineHeaderContainer.AddElement(createSpace(10));
-                lineHeaderContainer.AddElement($Aria.Parse(DrawScoreLinesElement(ScoreElement.TimeSig44)));
-            }
-
-            lineHeaderContainer.AddElement(createSpace(30));
-
-            lineHeaderContainer.toString = function() { return "LineHeaderContainer"; }
-
-            header.appendChild(lineHeaderContainer.Build());*/
-            //return lineHeaderContainer;
+        this.Find = function(measure) {
+            return measures.Find(measure);
         }
 
         this.InsertMeasure = function(measure, position) {
             //if the measure object already exists at this measure, return a message
-            if(measures.Find(measure) != -1) return "MEASURE_ALREADY_ON_MEASURE"; 
+            if(measures.Find(measure) != -1) return "MEASURE_ALREADY_ON_LINE"; 
             //implement timing verification in the future
             //Object validation successful
 
@@ -462,11 +506,85 @@ var ScoreBeta = new function() {
             return "SUCCESS";
         }
 
-        this.RemoveMeasure = function() {
+        this.RemoveAt = function(position) {
+            if(position < 0 || position >= measures.Count()) return "ERROR_POSITION_OUT_OF_BOUNDS";
 
+            var removedMeasure = measures.GetItem(position);    //get the measure handler from the list
+            group.removeChild(removedMeasure.Draw());  //remove it from the line
+            measures.RemoveAt(position);    //remove the measure from the list
+
+            return removedMeasure;
+        }
+
+        this.RemoveMeasure = function(measure) {
+            var position = measures.Find(measure);
+            if(position == -1) 
+                return "ERROR_MEASURE_NOT_FOUND";
+            else 
+                return selfRef.RemoveAt(position);
+        }
+    }
+
+    //General score that will handle multiple lines and add the drawings finish and attributes
+    this.Score = function(lineLength, minLength, properties) {
+        var selfRef = this, //self reference
+
+            group = document.createElementNS(xmlns, "g"),   //group to keep the visual objects
+            lines = new List(), //list to organize the score lines
+            refRect = document.createElementNS(xmlns, "rect");  //reference rectangle to be used as a fixed reference point
+
+        refRect.setAttribute("fill", "#050");
+        refRect.setAttribute("height", 30); 
+        refRect.setAttribute("width", 30);
+
+        group.appendChild(refRect); //append debug square  
+
+        //Add the first line
+        createLine();
+
+
+        this.Draw = function() { return group; }
+
+        this.MoveTo = function(x, y) {
+            SetTransform(group, { translate: [x, y] });
+        }
+
+        function createLine() {
+            var newLine = new ScoreBeta.ScoreLine(1500, { GClef: true, TimeSig44: true});   //create the line
+            lines.Add(newLine); //add the line to the lines list
+            group.appendChild(newLine.Draw()); //append new line to the group
         }
 
 
+        this.InsertMeasure = function(measure, position) {
+            
+            //VERIFY WHETHER THIS MEASURE IS AT SOME SCORE LINE
+            lines.ForEach(function(line) {
+                if(line.Find(measure) != -1)
+                    return "ERROR_MEASURE_ALREADY_ON_SCORE";
+            });
+
+            //if the type of the position variable is different from number or the position is bigger or the size of the list
+            if(typeof position != "number" || position >= measures.Count())    
+                measures.Add(measure);    //insert with add method at the last position
+            else //otherwise
+                measures.Insert(position, measure); //insert element reference at the position to the list
+
+
+        } 
+
+        this.RemoveAt = function(position) {
+
+        }
+
+        this.RemoveMeasure = function(measure) {
+
+        }
+
+        this.Organize = function() {
+
+
+        }
     }
 }
 
