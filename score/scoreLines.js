@@ -286,8 +286,11 @@ var ScoreBeta = new function() {
             if(noteIndex == -1)   //IF THE NOTE OBJECT WERE NOT FOUND
                 return "ERROR_NOTE_OBJECT_NOT_VALID"; //if not return error
 
-            notes[noteIndex] = null;    //clear the note ref at the array
+            delete notes[noteIndex];    //clear the note ref at the array
             group.removeChild(note.Draw()); //remove the note from the visual object
+
+            if(ArrayLength(notes) == 0)
+                group.appendChild(pause);
 
             return note;    //return the removed not
         }
@@ -454,7 +457,7 @@ var ScoreBeta = new function() {
                 measure.UpdateGaps(unitSize);   //update the gaps of the chords at the measure
                 measure.MoveTo(nextPos, 0); //move the measure to the next position available
                 nextPos += measure.GetWidth();  //generate the next position
-                console.log(measure.GetWidth());
+                //console.log(measure.GetWidth());
             });
         }
 
@@ -486,6 +489,10 @@ var ScoreBeta = new function() {
 
         this.Find = function(measure) {
             return measures.Find(measure);
+        }
+
+        this.Count = function() {
+            return measures.Count();
         }
 
         this.InsertMeasure = function(measure, position) {
@@ -525,7 +532,8 @@ var ScoreBeta = new function() {
         }
     }
 
-    //General score that will handle multiple lines and add the drawings finish and attributes
+
+    //General score that will handle multiple scores, lines and add the drawings finish and attributes
     this.Score = function(lineLength, minLength, properties) {
         var selfRef = this, //self reference
 
@@ -553,6 +561,7 @@ var ScoreBeta = new function() {
             var newLine = new ScoreBeta.ScoreLine(1500, { GClef: true, TimeSig44: true});   //create the line
             lines.Add(newLine); //add the line to the lines list
             group.appendChild(newLine.Draw()); //append new line to the group
+            return newLine;
         }
 
 
@@ -564,13 +573,35 @@ var ScoreBeta = new function() {
                     return "ERROR_MEASURE_ALREADY_ON_SCORE";
             });
 
-            //if the type of the position variable is different from number or the position is bigger or the size of the list
-            if(typeof position != "number" || position >= measures.Count())    
-                measures.Add(measure);    //insert with add method at the last position
-            else //otherwise
-                measures.Insert(position, measure); //insert element reference at the position to the list
+            //if the type of the position variable is different from number(invalid), add it at the end of the score
+            if(typeof position != "number") {
+                //add it to the last line
+                return lines.GetItem(lines.Count() -1).InsertMeasure(measure);    
+            } else {//otherwise
+                //find which line the specified position is
 
+                var posSum = 0, 
+                    linesCount = lines.Count();
 
+                for(var i = 0; i < linesCount; i++) {
+                    var line = lines.GetItem(i);    //get the current line object
+
+                    var measuresCount = line.Count(); //get the number of measures at this line
+                    
+                    //Covers the bug in case measures count is 0 and the position specified is 0 too
+                    if(measuresCount == 0 && position == 0)
+                        return line.InsertMeasure(measure); //insert it
+
+                    if(posSum + measuresCount - 1 >= position) {    //if the posSum minus 1 is greater or equal than position, we found the line
+                        var linePos = position - posSum;    //get the line position
+                        return line.InsertMeasure(measure, linePos);   //insert the measure at the current line
+                    }//if not
+
+                    posSum += measuresCount;    //sum the current line size to the position sum
+                }
+
+                return "ERROR_SCOREPOS_OUT_OF_BOUNDS";
+            }
         } 
 
         this.RemoveAt = function(position) {
@@ -581,13 +612,28 @@ var ScoreBeta = new function() {
 
         }
 
+        //function to organize the score elements sizes, creation of new lines, etc
         this.Organize = function() {
+            var minTopMargin = 100; //min value for a top margin for the scores
 
+            //iterate thru all lines and update their dimensions
+            lines.ForEach(function(line){
+                line.UpdateDimensions(200);
 
+            });
         }
     }
 }
 
+function ArrayLength(array) {
+    var length = 0;
+
+    for(var i = 0; i < array.length; i++)
+        if(array[i] != undefined)
+            length++;
+
+    return length;
+}
 
 function GetBBox(element) {
     var bBox = element.getBBox();   //get element bBox
