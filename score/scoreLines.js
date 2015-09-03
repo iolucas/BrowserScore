@@ -134,7 +134,11 @@ var ScoreBeta = new function() {
             octave = properties.octave,
             accident = properties.accident ? properties.accident : "none",  //current accident of the note (none (default), flat, sharp, cancel)
             denominator = properties.denominator,   //get the denominator of the note
-            aria;   // aria element to place the note current visual object
+            aria,   // aria element to place the note current visual object
+            noteGroup;
+
+
+        //IMPLEMENT MODE FOR CHORD IT SELF DRAW SYMBOLS AND ITS ATTRIBUTES     
         
         //Draw object
         //for now just draw the note, later add accidents, dots, etc
@@ -272,6 +276,14 @@ var ScoreBeta = new function() {
             //negative offset due to notes grow up but coodinates grow down
 
             var yCoord = -offset * ((noteProp.note.charCodeAt(0) - 69) + (noteProp.octave - 5) * 7);
+
+            //add a compensation for svg graphics bugs
+            switch(noteProp.denominator) {
+                case 1:
+                    yCoord -= 2.7;
+                    break;
+            }
+
             note.MoveTo(null, yCoord);
 
             return "SUCCESS";
@@ -649,7 +661,7 @@ var ScoreBeta = new function() {
                 line = lines.GetItem(i);
 
                 pos = line.Find(measure);
-                
+
                 if(pos != -1)
                     return line.RemoveAt(pos);
             }
@@ -693,11 +705,14 @@ var ScoreBeta = new function() {
             //iterate thry all the lines and organize their positions
             var nextYCoord = MIN_TOP_MARGIN;
             for(var i = 0; i < lines.Count(); i++) {
-                lines.GetItem(i).MoveTo(0, nextYCoord);
+                var line = lines.GetItem(i),    //get the current line ref
+                    currBBox = GetBBox(lines.GetItem(i).Draw());   //get current object bbox
 
-                var currHeight = GetBBox(lines.GetItem(i).Draw()).height;   //get current object high
+                //move the score line to the new coord compensing negative coordinates within it and rounding final value up
+                line.MoveTo(0, Math.ceil(nextYCoord - currBBox.y));    
 
-                nextYCoord += Math.ceil(currHeight) + MIN_TOP_MARGIN;  //avoid decimals places for a smooth object draw
+                //get the next position summing the actual coordinate plus the current object height
+                nextYCoord += currBBox.height + MIN_TOP_MARGIN;
             }
         }
     }
