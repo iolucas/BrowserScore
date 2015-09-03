@@ -6,14 +6,14 @@ var betaChord4 = new ScoreBeta.Chord({denominator: 4});
 var betaChord5 = new ScoreBeta.Chord({denominator: 4});
 var betaChord6 = new ScoreBeta.Chord({denominator: 4});
 
-var betaChord7 = new ScoreBeta.Chord({denominator: 1});
+var betaChord7 = new ScoreBeta.Chord({denominator: 4});
 
 
 var note1 = new ScoreBeta.Note({ denominator: 2 , note: 'C' , octave: 4});
 
 console.log(betaChord1.AddNote(note1));
-//console.log(betaChord1.AddNote(new ScoreBeta.Note({ denominator: 2 , note: 'E' , octave: 4})));
-//console.log(betaChord1.AddNote(new ScoreBeta.Note({ denominator: 2 , note: 'G' , octave: 4})));
+console.log(betaChord1.AddNote(new ScoreBeta.Note({ denominator: 2 , note: 'E' , octave: 4})));
+console.log(betaChord1.AddNote(new ScoreBeta.Note({ denominator: 2 , note: 'G' , octave: 4})));
 
 console.log(betaChord2.AddNote(new ScoreBeta.Note({ denominator: 2 , note: 'A' , octave: 5})));
 console.log(betaChord2.AddNote(new ScoreBeta.Note({ denominator: 2 , note: 'C' , octave: 5})));
@@ -35,8 +35,8 @@ console.log(betaChord6.AddNote(new ScoreBeta.Note({ denominator: 4 , note: 'B' ,
 console.log(betaChord6.AddNote(new ScoreBeta.Note({ denominator: 4 , note: 'G' , octave: 4})));
 console.log(betaChord6.AddNote(new ScoreBeta.Note({ denominator: 4 , note: 'D' , octave: 4})));
 
-//console.log(betaChord5.AddNote(new ScoreBeta.Note({ denominator: 2 , note: 'G' , octave: 4})));
-//console.log(betaChord6.AddNote(new ScoreBeta.Note({ denominator: 2 , note: 'D' , octave: 4})));
+//console.log(betaChord7.AddNote(new ScoreBeta.Note({ denominator: 4 , note: 'G' , octave: 4})));
+
 
 var betaMeasure1 = new ScoreBeta.Measure();
 var betaMeasure2 = new ScoreBeta.Measure();
@@ -51,62 +51,37 @@ betaMeasure2.InsertChord(betaChord5);
 betaMeasure2.InsertChord(betaChord6);
 
 betaMeasure3.InsertChord(betaChord7);
-//betaMeasure3.InsertChord(betaChord6);
-
-var betaScore = new ScoreBeta.ScoreLine(1500, { GClef: true, TimeSig44: true});
-
-betaScore.InsertMeasure(betaMeasure1);
-betaScore.InsertMeasure(betaMeasure2);
-betaScore.InsertMeasure(betaMeasure3);
-
-document.documentElement.appendChild(betaScore.Draw());
-betaScore.MoveTo(150,50.5);
-
-//betaMeasure.UpdateGaps(200);
-betaScore.UpdateDimensions();
-
-betaChord1.RemoveNote(note1);
 
 
 var alphaScore = new ScoreBeta.Score();
 
+//var betaScore = new ScoreBeta.ScoreLine(1500, { GClef: true, TimeSig44: true});
+
+alphaScore.InsertMeasure(betaMeasure1);
+alphaScore.InsertMeasure(betaMeasure2);
+alphaScore.InsertMeasure(betaMeasure3);
+
+//betaScore.InsertMeasure(betaMeasure1);
+//betaScore.InsertMeasure(betaMeasure2);
+//betaScore.InsertMeasure(betaMeasure3);
+
 document.documentElement.appendChild(alphaScore.Draw());
-alphaScore.MoveTo(150, 250.5);
+//document.documentElement.appendChild(betaScore.Draw());
+alphaScore.MoveTo(150, 50.5);
+//betaScore.MoveTo(150,50.5);
 
-var betaChord9 = new ScoreBeta.Chord({denominator: 1});
-var betaMeasure9 = new ScoreBeta.Measure();
-betaMeasure9.InsertChord(betaChord9);
+//betaMeasure.UpdateGaps(200);
+//betaScore.UpdateDimensions();
+//alphaScore.Organize();
 
-console.log(alphaScore.InsertMeasure(betaMeasure9, 0));
+var betaMeasure4 = new ScoreBeta.Measure();
+betaMeasure4.InsertChord(new ScoreBeta.Chord({denominator: 1}));
+alphaScore.InsertMeasure(betaMeasure4);
+
+
 
 alphaScore.Organize();
 
-
-//------------------- OLD BETA -------------------
-
-var score1 = ScoreBuilder.CreateLine(1500, { GClef: true, TimeSig44: true});   //create a scoreline with 890 length
-//document.documentElement.appendChild(score1.Build());
-
-score1.MoveTo(10.5, 10.5);
-
-score1.InsertMeasure();
-score1.InsertMeasure();
-score1.InsertMeasure();
-
-score1.UpdateSpaces();
-
-var score2 = ScoreBuilder.CreateLine(1500, { GClef: true, TimeSig44: false});   //create a scoreline with 890 length
-//document.documentElement.appendChild(score2.Build());
-
-score2.MoveTo(10.5, score1.GetHeight() + 21.5);
-
-score2.InsertMeasure();
-score2.InsertMeasure();
-score2.InsertMeasure();
-score2.InsertMeasure();
-
-score2.UpdateSpaces();
-
-
+alphaScore.Organize();
 
 function log(msg) { console.log(msg); }

@@ -241,16 +241,15 @@ var ScoreBeta = new function() {
 
             var noteProp = note.GetProperties();    //get the note properties values
 
+            if(denominator != noteProp.denominator) //if the note denominator is different from chord denominator
+                return "NOTE_WITH_DIFFERENT_DENOMINATOR: " + denominator + " " + noteProp.denominator;
+
             for(var i = 0; i < notes.length; i++) { //iterate thru all the notes
                 if(notes[i]) {   //if the note is valid
                     var currProp = notes[i].GetProperties();
 
                     if((currProp.note == noteProp.note && currProp.octave == noteProp.octave))
                         return "SAME_NOTE_AND_OCTAVE";
-
-                    //do not need to verify if the denominator is set, cause to get here, the notes cant be empty
-                    if(denominator != noteProp.denominator)
-                        return "NOTE_WITH_DIFFERENT_DENOMINATOR: " + denominator + " " + noteProp.denominator;
                 }
             }
 
@@ -342,7 +341,7 @@ var ScoreBeta = new function() {
         //Function to update the spaces of the measure and organize chords
         this.UpdateGaps = function(spaceUnitLength) {
             //the start position for the first chord
-            var nextPos = 20;       //30 for the measure left margin 
+            var nextPos = 20;       //20 for the measure left margin 
 
             chords.ForEach(function(chord) {
                 chord.MoveTo(nextPos, 0);  //move the chord X pos to current nextposition keeping the Y value
@@ -450,15 +449,20 @@ var ScoreBeta = new function() {
             //set measures denominators unit size
             var unitSize = (lineLength - elemTotalLength) / denSum,
             //update measure positions
-                nextPos = headerBox.width + headerBox.x;
+                nextPos = headerBox.width + headerBox.x,
+
+                minFlag = false;    
 
             //update the denominator unit size for every measure
             measures.ForEach(function(measure) {    
                 measure.UpdateGaps(unitSize);   //update the gaps of the chords at the measure
                 measure.MoveTo(nextPos, 0); //move the measure to the next position available
                 nextPos += measure.GetWidth();  //generate the next position
-                //console.log(measure.GetWidth());
+                if(measure.GetWidth() < minLength)  //if the current measure width is less than the min width,
+                    minFlag = true; //set flag
             });
+
+            return minFlag;
         }
 
         function setScoreProperties(props) {
@@ -548,7 +552,7 @@ var ScoreBeta = new function() {
         group.appendChild(refRect); //append debug square  
 
         //Add the first line
-        createLine();
+        createLine({ GClef: true, TimeSig44: true});
 
 
         this.Draw = function() { return group; }
@@ -557,8 +561,8 @@ var ScoreBeta = new function() {
             SetTransform(group, { translate: [x, y] });
         }
 
-        function createLine() {
-            var newLine = new ScoreBeta.ScoreLine(1500, { GClef: true, TimeSig44: true});   //create the line
+        function createLine(prop) {
+            var newLine = new ScoreBeta.ScoreLine(1500, prop);   //create the line
             lines.Add(newLine); //add the line to the lines list
             group.appendChild(newLine.Draw()); //append new line to the group
             return newLine;
@@ -605,22 +609,96 @@ var ScoreBeta = new function() {
         } 
 
         this.RemoveAt = function(position) {
+            //get measures qty @ the score
+            var measuresQty = 0;
+            lines.ForEach(function(line) {
+                measuresQty += line.Count();
+            });
 
+            if(position >= measuresQty)
+                return "ERROR_REM_SCOREPOS_OUT_OF_BOUNDS";
+
+            //if the position is valid, find which line it is at
+
+            var posSum = 0, 
+                linesCount = lines.Count();
+
+            for(var i = 0; i < linesCount; i++) {
+                var line = lines.GetItem(i);    //get the current line object
+
+                var measuresCount = line.Count(); //get the number of measures at this line
+                    
+                //if the position is greater than the absolute position of the last member of this line
+                if(position >= posSum + measuresCount) {    
+                    posSum += measuresCount;    //increase the absolute pointer (posSum) with the line length
+                    continue;   //proceed next iteration
+                }
+
+                var removedMeasure = line.RemoveAt(position - posSum);    //remove the measure from the list
+                return removedMeasure;
+            }
         }
 
         this.RemoveMeasure = function(measure) {
+            //find the measure
+            var linesCount = lines.Count(),
+                pos, 
+                line;
 
+            for(var i = 0; i < linesCount; i++) {
+                line = lines.GetItem(i);
+
+                pos = line.Find(measure);
+                
+                if(pos != -1)
+                    return line.RemoveAt(pos);
+            }
+
+            return "ERROR_MEASURE_NOT_FOUND";
         }
 
         //function to organize the score elements sizes, creation of new lines, etc
         this.Organize = function() {
-            var minTopMargin = 100; //min value for a top margin for the scores
+            var MIN_TOP_MARGIN = 10; //min value for a top margin for the scores
 
             //iterate thru all lines and update their dimensions
-            lines.ForEach(function(line){
-                line.UpdateDimensions(200);
+            for(var i = 0; i < lines.Count(); i++) {
+                var line = lines.GetItem(i),
+                    lastMeasures = [];
 
-            });
+                //while the update dimensions min width flag keep set, 
+                while(line.UpdateDimensions(200)) {
+                    //remove the last measure
+                    lastMeasures.push(line.RemoveAt(line.Count() -1));
+                    //console.log(lastMeasures);
+                }
+
+                //if there is removed lines, add them to the next line,
+                if(lastMeasures.length > 0) {
+                    //if the current line is the last line, create a new one
+                    if(lines.Count() - 1 == i)
+                        createLine({ GClef: true });
+
+                    var nextLine = lines.GetItem(i + 1);  //get the next line ref
+
+                    //iterate thru the removed measures
+                    for(var j = 0; j < lastMeasures.length; j++) {
+                        nextLine.InsertMeasure(lastMeasures[j], 0); //add them to the first position at the new line
+                    }
+                }
+            }
+
+            //KEEP IMPROVING SYSTEM FOR NEW LINES CREATION AND DELETATION
+
+            //iterate thry all the lines and organize their positions
+            var nextYCoord = MIN_TOP_MARGIN;
+            for(var i = 0; i < lines.Count(); i++) {
+                lines.GetItem(i).MoveTo(0, nextYCoord);
+
+                var currHeight = GetBBox(lines.GetItem(i).Draw()).height;   //get current object high
+
+                nextYCoord += Math.ceil(currHeight) + MIN_TOP_MARGIN;  //avoid decimals places for a smooth object draw
+            }
         }
     }
 }
