@@ -6,6 +6,11 @@ var ScoreBeta = new function() {
     ///create notes, chords, measures and score class to manage all the score features
     ///lets begin with the note element placing at a chord
 
+    var MEASURE_LEFT_MARGIN = 20,  //constante value for the left margin of the measure
+        SCORE_LINE_LEFT_MARGIN = 10,
+        SCORE_LINE_HEADER_MARGIN = 10,
+        SCORE_TOP_MARGIN = 50; //min value for a top margin for the scores
+
     this.Note = function(properties) {
         var selfRef = this,
 
@@ -47,7 +52,9 @@ var ScoreBeta = new function() {
         var selfRef = this,
 
             notes = [], //Array to set the notes at this chord
-            offset = 7.5,   //offset of each note at the visual object
+            OFFSET = 7.5,   //const offset of each note at the visual object
+            LINE_UPPER_LIMIT = (-2) * OFFSET,   //min coordinate where a aux line is not necessary
+            LINE_LOWER_LIMIT = 8 * OFFSET,  //max coordinate where a aux line is not necessary
             denominator = properties.denominator,    //chord general denominator
             group = document.createElementNS(xmlns, "g"),
             rest = DrawRest(denominator),  //get the rest element draw
@@ -115,9 +122,31 @@ var ScoreBeta = new function() {
             //E letter code is 69
             //negative offset due to notes grow up but coodinates grow down
 
-            var yCoord = -offset * ((noteProp.note.charCodeAt(0) - 69) + (noteProp.octave - 5) * 7);
+            var yCoord = -OFFSET * ((noteProp.note.charCodeAt(0) - 69) + (noteProp.octave - 5) * 7);
 
             note.MoveTo(0, yCoord);
+
+            //if the coordinate overflow the score lines limits, got to draw auxiliar lines
+            if(yCoord < LINE_UPPER_LIMIT) {  //if the score over flow thru the upper part
+                var auxLineType = denominator == 1 ? "AUX_LINE1" : "AUX_LINE2"; //get the larger line for denominator 1
+
+                //iterate thru the coordinates to add aux lines where is needed
+                for(var lineYCoord = LINE_UPPER_LIMIT; lineYCoord > yCoord; lineYCoord -= OFFSET*2) {
+                    var auxLine = DrawMeasureElement(auxLineType);  //get the auxline obj
+                    group.appendChild(auxLine); //append it to the chord group
+                    SetTransform(auxLine, { translate: [-5, lineYCoord]});  //translate it to its right position
+                }
+
+            } else if(yCoord > LINE_LOWER_LIMIT) {  //if the score over flow thru the lower part
+                var auxLineType = denominator == 1 ? "AUX_LINE1" : "AUX_LINE2"; //get the larger line for denominator 1
+
+                //iterate thru the coordinates to add aux lines where is needed
+                for(var lineYCoord = LINE_LOWER_LIMIT + OFFSET * 2; lineYCoord <= yCoord + OFFSET; lineYCoord += OFFSET * 2) {
+                    var auxLine = DrawMeasureElement(auxLineType);  //get the auxline obj
+                    group.appendChild(auxLine); //append it to the chord group
+                    SetTransform(auxLine, { translate: [-5, lineYCoord]});  //translate it to its right position
+                }
+            }
 
             return "SUCCESS";
         }
@@ -190,7 +219,7 @@ var ScoreBeta = new function() {
         //Function to update the spaces of the measure and organize chords
         this.UpdateGaps = function(spaceUnitLength) {
             //the start position for the first chord
-            var nextPos = 20;       //20 for the measure left margin 
+            var nextPos = MEASURE_LEFT_MARGIN;  //the measure left margin 
             chords.ForEach(function(chord) {
                 chord.MoveTo(nextPos, 0);  //move the chord X pos to current nextposition keeping the Y value
                 nextPos += chord.GetWidth() + spaceUnitLength / chord.GetDenominator();    //get the gap value and add it to the next position
@@ -284,7 +313,7 @@ var ScoreBeta = new function() {
                 denSum = 0; //denominators sum
 
             measures.ForEach(function(measure) { 
-                elemTotalLength += 20;  //sum the measure left margin   
+                elemTotalLength += MEASURE_LEFT_MARGIN;  //sum the measure left margin   
                 measure.ForEach(function(chord){
                     //PROBABLY IN THE FUTURE WILL HAVE TO VERIFY THE DENOMINATOR FOR ELEM TOTAL LENGTH FOR THE FINAL FINISH OF THE NOTES
                     denSum += 1 / chord.GetDenominator();   //get denominator value
@@ -315,20 +344,21 @@ var ScoreBeta = new function() {
         }
 
         function setScoreProperties(props) {
-            var nextPos = 10;
+
+            var nextPos = SCORE_LINE_LEFT_MARGIN;
 
             if(props.GClef) {
                 var clef = DrawScoreLinesElement(ScoreElement.GClef);
                 header.appendChild(clef);
                 SetTransform(clef, { translate: [22 + nextPos, 13] });
-                nextPos += GetBBox(clef).width + 10;
+                nextPos += GetBBox(clef).width + SCORE_LINE_HEADER_MARGIN;
             }
             
             if(props.TimeSig44) {
                 var timeSig = DrawScoreLinesElement(ScoreElement.TimeSig44);
                 header.appendChild(timeSig);
                 SetTransform(timeSig, { translate: [nextPos, 0] });
-                nextPos += GetBBox(timeSig).width + 10;
+                nextPos += GetBBox(timeSig).width + SCORE_LINE_HEADER_MARGIN;
             }
 
             //DEBUG RECT MARK
@@ -509,7 +539,6 @@ var ScoreBeta = new function() {
 
         //function to organize the score elements sizes, creation of new lines, etc
         this.Organize = function() {
-            var MIN_TOP_MARGIN = 10; //min value for a top margin for the scores
 
             //iterate thru all lines and update their dimensions
             for(var i = 0; i < lines.Count(); i++) {
@@ -542,7 +571,7 @@ var ScoreBeta = new function() {
             //KEEP IMPROVING SYSTEM FOR NEW LINES CREATION AND DELETATION
 
             //iterate thry all the lines and organize their vertical positions
-            var nextYCoord = MIN_TOP_MARGIN;
+            var nextYCoord = SCORE_TOP_MARGIN;
             for(var i = 0; i < lines.Count(); i++) {
                 var line = lines.GetItem(i),    //get the current line ref
                     currBBox = GetBBox(lines.GetItem(i).Draw());   //get current object bbox
@@ -551,7 +580,7 @@ var ScoreBeta = new function() {
                 line.MoveTo(0, Math.ceil(nextYCoord - currBBox.y));    
 
                 //get the next position summing the actual coordinate plus the current object height
-                nextYCoord += currBBox.height + MIN_TOP_MARGIN;
+                nextYCoord += currBBox.height + SCORE_TOP_MARGIN;
             }
         }
     }

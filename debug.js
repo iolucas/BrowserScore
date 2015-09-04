@@ -10,7 +10,7 @@ var betaChord7 = new ScoreBeta.Chord({denominator: 1});
 
 var betaChord8 = new ScoreBeta.Chord({denominator: 1});
 
-console.log(betaChord1.AddNote(new ScoreBeta.Note({ denominator: 2 , note: 'A' , octave: 4})));
+console.log(betaChord1.AddNote(new ScoreBeta.Note({ denominator: 2 , note: 'C' , octave: 4})));
 console.log(betaChord1.AddNote(new ScoreBeta.Note({ denominator: 2 , note: 'E' , octave: 4})));
 console.log(betaChord1.AddNote(new ScoreBeta.Note({ denominator: 2 , note: 'G' , octave: 4})));
 
@@ -38,7 +38,7 @@ console.log(betaChord7.AddNote(new ScoreBeta.Note({ denominator: 1, note: 'C', o
 console.log(betaChord7.AddNote(new ScoreBeta.Note({ denominator: 1, note: 'G', octave: 4 })));
 console.log(betaChord7.AddNote(new ScoreBeta.Note({ denominator: 1, note: 'E', octave: 4 })));
 
-betaChord8.AddNote(new ScoreBeta.Note( { note: 'A', denominator: 1, octave: 5}));
+betaChord8.AddNote(new ScoreBeta.Note( { note: 'G', denominator: 1, octave: 4}));
 
 
 var betaMeasure1 = new ScoreBeta.Measure();
@@ -67,7 +67,6 @@ alphaScore.InsertMeasure(betaMeasure1);
 alphaScore.InsertMeasure(betaMeasure2);
 alphaScore.InsertMeasure(betaMeasure3);
 alphaScore.InsertMeasure(betaMeasure4);
-
 
 alphaScore.InsertMeasure(getMeasure());
 alphaScore.InsertMeasure(getMeasure());

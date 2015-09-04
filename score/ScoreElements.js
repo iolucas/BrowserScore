@@ -127,9 +127,24 @@ function DrawMeasureElement(element) {
             mElem.setAttribute("stroke", "#000");
             break;
 
+
+        case "AUX_LINE1":
+            mElem = document.createElementNS(xmlns, "line");  //create new line
+            mElem.setAttribute("x2", 35);
+            mElem.setAttribute("stroke", "#000");
+            //mElem.setAttribute("stroke-width", "3");
+            break;
+
+        case "AUX_LINE2":
+            mElem = document.createElementNS(xmlns, "line");  //create new line
+            mElem.setAttribute("x2", 28);
+            mElem.setAttribute("stroke", "#000");
+            //mElem.setAttribute("stroke-width", "3");
+            break;
+
         default:
             throw "INVALID_MEASURE_ELEMENT_TO_DRAW";
-    }        
+    }     
 
     return mElem;
 }
