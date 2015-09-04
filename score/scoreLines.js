@@ -1,127 +1,6 @@
 xmlns = "http://www.w3.org/2000/svg";
 xlink = "http://www.w3.org/1999/xlink";  
 
-var lineHeight = 300;   //score line height
-
-function createScoreLine(lineLength, headerProperties) {
-
-    //Create container to fit all objects
-    var lineContainer = $Aria.CreateContainer({ minWidth: lineLength, height: lineHeight });
-    //lineContainer.SetBorder(1, "blue");
-
-    //Create score lines
-    var lines = DrawScoreLines(lineLength); 
-    //Calculate coordinates to place the lines at the center of the group
-    SetTransform(lines, { translate: [0, (lineHeight - 60) / 2] });
-    //Append lines to the group
-    lineContainer.Build().appendChild(lines);   
-
-    //AddScore header
-    lineContainer.AddElement(createScoreLineHeader(headerProperties));
-
-    //Append function to be used for insert a measure @ the score line
-    lineContainer.InsertMeasure = function(position, measure) {
-        //if the position were not specified, assume it is the last one
-        if(!position) position = lineContainer.Count();
-        //if the measure is not specified, create new score measure, passing a function to be used to get the current number of symbols spaces on this line
-        if(!measure) measure = createScoreMeasure();
-        //insert it in the specified position
-        lineContainer.InsertAt(position, measure);
-
-        return measure; //return the just created measure
-    }
-
-    //Propertie to hold the next line handler
-    var nextLine = null;
-    lineContainer.SetNextLine = function(line) { nextLine = line; }
-    lineContainer.GetNextLine = function(line) { return nextLine; }
-
-    //append function to update the symbols spaces to adjust the score line correctly
-    lineContainer.UpdateSpaces = function() {
-
-        var symbolSpaceCount = 0,   //var to sum the number of symbols space
-            fixedSymbolsLength = 0; //var to sum the length of all fixed symbols at the score line
-
-        //Got to iterate thry all the line to get the fixed symbols total length and how many symbols space there is
-
-        lineContainer.ForEach(function(lineElement)  {   //iterate thru all elements at the line container           
-            if(lineElement.toString() == "ScoreMeasure") {  //check whether the element is a score measure
-                lineElement.ForEach(function(measureElement) {    //if it is, iterate thru all its element 
-                    if(measureElement.toString() == "SymbolSpace")   //if the element is a symbol space
-                        symbolSpaceCount += 1 / measureElement.denominator;   //gets its denominator and sum its fraction value
-                    else //if not
-                        fixedSymbolsLength += measureElement.GetWidth();   //get its width and sum
-                });
-            } else //if it is not a score measure
-                fixedSymbolsLength += lineElement.GetWidth();   //get its width and sum
-        });
-
-        //now we got the values, we can adjust their sizes
-        var unitSpaceSize = (lineLength - fixedSymbolsLength) / symbolSpaceCount;   //calc the unitSpace size
-
-        lineContainer.ForEach(function(lineElement)  {   //iterate thru all elements at the line container           
-            if(lineElement.toString() == "ScoreMeasure") {  //check whether the element is a score measure
-                lineElement.ForEach(function(measureElement) {    //if it is, iterate thru all its element 
-                    if(measureElement.toString() == "SymbolSpace")   //if the element is a symbol space
-                        measureElement.SetWidth(unitSpaceSize); //set this space symbol new width
-                });
-            } 
-        });
-    }
-
-    return lineContainer;   //return the create line container
-}
-
-//Function to create a ScoreMeasure object inherited from Aria rectangle
-function createScoreMeasure() {
-    var measure = $Aria.CreateContainer(({ minWidth: 10, height: lineHeight }));
-    //measure.SetBorder(1, "#000");
-    //measure.SetBackgroundColor("rgba(0,0,64,.5)");
-
-    measure.AddSymbol = function(scoreElement) {
-        //var symbol = $Aria.CreateCircle(50, "#333");
-        
-        //return symbol;
-    }
-
-    measure.InsertSymbolsCollection = function(position, collection) {
-        var coll = createSymbolCollection();
-        measure.AddElement(coll);
-        return coll;
-    }
-
-    measure.AddMeasureElement = function(scoreElement) {
-        var elem = $Aria.Parse(scoreElement)
-        measure.AddElement(elem);
-        return elem;
-    }
-
-    measure.AddNoteSpace = function(sizeDenominator) {
-        var s = createNoteSpace(sizeDenominator);
-        measure.AddElement(s);
-        return s;
-    }
-
-    //Overwrite the current toString method
-    measure.toString = function() { return "ScoreMeasure"; }
-
-
-    //----------For every new measure, set the standard elements
-    measure.AddMeasureElement(DrawMeasureElement(MeasureElement.Margin)); //margin
-
-    //whole pause (note for debug)
-    var noteCollection = createNotesCollection();
-    //noteCollection.AddNote(1, 20);
-    noteCollection.AddPause(2);//symbol space
-    measure.AddMeasureElement(noteCollection);
-
-    measure.AddNoteSpace(1);//symbol space  
-
-    measure.AddMeasureElement(DrawMeasureElement(MeasureElement.SimpleBar)); //line end bar
-
-    return measure;
-}
-
 //Pseudo Namespace to fit score objects classes
 var ScoreBeta = new function() {
     ///create notes, chords, measures and score class to manage all the score features
@@ -138,32 +17,12 @@ var ScoreBeta = new function() {
             noteGroup;
 
 
-        //IMPLEMENT MODE FOR CHORD IT SELF DRAW SYMBOLS AND ITS ATTRIBUTES     
-        
-        //Draw object
-        //for now just draw the note, later add accidents, dots, etc
-        switch(denominator) {
-            case 1:
-                aria= $Aria.Parse(DrawMeasureElement(MeasureElement.WholeNote));
-                break;
+        //----------------------------------------------------------------
+        //IMPLEMENT MODE FOR CHORD IT SELF DRAW SYMBOLS AND ITS ATTRIBUTES
+        //CAUSE SOME ADJUSTS ARE DEPENDENTS TO OTHER NOTES
+        //--------------------------------------------------------------     
 
-            case 2:
-                aria = $Aria.Parse(DrawMeasureElement(MeasureElement.HalfNote));
-                break;
-
-            //case 4:
-                //aria = $Aria.Parse(DrawMeasureElement(MeasureElement.QuarterNote));
-                //break;
-
-            //if the denominator is greater than 4, set the note drawing for greater than 4
-            default:
-                if(denominator >= 4) 
-                    aria = $Aria.Parse(DrawMeasureElement(MeasureElement.QuarterNote));
-                else
-                    aria = $Aria.CreateCircle(7.5, "blue");  //if a invalid denominator has been set, put a blue circle at it
-        }
-
-        aria.MoveTo(0, 0);  //put the element at the reset position
+        aria = DrawNote(denominator);        
 
         this.GetProperties = function() { 
             return { 
@@ -176,9 +35,11 @@ var ScoreBeta = new function() {
 
         //this.Transpose = function() {}  //function to be implemented for transpose the note determined number of steps
 
-        this.MoveTo = function() { return aria.MoveTo.apply(this, arguments); }
-        this.Draw = function() { return aria.Build(); }
-        this.getAria = function() { return aria; }
+        this.MoveTo = function(x, y) { 
+            SetTransform(aria, { translate: [x, y] }); 
+        }
+
+        this.Draw = function() { return aria; }
     }
 
     //group to fit moer than one note
@@ -189,7 +50,7 @@ var ScoreBeta = new function() {
             offset = 7.5,   //offset of each note at the visual object
             denominator = properties.denominator,    //chord general denominator
             group = document.createElementNS(xmlns, "g"),
-            pause,  //pause element
+            rest = DrawRest(denominator),  //get the rest element draw
 
         //for debug, not really necessary due to group grows, but coodinates origin remains the same
             refRect = document.createElementNS(xmlns, "rect");  //reference rectangle to be used as a fixed reference point
@@ -199,28 +60,7 @@ var ScoreBeta = new function() {
         refRect.setAttribute("width", 10);    
 
         group.appendChild(refRect);
-
-        setPause(); //set the chord pause
-
-        function setPause() {
-            if(!denominator) return;
-
-            switch(denominator) {
-                case 1:
-                    pause = DrawMeasureElement(MeasureElement.WholePause);
-                    SetTransform(pause, { translate: [0, 15]}); //put the element at the right position
-                    break;
-
-                case 2:
-                    pause = DrawMeasureElement(MeasureElement.WholePause);
-                    SetTransform(pause, { translate: [0, 23]}); //put the element at the right position
-                    break;
-
-                default:
-                    pause = $Aria.CreateRectangle(10, 10, "purple").Build();
-            }
-            group.appendChild(pause);
-        }
+        group.appendChild(rest);
 
         this.Draw = function() { return group; }
 
@@ -262,8 +102,8 @@ var ScoreBeta = new function() {
             if(!denominator) //if denominator not defined, set it
                 denominator = noteProp.denominator;
 
-            if(pause.parentElement)
-                pause.parentElement.removeChild(pause);
+            if(rest.parentElement)  //if the rest element is attached, 
+                rest.parentElement.removeChild(rest);  //detach it
 
             notes.push(note);   //add the new note object to the notes array
 
@@ -277,21 +117,12 @@ var ScoreBeta = new function() {
 
             var yCoord = -offset * ((noteProp.note.charCodeAt(0) - 69) + (noteProp.octave - 5) * 7);
 
-            //add a compensation for svg graphics bugs
-            switch(noteProp.denominator) {
-                case 1:
-                    yCoord -= 2.7;
-                    break;
-            }
-
-            note.MoveTo(null, yCoord);
+            note.MoveTo(0, yCoord);
 
             return "SUCCESS";
         }
 
         this.RemoveNote = function(note) {
-
-            //MUST PLACE A ROUTINE TO PUT THE PAUSE DRAW WHEN ALL THE NOTES HAVE BEEN REMOVED
 
             var noteIndex = notes.indexOf(note);
             if(noteIndex == -1)   //IF THE NOTE OBJECT WERE NOT FOUND
@@ -300,8 +131,9 @@ var ScoreBeta = new function() {
             delete notes[noteIndex];    //clear the note ref at the array
             group.removeChild(note.Draw()); //remove the note from the visual object
 
-            if(ArrayLength(notes) == 0)
-                group.appendChild(pause);
+            //if the length of the notes array is 0 and the rest element is not appended,
+            if(ArrayLength(notes) == 0 && !rest.parentElement)
+                group.appendChild(rest);    //show the rest element
 
             return note;    //return the removed not
         }
@@ -317,7 +149,8 @@ var ScoreBeta = new function() {
             
             //for debug, not really necessary due to group grows, but coodinates origin remains the same
             refRect = document.createElementNS(xmlns, "rect"),  //reference rectangle to be used as a fixed reference point
-            measureEndBar = $Aria.Parse(DrawMeasureElement(MeasureElement.SimpleBar)),
+            //measureEndBar = $Aria.Parse(DrawMeasureElement(MeasureElement.SimpleBar)),
+            measureEndBar = DrawMeasureElement("SIMPLE_BAR"),
             chords = new List();    //ordered list to fit all the chords @ this measure
 
         refRect.setAttribute("fill", "red");
@@ -326,7 +159,7 @@ var ScoreBeta = new function() {
 
         group.appendChild(refRect); //append debug square
 
-        group.appendChild(measureEndBar.Build()); //append measure end bar   
+        group.appendChild(measureEndBar); //append measure end bar   
 
         this.Draw = function() { return group; }
 
@@ -336,6 +169,10 @@ var ScoreBeta = new function() {
 
         this.GetWidth = function() {
             return GetBBox(group).width;    
+        }
+
+        this.Count = function() {
+            return chords.Count();
         }
 
         //function to get the fixed elements total length
@@ -354,12 +191,13 @@ var ScoreBeta = new function() {
         this.UpdateGaps = function(spaceUnitLength) {
             //the start position for the first chord
             var nextPos = 20;       //20 for the measure left margin 
-
             chords.ForEach(function(chord) {
                 chord.MoveTo(nextPos, 0);  //move the chord X pos to current nextposition keeping the Y value
                 nextPos += chord.GetWidth() + spaceUnitLength / chord.GetDenominator();    //get the gap value and add it to the next position
             });
-            measureEndBar.MoveTo(nextPos, 0);  //put the end bar at the end of the measure
+
+            //put the end bar at the end of the measure
+            SetTransform(measureEndBar, { translate: [nextPos, 0] });
         }
 
         this.InsertChord = function(chord, position) {
@@ -405,10 +243,6 @@ var ScoreBeta = new function() {
         var selfRef = this,
 
             group = document.createElementNS(xmlns, "g"),   //group to fit all the score members
-            //got to make a list of score lines
-
-            //GOT THE RESOLVE HOW MAKE SCORE LINES LIST, TO MAKE A SCORE LINE INDIVIDUAL OR A GENERAL WITH AN ARRAY TO CONTORLE THE GROUPS OF ELEMENTS
-
 
             //for debug, not really necessary due to group grows, but coodinates origin remains the same
             refRect = document.createElementNS(xmlns, "rect"),  //reference rectangle to be used as a fixed reference point
@@ -466,14 +300,17 @@ var ScoreBeta = new function() {
                 minFlag = false;    
 
             //update the denominator unit size for every measure
-            measures.ForEach(function(measure) {    
+            measures.ForEach(function(measure) {   
                 measure.UpdateGaps(unitSize);   //update the gaps of the chords at the measure
                 measure.MoveTo(nextPos, 0); //move the measure to the next position available
                 nextPos += measure.GetWidth();  //generate the next position
-                if(measure.GetWidth() < minLength)  //if the current measure width is less than the min width,
+            
+            //if the measure has notes ands current measure width is less than the min width,
+                if(measure.Count() > 0 && measure.GetWidth() < minLength)  
                     minFlag = true; //set flag
             });
 
+            
             return minFlag;
         }
 
@@ -515,6 +352,7 @@ var ScoreBeta = new function() {
             //if the measure object already exists at this measure, return a message
             if(measures.Find(measure) != -1) return "MEASURE_ALREADY_ON_LINE"; 
             //implement timing verification in the future
+
             //Object validation successful
 
             //if the type of the position variable is different from number or the position is bigger or the size of the list
@@ -679,7 +517,7 @@ var ScoreBeta = new function() {
                     lastMeasures = [];
 
                 //while the update dimensions min width flag keep set, 
-                while(line.UpdateDimensions(200)) {
+                while(line.UpdateDimensions(300)) {
                     //remove the last measure
                     lastMeasures.push(line.RemoveAt(line.Count() -1));
                     //console.log(lastMeasures);
@@ -698,11 +536,12 @@ var ScoreBeta = new function() {
                         nextLine.InsertMeasure(lastMeasures[j], 0); //add them to the first position at the new line
                     }
                 }
+                
             }
 
             //KEEP IMPROVING SYSTEM FOR NEW LINES CREATION AND DELETATION
 
-            //iterate thry all the lines and organize their positions
+            //iterate thry all the lines and organize their vertical positions
             var nextYCoord = MIN_TOP_MARGIN;
             for(var i = 0; i < lines.Count(); i++) {
                 var line = lines.GetItem(i),    //get the current line ref
@@ -750,204 +589,8 @@ function GetBBox(element) {
 
 
 
-//Function to accomodate symbols area and symbols space to fit at the measure at the score
-function createSymbolCollection() {
-    //container to fit the notes and the space 
-    var collectionContainer = $Aria.CreateContainer(({ minWidth: 10, height: lineHeight }));
-    collectionContainer.SetBackgroundColor("yellow");
-
-    
-    
-
-    collectionContainer.SetDenominator = function(denominator) {
-
-    }
-
-    collectionContainer.AddNote = function(position) {
-
-    }
-
-    collectionContainer.RemoveNote = function(position) {
-
-    }
-
-    collectionContainer.AddPause = function() {
-
-    }
-
-    return collectionContainer; //return the container
-}
-
-function createSymbolsArea() {
-    var group = document.createElementNS(xmlns, "g"),
-        symbolsArea = $Aria.Parse(group, function() {});    //Parse the group as a aria element with a empty function for setsize
-
-    symbolsArea._denominator = 1;   //set the standard value for the symbols area
-    symbolsArea._pause = true;  
-    symbolsArea._notesArray = [];
-
-    symbolArea.SetDenominator = function(denominator) {
-        symbolsArea._denominator = denominator; //set the new denominator
-    }
-
-    symbolsArea.AddNote = function(position) {
-        var startPosition = 0,  //var to store the start position where the specified position will be counted
-            offset = 7.5,   //var to store the offset which the position will be steped
-
-            note = createNote(symbolsArea._denominator);
-
-        group.appendChild(note.Build());
-        //Add this verification due to notes greater than quarter have a gap to be fixed
-        if(symbolsArea._denominator >= 4 && position > 0)
-            note.MoveTo(null, startPosition + position * offset - 1);
-        else
-            note.MoveTo(null, startPosition + position * offset);
-
-        symbolsArea._notesArray.push(note); //push the note to the noteList
-
-        return note;
-    }
-
-    symbolsArea.RemoveNote = function(position) {
-
-    }
-
-    symbolsArea.AddPause = function() {
-        var pause = createPause(symbolsArea._denominator);
-
-        group.appendChild(pause.Build());
-        
-        switch(symbolsArea._denominator) {
-            case 1:
-                pause.MoveTo(null, 135);
-                break;
-            case 2:
-                pause.MoveTo(null, 142.5);
-                break;
-        }       
-
-        return pause;
-    }
-
-    return symbolsArea; //return the symbol area element
-}
 
 
-//Place where notes, pause, attributes will be placed with the correpondent note space
-function createNotesCollection() {
-
-    var group = document.createElementNS(xmlns, "g");
-
-    var area = document.createElementNS(xmlns, "rect");  //create new line
-    area.setAttribute("width", 10);
-    area.setAttribute("height", lineHeight);
-    area.setAttribute("fill", "rgba(0,0,0,.2)");
-    group.appendChild(area);
-
-    area.addEventListener("click", function(){
-        alert("Oi!!!");
-        area.setAttribute("width", 100);
-        score1.UpdateSpaces();
-    });
-
-    group.AddNote = function(denominator, position) {
-        var startPosition = 0,  //var to store the start position where the specified position will be counted
-            offset = 7.5,   //var to store the offset which the position will be steped
-
-            note = createNote(denominator);
-
-        group.appendChild(note.Build());
-        //Add this verification due to notes greater than quarter have a gap to be fixed
-        if(denominator >= 4 && position > 0)
-            note.MoveTo(null, startPosition + position*offset - 1);
-        else
-            note.MoveTo(null, startPosition + position*offset);
-        return note;
-    }
-
-    group.AddPause = function(denominator) {
-        var pause = createPause(denominator);
-
-        group.appendChild(pause.Build());
-        
-        switch(denominator) {
-            case 1:
-                pause.MoveTo(null, 135);
-                break;
-            case 2:
-                pause.MoveTo(null, 142.5);
-                break;
-        }
-        
-
-        return pause;
-    }
-
-    return group;
-}
-
-//function to create a note, with its attributes, etc...
-function createNote(denominator) {
-    var note;
-
-    switch(denominator) {
-        case 1:
-            note = $Aria.Parse(DrawMeasureElement(MeasureElement.WholeNote));
-            break;
-
-        case 4:
-            note = $Aria.Parse(DrawMeasureElement(MeasureElement.QuarterNote));
-            break;
-
-        default: 
-            //note = $Aria.Parse(DrawMeasureElement(MeasureElement.WholeNote));
-    }
-
-    note.setNoteAttribute = function(){}
-    note.getNoteAttribute = function(){}
-
-    return note;
-}
-
-function createPause(denominator) {
-    var pause;
-
-    switch(denominator) {
-        case 1:
-            pause = $Aria.Parse(DrawMeasureElement(MeasureElement.WholePause));
-            break;
-
-        case 2:
-            pause = $Aria.Parse(DrawMeasureElement(MeasureElement.WholePause));
-            break;
-
-        default: 
-            //pause = $Aria.Parse(DrawMeasureElement(MeasureElement.WholePause));
-    }
-
-    return pause;
-}
-
-function createNoteSpace(denominator) {
-    if(!denominator || denominator < 1)
-        throw "Invalid denominator";
-
-    var space = $Aria.CreateRectangle(10, 50, "rgba(0,128,255,.3)"); //create the rectangle to fill the space
-    //space.Build().setAttribute("stroke", "#000");
-    //space.Build().setAttribute("stroke-width", 1);
-    //var to hold the denominator value of this space
-    space.denominator = denominator;
-
-    //method to set the width of the symbol space
-    space.SetWidth = function(symbolSpaceSize) { 
-        space.SetSize(symbolSpaceSize / space.denominator);
-    }
-
-    //overwrite the to string function
-    space.toString = function() { return "SymbolSpace"; }
-
-    return space;
-}
 
 function createScoreLineHeader(properties){
     var lineHeaderContainer = $Aria.CreateContainer({ height: lineHeight });    //header container  
