@@ -7,6 +7,7 @@ var ScoreBeta = new function() {
     ///lets begin with the note element placing at a chord
 
     var MEASURE_LEFT_MARGIN = 20,  //constante value for the left margin of the measure
+        SCORE_LINE_LENGTH = 1500,
         SCORE_LINE_LEFT_MARGIN = 10,
         SCORE_LINE_HEADER_MARGIN = 10,
         SCORE_TOP_MARGIN = 50; //min value for a top margin for the scores
@@ -25,6 +26,8 @@ var ScoreBeta = new function() {
         //----------------------------------------------------------------
         //IMPLEMENT MODE FOR CHORD IT SELF DRAW SYMBOLS AND ITS ATTRIBUTES
         //CAUSE SOME ADJUSTS ARE DEPENDENTS TO OTHER NOTES
+        //
+        //KEEP KEEPING NOTE SIMPLE AND CHORDS ORGANIZE FUNCTION TO PUT ELEMENTS IN THE ORDER
         //--------------------------------------------------------------     
 
         aria = DrawNote(denominator);        
@@ -84,6 +87,169 @@ var ScoreBeta = new function() {
             for(var i = 0; i < notes.length; i++) //iterate thru all the notes
                 if(notes[i])    //if the note is valid
                     action(notes[i]);   //apply the specified action to it
+        }
+
+        this.InsertNote = function(note) {
+            //if the note object already exists at this chord, return message
+            if(notes.indexOf(note) != -1) return "NOTE_ALREADY_ON_CHORD";
+
+            if(!note.note || typeof note.octave != "number") return "INVALID_NOTE";
+
+            //iterate thru all notes already placed to check if it is not equal to some of them
+            for(var i = 0; i < notes.length; i++) { //iterate thru all the notes
+                if(notes[i]) {   //if the note is valid
+                    if((note.note == notes[i].note && note.octave == notes[i].octave))
+                        return "SAME_NOTE_AND_OCTAVE";
+                }
+            }
+
+            note.noteDraw = DrawNote(denominator);  //get the note draw
+            group.appendChild(note.noteDraw);   //append the note drawing to the group
+
+            if(note.accident) {   //if the note has an accident, 
+                note.accidentDraw = DrawNoteAtt(note.accident); //get its draw
+                group.appendChild(note.accidentDraw);   //append the accident drawing to the group if some
+            }
+
+            notes.push(note);   //add the new note object to the notes array
+
+            organizeNotes();    //execute routine to organize the notes @ the chord
+
+            return "INSERT_SUCCESS";
+        }
+
+        this.DeleteNote = function(note) {
+            //if the same note object is placed
+            var noteIndex = notes.indexOf(note);
+
+            if(noteIndex == -1) { //if the note object is not found,
+                //iterate thru all notes already placed to check if it is equal to the passed
+                for(var i = 0; i < notes.length; i++) { //iterate thru all the notes
+                    if(notes[i]) {   //if the note is valid
+                        //check if it is the same
+                        if((note.note == notes[i].note && note.octave == notes[i].octave)) {
+                            noteIndex = i;    //set the note index
+                            note = notes[i];    //get the valid note reference for this note values
+                            break;  //exit the iteration
+                        }                            
+                    }
+                }
+            }
+
+            //if the note ind is still -1,
+            if(noteIndex == -1)
+                return "ERROR_REMOVE_NOTE_NOT_FOUND"; //if not return error
+          
+            if(note.noteDraw.parentElement) //if the noteDraw has any parent,
+                note.noteDraw.parentElement.removeChild(note.noteDraw); //remove from it
+
+            //if there is a note.accidentDraw and a parent to it
+            if(note.accidentDraw && note.accidentDraw.parentElement)
+                note.accidentDraw.parentElement.removeChild(note.accidentDraw);//remove from it
+
+            delete notes[noteIndex];    //clear the note ref at the array
+
+            organizeNotes();    //reorganize notes
+
+            return "REMOVE_SUCCESSFUL";
+        }
+
+        //Private function to be called when the chord is edited to rearrange its elements 
+        function organizeNotes() {
+            //If there is no more notes on this chord
+            if(ArrayLength(notes) == 0 && !rest.parentElement) {
+                group.appendChild(rest);    //show the rest element
+                return;
+            }
+
+            if(rest.parentElement)  //if the rest element is attached, 
+                rest.parentElement.removeChild(rest);  //detach it
+
+            //detect the lowest position value
+
+            var lowValue = 0;   //var to store the lowest value for y position
+
+            for(var i = 0; i < notes.length; i++) { //iterate thru all the notes
+                if(notes[i]) {   //if the note is valid
+
+                    //get the element y coordinate based on its values for note and octave
+                    var yCoord = -((notes[i].note.charCodeAt(0) - 69) + (notes[i].octave - 5) * 7); 
+                    notes[i].yCoord = yCoord;   //register the y coord at the note element
+
+                    //if the current y position is low than the actual lowest value
+                    if(yCoord < lowValue)   
+                        lowValue = yCoord;  //update the lowest value
+                }
+            }
+
+            //generate the position list
+            var positionList = []; //List to keep the elements for adjacent verification 
+
+            for(var j = 0; j < notes.length; j++) { //iterate thru all the notes
+                if(notes[j]) {   //if the note is valid
+                    
+                    //get the current pos offseted by the lowest value to ensure positive values
+                    var currPos = notes[j].yCoord - lowValue;   
+
+                    positionList[currPos] = notes[j];    //put the element at the index with same value than y coord
+                }
+            }
+
+            //flag to signalize when a right before note were valid to detect adjacent
+            var prevValidNote = false;    
+
+            for(var k = positionList.length + 1; k >= 0; k--) { //iterate thru all the position queue
+                if(!positionList[k]) {  //if position not valid
+                    prevValidNote = false;  //reset the prev valid note flag
+                    continue;
+                }
+
+                var currNote = positionList[k], //get the curr note reference
+                    finalYCoord = currNote.yCoord * OFFSET,
+                    finalXCoord = 0;
+
+                //if the immediatelly prev note were valid
+                if(prevValidNote) { 
+                    //xCoord must be offseted
+                    finalXCoord = denominator == 1 ? 21 : 17; //hard code note x offset for adjacent
+                    //reset the prev valid note cause it is not necessary for the next one to move since this one moved
+                    prevValidNote = false;  
+                } else //otherwise
+                    prevValidNote = true;   //just set the prev valid not to move the next one if it is valid
+
+
+                //move the current note to its right position
+                SetTransform(currNote.noteDraw, { translate: [finalXCoord, finalYCoord] });
+
+                //add aux lines if needed
+
+                //if the coordinate overflow the score lines limits, got to draw auxiliar lines
+                if(finalYCoord < LINE_UPPER_LIMIT) {  //if the score over flow thru the upper part
+                    var auxLineType = denominator == 1 ? "AUX_LINE1" : "AUX_LINE2"; //get the larger line for denominator 1
+
+                    //iterate thru the coordinates to add aux lines where is needed
+                    for(var lineYCoord = LINE_UPPER_LIMIT; lineYCoord > finalYCoord; lineYCoord -= OFFSET*2) {
+                        var auxLine = DrawMeasureElement(auxLineType);  //get the auxline obj
+                        group.appendChild(auxLine); //append it to the chord group
+                        SetTransform(auxLine, { translate: [-5 + finalXCoord, lineYCoord]});  //translate it to its right position
+                    }
+
+                } else if(finalYCoord > LINE_LOWER_LIMIT) {  //if the score over flow thru the lower part
+                    var auxLineType = denominator == 1 ? "AUX_LINE1" : "AUX_LINE2"; //get the larger line for denominator 1
+
+                    //iterate thru the coordinates to add aux lines where is needed
+                    for(var lineYCoord = LINE_LOWER_LIMIT + OFFSET * 2; lineYCoord <= finalYCoord + OFFSET; lineYCoord += OFFSET * 2) {
+                        var auxLine = DrawMeasureElement(auxLineType);  //get the auxline obj
+                        group.appendChild(auxLine); //append it to the chord group
+                        SetTransform(auxLine, { translate: [-5 + finalXCoord, lineYCoord]});  //translate it to its right position
+                    }
+                }
+            }
+        }
+
+        this.ChangeDenominator = function(denominator) {
+
+
         }
 
         this.AddNote = function(note) {
@@ -442,7 +608,7 @@ var ScoreBeta = new function() {
         }
 
         function createLine(prop) {
-            var newLine = new ScoreBeta.ScoreLine(1500, prop);   //create the line
+            var newLine = new ScoreBeta.ScoreLine(SCORE_LINE_LENGTH, prop);   //create the line
             lines.Add(newLine); //add the line to the lines list
             group.appendChild(newLine.Draw()); //append new line to the group
             return newLine;

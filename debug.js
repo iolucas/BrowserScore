@@ -1,3 +1,18 @@
+var alphaChord = new ScoreBeta.Chord({ denominator: 2 });
+
+//document.documentElement.appendChild(alphaChord.Draw());
+alphaChord.MoveTo(250,50);
+
+//console.log(alphaChord.InsertNote({ note: 'G', octave: 4}));
+//console.log(alphaChord.InsertNote({ note: 'A', octave: 5}));
+//console.log(alphaChord.InsertNote({ note: 'D', octave: 0}));
+//console.log(alphaChord.InsertNote({ note: 'C', octave: 0}));
+
+
+
+
+
+
 var betaChord1 = new ScoreBeta.Chord({denominator: 2});
 var betaChord2 = new ScoreBeta.Chord({denominator: 2});
 
@@ -10,17 +25,26 @@ var betaChord7 = new ScoreBeta.Chord({denominator: 1});
 
 var betaChord8 = new ScoreBeta.Chord({denominator: 1});
 
-console.log(betaChord1.AddNote(new ScoreBeta.Note({ denominator: 2 , note: 'C' , octave: 4})));
+console.log(betaChord1.InsertNote({ note: 'B', octave: 4}));
+
+
+var lucasNote = { note: 'G', octave: 4};
+console.log(betaChord1.InsertNote(lucasNote));
+
+
+console.log(betaChord1.InsertNote({ note: 'A', octave: 5}));
+console.log(betaChord1.DeleteNote({ note: 'A', octave: 5}));
+/*console.log(betaChord1.AddNote(new ScoreBeta.Note({ denominator: 2 , note: 'C' , octave: 4})));
 console.log(betaChord1.AddNote(new ScoreBeta.Note({ denominator: 2 , note: 'E' , octave: 4})));
-console.log(betaChord1.AddNote(new ScoreBeta.Note({ denominator: 2 , note: 'G' , octave: 4})));
+console.log(betaChord1.AddNote(new ScoreBeta.Note({ denominator: 2 , note: 'G' , octave: 4})));*/
 
-console.log(betaChord2.AddNote(new ScoreBeta.Note({ denominator: 2 , note: 'A' , octave: 5})));
+/*console.log(betaChord2.AddNote(new ScoreBeta.Note({ denominator: 2 , note: 'A' , octave: 5})));
 console.log(betaChord2.AddNote(new ScoreBeta.Note({ denominator: 2 , note: 'C' , octave: 5})));
-console.log(betaChord2.AddNote(new ScoreBeta.Note({ denominator: 2 , note: 'F' , octave: 5})));
+console.log(betaChord2.AddNote(new ScoreBeta.Note({ denominator: 2 , note: 'F' , octave: 5})));*/
 
-console.log(betaChord3.AddNote(new ScoreBeta.Note({ denominator: 4 , note: 'C' , octave: 4})));
+/*console.log(betaChord3.AddNote(new ScoreBeta.Note({ denominator: 4 , note: 'C' , octave: 4})));
 console.log(betaChord3.AddNote(new ScoreBeta.Note({ denominator: 4 , note: 'E' , octave: 4})));
-console.log(betaChord3.AddNote(new ScoreBeta.Note({ denominator: 4 , note: 'G' , octave: 4})));
+console.log(betaChord3.AddNote(new ScoreBeta.Note({ denominator: 4 , note: 'G' , octave: 4})));*/
 
 console.log(betaChord4.AddNote(new ScoreBeta.Note({ denominator: 4 , note: 'D' , octave: 4})));
 console.log(betaChord4.AddNote(new ScoreBeta.Note({ denominator: 4 , note: 'F' , octave: 4})));
@@ -72,7 +96,7 @@ alphaScore.InsertMeasure(getMeasure());
 alphaScore.InsertMeasure(getMeasure());
 alphaScore.InsertMeasure(getMeasure());
 alphaScore.InsertMeasure(getMeasure());
-alphaScore.InsertMeasure(getMeasure());
+
 
 alphaScore.Organize();
 
