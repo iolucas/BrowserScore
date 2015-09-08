@@ -58,17 +58,23 @@ var ScoreBeta = new function() {
             OFFSET = 7.5,   //const offset of each note at the visual object
             LINE_UPPER_LIMIT = (-2) * OFFSET,   //min coordinate where a aux line is not necessary
             LINE_LOWER_LIMIT = 8 * OFFSET,  //max coordinate where a aux line is not necessary
+            LINE_LOW_POS = -2, //* OFFSET,   //min coordinate where a aux line is not necessary
+            LINE_HIGH_POS = 8, // * OFFSET,  //max coordinate where a aux line is not necessary
             denominator = properties.denominator,    //chord general denominator
             group = document.createElementNS(xmlns, "g"),
             rest = DrawRest(denominator),  //get the rest element draw
+            auxLines = document.createElementNS(xmlns, "path"), //path to receive the aux lines to be draw
 
         //for debug, not really necessary due to group grows, but coodinates origin remains the same
             refRect = document.createElementNS(xmlns, "rect");  //reference rectangle to be used as a fixed reference point
 
         refRect.setAttribute("fill", "blue");
         refRect.setAttribute("height", 10); 
-        refRect.setAttribute("width", 10);    
+        refRect.setAttribute("width", 10);
 
+        auxLines.setAttribute("stroke", "#000");    //set the aux lines color 
+
+        group.appendChild(auxLines);
         group.appendChild(refRect);
         group.appendChild(rest);
 
@@ -167,7 +173,8 @@ var ScoreBeta = new function() {
 
             //detect the lowest position value
 
-            var lowValue = 0;   //var to store the lowest value for y position
+            var lowValue = 0,   //var to store the lowest value for y position
+                highValue = 0;   //var to store the higher position for aux lines
 
             for(var i = 0; i < notes.length; i++) { //iterate thru all the notes
                 if(notes[i]) {   //if the note is valid
@@ -179,6 +186,9 @@ var ScoreBeta = new function() {
                     //if the current y position is low than the actual lowest value
                     if(yCoord < lowValue)   
                         lowValue = yCoord;  //update the lowest value
+
+                    if(yCoord > highValue)   
+                        highValue = yCoord;  //update the lowest value
                 }
             }
 
@@ -220,31 +230,34 @@ var ScoreBeta = new function() {
 
                 //move the current note to its right position
                 SetTransform(currNote.noteDraw, { translate: [finalXCoord, finalYCoord] });
-
-                //add aux lines if needed
-
-                //if the coordinate overflow the score lines limits, got to draw auxiliar lines
-                if(finalYCoord < LINE_UPPER_LIMIT) {  //if the score over flow thru the upper part
-                    var auxLineType = denominator == 1 ? "AUX_LINE1" : "AUX_LINE2"; //get the larger line for denominator 1
-
-                    //iterate thru the coordinates to add aux lines where is needed
-                    for(var lineYCoord = LINE_UPPER_LIMIT; lineYCoord > finalYCoord; lineYCoord -= OFFSET*2) {
-                        var auxLine = DrawMeasureElement(auxLineType);  //get the auxline obj
-                        group.appendChild(auxLine); //append it to the chord group
-                        SetTransform(auxLine, { translate: [-5 + finalXCoord, lineYCoord]});  //translate it to its right position
-                    }
-
-                } else if(finalYCoord > LINE_LOWER_LIMIT) {  //if the score over flow thru the lower part
-                    var auxLineType = denominator == 1 ? "AUX_LINE1" : "AUX_LINE2"; //get the larger line for denominator 1
-
-                    //iterate thru the coordinates to add aux lines where is needed
-                    for(var lineYCoord = LINE_LOWER_LIMIT + OFFSET * 2; lineYCoord <= finalYCoord + OFFSET; lineYCoord += OFFSET * 2) {
-                        var auxLine = DrawMeasureElement(auxLineType);  //get the auxline obj
-                        group.appendChild(auxLine); //append it to the chord group
-                        SetTransform(auxLine, { translate: [-5 + finalXCoord, lineYCoord]});  //translate it to its right position
-                    }
-                }
             }
+
+            //set aux lines if needed
+            setAuxLines(-5, lowValue, highValue);
+        }
+
+        //function to set the aux lines for the chords
+        function setAuxLines(xCoord, lowValue, highValue) {
+                
+            var dAtt = "";  //path trail for the aux lines objects
+        
+            //if the coordinate overflow the score lines limits, got to draw auxiliar lines
+            if(lowValue < LINE_LOW_POS) {  //if the score over flow thru the upper part
+                var singleLine = denominator == 1 ? "l0,0,35,0" : "l0,0,28,0";
+
+                for(var lineYCoord = LINE_LOW_POS; lineYCoord > lowValue; lineYCoord -= 2)
+                    dAtt += "M" + xCoord + ", " + lineYCoord * OFFSET + singleLine;
+            } 
+
+            if(highValue > LINE_HIGH_POS) {  //if the score over flow thru the lower part
+
+                var singleLine = denominator == 1 ? "l0,0,35,0" : "l0,0,28,0";
+
+                for(var lineYCoord = LINE_HIGH_POS + 2; lineYCoord <= highValue + 1; lineYCoord += 2)      
+                    dAtt += "M" + xCoord + ", " + lineYCoord * OFFSET + singleLine;
+            }
+
+            auxLines.setAttribute("d", dAtt);   //set the path trail attribute (d) to the auxlines path
         }
 
         this.ChangeDenominator = function(denominator) {

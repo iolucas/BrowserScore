@@ -9,10 +9,6 @@ alphaChord.MoveTo(250,50);
 //console.log(alphaChord.InsertNote({ note: 'C', octave: 0}));
 
 
-
-
-
-
 var betaChord1 = new ScoreBeta.Chord({denominator: 2});
 var betaChord2 = new ScoreBeta.Chord({denominator: 2});
 
@@ -25,15 +21,13 @@ var betaChord7 = new ScoreBeta.Chord({denominator: 1});
 
 var betaChord8 = new ScoreBeta.Chord({denominator: 1});
 
-console.log(betaChord1.InsertNote({ note: 'B', octave: 4}));
-
-
-var lucasNote = { note: 'G', octave: 4};
-console.log(betaChord1.InsertNote(lucasNote));
-
-
-console.log(betaChord1.InsertNote({ note: 'A', octave: 5}));
-console.log(betaChord1.DeleteNote({ note: 'A', octave: 5}));
+console.log(betaChord1.InsertNote({ note: 'B', octave: 4 }));
+console.log(betaChord1.InsertNote({ note: 'C', octave: 4 }));
+console.log(betaChord1.InsertNote({ note: 'A', octave: 4 }));
+/*
+console.log(betaChord1.DeleteNote({ note: 'A', octave: 0}));
+console.log(betaChord1.DeleteNote({ note: 'G', octave: 0}));
+console.log(betaChord1.DeleteNote({ note: 'B', octave: 0}));*/
 /*console.log(betaChord1.AddNote(new ScoreBeta.Note({ denominator: 2 , note: 'C' , octave: 4})));
 console.log(betaChord1.AddNote(new ScoreBeta.Note({ denominator: 2 , note: 'E' , octave: 4})));
 console.log(betaChord1.AddNote(new ScoreBeta.Note({ denominator: 2 , note: 'G' , octave: 4})));*/

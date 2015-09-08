@@ -127,7 +127,6 @@ function DrawMeasureElement(element) {
             mElem.setAttribute("stroke", "#000");
             break;
 
-
         case "AUX_LINE1":
             mElem = document.createElementNS(xmlns, "line");  //create new line
             mElem.setAttribute("x2", 35);
