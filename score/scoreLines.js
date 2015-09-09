@@ -24,10 +24,19 @@ var ScoreBeta = new function() {
 
 
         //----------------------------------------------------------------
+        //MUST IDEALIZE HOW THE INTERFACE WILL LOOKS LIKE, HOW CONTENT WILL BE SPREAD
+        //WHERE MOBILE FIRST FITS ON IT, IF ONLY NEWS OR INTERATIVE CONTENT TOO
+
+
         //IMPLEMENT MODE FOR CHORD IT SELF DRAW SYMBOLS AND ITS ATTRIBUTES
         //CAUSE SOME ADJUSTS ARE DEPENDENTS TO OTHER NOTES
         //
-        //KEEP KEEPING NOTE SIMPLE AND CHORDS ORGANIZE FUNCTION TO PUT ELEMENTS IN THE ORDER
+        //CREATE METHOD TO HANDLE TO SCORES FOR G AND F CLEFS, 
+        //FINALIZE METHOD TO PUT THE ACCIDENT SYMBOLS CORRECTLY
+        //CREATE SYSTEM TO ADD THE NOTE FINISH, HASTES AND BANDEIROLAS
+        //ADD MEASURES TYPES OF BARS
+        //ADD TABLATURE SYSTEM
+        //ADD POINTS AND LINKS TO NOTES
         //--------------------------------------------------------------     
 
         aria = DrawNote(denominator);        
@@ -95,9 +104,9 @@ var ScoreBeta = new function() {
                     action(notes[i]);   //apply the specified action to it
         }
 
-        this.InsertNote = function(note) {
+        this.AddNote = function(note) {
             //if the note object already exists at this chord, return message
-            if(notes.indexOf(note) != -1) return "NOTE_ALREADY_ON_CHORD";
+            if(notes.indexOf(note) != -1) return "NOTE_ALREADY_ON_CHORD_SAME_OBJ";
 
             if(!note.note || typeof note.octave != "number") return "INVALID_NOTE";
 
@@ -105,7 +114,7 @@ var ScoreBeta = new function() {
             for(var i = 0; i < notes.length; i++) { //iterate thru all the notes
                 if(notes[i]) {   //if the note is valid
                     if((note.note == notes[i].note && note.octave == notes[i].octave))
-                        return "SAME_NOTE_AND_OCTAVE";
+                        return "NOTE_ALREADY_ON_CHORD_SAME_NOTE_AND_OCTAVE";
                 }
             }
 
@@ -165,6 +174,7 @@ var ScoreBeta = new function() {
             //If there is no more notes on this chord
             if(ArrayLength(notes) == 0 && !rest.parentElement) {
                 group.appendChild(rest);    //show the rest element
+                setAuxLines(0,0,0); //remove all the aux lines
                 return;
             }
 
@@ -265,87 +275,6 @@ var ScoreBeta = new function() {
 
         }
 
-        this.AddNote = function(note) {
-            
-            if(notes.indexOf(note) != -1) return "NOTE_ALREADY_ON_CHORD"; //if the note object already exists at this chord, return message
-
-            var noteProp = note.GetProperties();    //get the note properties values
-
-            if(denominator != noteProp.denominator) //if the note denominator is different from chord denominator
-                return "NOTE_WITH_DIFFERENT_DENOMINATOR: " + denominator + " " + noteProp.denominator;
-
-            for(var i = 0; i < notes.length; i++) { //iterate thru all the notes
-                if(notes[i]) {   //if the note is valid
-                    var currProp = notes[i].GetProperties();
-
-                    if((currProp.note == noteProp.note && currProp.octave == noteProp.octave))
-                        return "SAME_NOTE_AND_OCTAVE";
-                }
-            }
-
-            //Object validation successful
-
-            if(!denominator) //if denominator not defined, set it
-                denominator = noteProp.denominator;
-
-            if(rest.parentElement)  //if the rest element is attached, 
-                rest.parentElement.removeChild(rest);  //detach it
-
-            notes.push(note);   //add the new note object to the notes array
-
-            //append the object to the group
-            group.appendChild(note.Draw());
-
-            //put it in the desired place, 
-            //Note E octave 5 must be 0,0
-            //E letter code is 69
-            //negative offset due to notes grow up but coodinates grow down
-
-            var yCoord = -OFFSET * ((noteProp.note.charCodeAt(0) - 69) + (noteProp.octave - 5) * 7);
-
-            note.MoveTo(0, yCoord);
-
-            //if the coordinate overflow the score lines limits, got to draw auxiliar lines
-            if(yCoord < LINE_UPPER_LIMIT) {  //if the score over flow thru the upper part
-                var auxLineType = denominator == 1 ? "AUX_LINE1" : "AUX_LINE2"; //get the larger line for denominator 1
-
-                //iterate thru the coordinates to add aux lines where is needed
-                for(var lineYCoord = LINE_UPPER_LIMIT; lineYCoord > yCoord; lineYCoord -= OFFSET*2) {
-                    var auxLine = DrawMeasureElement(auxLineType);  //get the auxline obj
-                    group.appendChild(auxLine); //append it to the chord group
-                    SetTransform(auxLine, { translate: [-5, lineYCoord]});  //translate it to its right position
-                }
-
-            } else if(yCoord > LINE_LOWER_LIMIT) {  //if the score over flow thru the lower part
-                var auxLineType = denominator == 1 ? "AUX_LINE1" : "AUX_LINE2"; //get the larger line for denominator 1
-
-                //iterate thru the coordinates to add aux lines where is needed
-                for(var lineYCoord = LINE_LOWER_LIMIT + OFFSET * 2; lineYCoord <= yCoord + OFFSET; lineYCoord += OFFSET * 2) {
-                    var auxLine = DrawMeasureElement(auxLineType);  //get the auxline obj
-                    group.appendChild(auxLine); //append it to the chord group
-                    SetTransform(auxLine, { translate: [-5, lineYCoord]});  //translate it to its right position
-                }
-            }
-
-            return "SUCCESS";
-        }
-
-        this.RemoveNote = function(note) {
-
-            var noteIndex = notes.indexOf(note);
-            if(noteIndex == -1)   //IF THE NOTE OBJECT WERE NOT FOUND
-                return "ERROR_NOTE_OBJECT_NOT_VALID"; //if not return error
-
-            delete notes[noteIndex];    //clear the note ref at the array
-            group.removeChild(note.Draw()); //remove the note from the visual object
-
-            //if the length of the notes array is 0 and the rest element is not appended,
-            if(ArrayLength(notes) == 0 && !rest.parentElement)
-                group.appendChild(rest);    //show the rest element
-
-            return note;    //return the removed not
-        }
-
         this.GetDenominator = function() { return denominator; }
     }
 
@@ -418,7 +347,7 @@ var ScoreBeta = new function() {
             if(typeof position != "number" || position >= chords.Count())    
                 chords.Add(chord);    //insert with add method at the last position
             else //otherwise
-                childs.Insert(position, chord); //insert element reference at the position to the list
+                chords.Insert(position, chord); //insert element reference at the position to the list
 
             //append the object to the group
             group.appendChild(chord.Draw());
