@@ -6,26 +6,10 @@ var ScoreBeta = new function() {
     ///create notes, chords, measures and score class to manage all the score features
     ///lets begin with the note element placing at a chord
 
-    var MEASURE_LEFT_MARGIN = 20,  //constante value for the left margin of the measure
-        SCORE_LINE_LENGTH = 1500,
-        SCORE_LINE_LEFT_MARGIN = 10,
-        SCORE_LINE_HEADER_MARGIN = 10,
-        SCORE_TOP_MARGIN = 50; //min value for a top margin for the scores
-
-    this.Note = function(properties) {
-        var selfRef = this,
-
-            note = properties.note, //current note of the note object (A, B, C, D, E, F, G)
-            octave = properties.octave,
-            accident = properties.accident ? properties.accident : "none",  //current accident of the note (none (default), flat, sharp, cancel)
-            denominator = properties.denominator,   //get the denominator of the note
-            aria,   // aria element to place the note current visual object
-            noteGroup;
-
-
         //----------------------------------------------------------------
         //MUST IDEALIZE HOW THE INTERFACE WILL LOOKS LIKE, HOW CONTENT WILL BE SPREAD
         //WHERE MOBILE FIRST FITS ON IT, IF ONLY NEWS OR INTERATIVE CONTENT TOO
+        //CHORO IS COMING BACK, FOCUS ON IT
 
 
         //IMPLEMENT MODE FOR CHORD IT SELF DRAW SYMBOLS AND ITS ATTRIBUTES
@@ -37,34 +21,22 @@ var ScoreBeta = new function() {
         //ADD MEASURES TYPES OF BARS
         //ADD TABLATURE SYSTEM
         //ADD POINTS AND LINKS TO NOTES
-        //--------------------------------------------------------------     
+        //--------------------------------------------------------------  
 
-        aria = DrawNote(denominator);        
+    var MEASURE_LEFT_MARGIN = 20,  //constante value for the left margin of the measure
+        SCORE_LINE_LENGTH = 1500,
+        SCORE_LINE_LEFT_MARGIN = 10,
+        SCORE_LINE_HEADER_MARGIN = 10,
+        SCORE_TOP_MARGIN = 50, //min value for a top margin for the scores
+        OFFSET = 7.5;   //const offset of each note at the visual object
 
-        this.GetProperties = function() { 
-            return { 
-                note: note,
-                octave: octave,
-                accident: accident,
-                denominator: denominator
-            }
-        }
 
-        //this.Transpose = function() {}  //function to be implemented for transpose the note determined number of steps
 
-        this.MoveTo = function(x, y) { 
-            SetTransform(aria, { translate: [x, y] }); 
-        }
-
-        this.Draw = function() { return aria; }
-    }
-
-    //group to fit moer than one note
+    //group to place the notes
     this.Chord = function(properties) {
         var selfRef = this,
 
             notes = [], //Array to set the notes at this chord
-            OFFSET = 7.5,   //const offset of each note at the visual object
             LINE_UPPER_LIMIT = (-2) * OFFSET,   //min coordinate where a aux line is not necessary
             LINE_LOWER_LIMIT = 8 * OFFSET,  //max coordinate where a aux line is not necessary
             LINE_LOW_POS = -2, //* OFFSET,   //min coordinate where a aux line is not necessary
@@ -73,17 +45,22 @@ var ScoreBeta = new function() {
             group = document.createElementNS(xmlns, "g"),
             rest = DrawRest(denominator),  //get the rest element draw
             auxLines = document.createElementNS(xmlns, "path"), //path to receive the aux lines to be draw
+            stem =  document.createElementNS(xmlns, "line"),    //chord stem to be placed
 
         //for debug, not really necessary due to group grows, but coodinates origin remains the same
             refRect = document.createElementNS(xmlns, "rect");  //reference rectangle to be used as a fixed reference point
 
-        refRect.setAttribute("fill", "blue");
+        refRect.setAttribute("fill", "rgba(0,0,255,.5)");
         refRect.setAttribute("height", 10); 
         refRect.setAttribute("width", 10);
 
         auxLines.setAttribute("stroke", "#000");    //set the aux lines color 
 
+        stem.setAttribute("stroke", "#000");    //set the stem line color 
+        stem.setAttribute("stroke-width", "2");    //set the stem line color
+
         group.appendChild(auxLines);
+        group.appendChild(stem);
         group.appendChild(refRect);
         group.appendChild(rest);
 
@@ -93,12 +70,16 @@ var ScoreBeta = new function() {
             SetTransform(group, { translate: [x, y] });
         }
 
+        this.Count = function() {
+            return ArrayLength(notes);
+        }
+
         this.GetWidth = function() {
             return GetBBox(group).width;    
         }
 
         //Function to iterate thru all elements
-        this.ForEach = function(action) {
+        this.ForEachNote = function(action) {
             for(var i = 0; i < notes.length; i++) //iterate thru all the notes
                 if(notes[i])    //if the note is valid
                     action(notes[i]);   //apply the specified action to it
@@ -275,6 +256,23 @@ var ScoreBeta = new function() {
 
         }
 
+        this.SetStem = function(x, yStart, yEnd) {
+            if(x == undefined || x == null) {   //if no X is passed, hide the stem and return
+                stem.setAttribute("x1", 0);
+                stem.setAttribute("x2", 0);
+                stem.setAttribute("y1", 0);
+                stem.setAttribute("y2", 0);
+                return;
+            }
+
+            //otherwise, set its high and position
+
+            stem.setAttribute("x1", x);
+            stem.setAttribute("x2", x);
+            stem.setAttribute("y1", yStart);
+            stem.setAttribute("y2", yEnd);
+        }
+
         this.GetDenominator = function() { return denominator; }
     }
 
@@ -320,7 +318,7 @@ var ScoreBeta = new function() {
             });
         }
 
-        this.ForEach = function(action) {
+        this.ForEachChord = function(action) {
             chords.ForEach(action);//iterate thru all the chords and apply the specified action to it
         }
 
@@ -329,12 +327,64 @@ var ScoreBeta = new function() {
             //the start position for the first chord
             var nextPos = MEASURE_LEFT_MARGIN;  //the measure left margin 
             chords.ForEach(function(chord) {
-                chord.MoveTo(nextPos, 0);  //move the chord X pos to current nextposition keeping the Y value
+                //round the nextPos down for smooth look
+                chord.MoveTo(Math.floor(nextPos), 0);  //move the chord X pos to current nextposition keeping the Y value
                 nextPos += chord.GetWidth() + spaceUnitLength / chord.GetDenominator();    //get the gap value and add it to the next position
             });
 
             //put the end bar at the end of the measure
             SetTransform(measureEndBar, { translate: [nextPos, 0] });
+
+            //Draw the stem lines to the notes
+            chords.ForEach(function(chord) {
+                if(chord.GetDenominator() < 2 || chord.Count() <= 0)  //if the chord den is less than 2,
+                    return; //do not and proceed the next chord (return)
+
+                var xCoord,
+                    highCoord = null ,   //highest of the chord
+                    lowCoord = null,    //lowest of the chord
+                    downStem,   //flag to signelize whether we will draw a down stem or up stem
+                    startStemCoord, //value of the final coord of the stem line
+                    finalStemCoord; //value of the final coord of the stem line
+                
+                //get the lower and higher coordinates
+                chord.ForEachNote(function(note) {
+                    if(lowCoord == null || note.yCoord < lowCoord)
+                        lowCoord = note.yCoord;
+                    if(highCoord == null || note.yCoord > highCoord)
+                        highCoord = note.yCoord;
+                });
+
+                //set the down stem flag based on data gathered
+                if(lowCoord == highCoord)   //if there is only one note
+                    downStem = lowCoord <= 3;   //choose stem orientation based on note place
+                else //if not
+                    //choose from the far way note from the middle
+                    //(the only way for the if the high coord abs is bigger than low abs, it must be in the lower half)
+                    downStem = (Math.abs(lowCoord - 3) < Math.abs(highCoord - 3)) ? false : true;   
+
+                if(downStem) {  //if the stem starts from the lowest coord
+                    //get the final coord for stem based on the high coordinate
+                    finalStemCoord = (highCoord + 7) * OFFSET + 8;
+                    //Check if the end coord pass the middle line of the score, if not, extend it to the middle line
+                    finalStemCoord = (finalStemCoord < 4 * OFFSET) ? 4 * OFFSET : finalStemCoord;
+                    //start coord for stem, offseted the note drawing to fit
+                    startStemCoord = lowCoord * 7.5 + 10;  
+                    //x coord for down stem
+                    xCoord = 1; 
+                } else {
+                    //x coord for up stem
+                    xCoord = 17;
+                    //get the final coord for stem based on the high coordinate
+                    finalStemCoord = (lowCoord - 7) * OFFSET + 7;
+                    //Check if the end coord pass the middle line of the score, if not, extend it to the middle line
+                    finalStemCoord = (finalStemCoord > 4 * OFFSET) ? 4 * OFFSET : finalStemCoord;
+                    //start coord for stem, offseted the note drawing to fit
+                    startStemCoord = highCoord * 7.5 + 5;
+                }
+                //set the chord stem
+                chord.SetStem(xCoord, startStemCoord, finalStemCoord);
+            });
         }
 
         this.InsertChord = function(chord, position) {
@@ -422,7 +472,7 @@ var ScoreBeta = new function() {
 
             measures.ForEach(function(measure) { 
                 elemTotalLength += MEASURE_LEFT_MARGIN;  //sum the measure left margin   
-                measure.ForEach(function(chord){
+                measure.ForEachChord(function(chord){
                     //PROBABLY IN THE FUTURE WILL HAVE TO VERIFY THE DENOMINATOR FOR ELEM TOTAL LENGTH FOR THE FINAL FINISH OF THE NOTES
                     denSum += 1 / chord.GetDenominator();   //get denominator value
                     elemTotalLength += chord.GetWidth();    //get chord length
@@ -439,7 +489,7 @@ var ScoreBeta = new function() {
             //update the denominator unit size for every measure
             measures.ForEach(function(measure) {   
                 measure.UpdateGaps(unitSize);   //update the gaps of the chords at the measure
-                measure.MoveTo(nextPos, 0); //move the measure to the next position available
+                measure.MoveTo(Math.floor(nextPos), 0); //move the measure to the next position available (round down for smooth look)
                 nextPos += measure.GetWidth();  //generate the next position
             
             //if the measure has notes ands current measure width is less than the min width,
