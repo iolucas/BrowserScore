@@ -8,9 +8,10 @@ var betaChord6 = new ScoreBeta.Chord({denominator: 4});
 var betaChord7 = new ScoreBeta.Chord({denominator: 1});
 var betaChord8 = new ScoreBeta.Chord({denominator: 1});
 
-console.log(betaChord1.AddNote({ note: 'A', octave: 7, accident: "" }));
-console.log(betaChord1.AddNote({ note: 'G', octave: 6, accident: "" }));
+console.log(betaChord1.AddNote({ note: 'E', octave: 4, accident: "" }));
+console.log(betaChord1.AddNote({ note: 'F', octave: 5, accident: "" }));
 console.log(betaChord1.AddNote({ note: 'B', octave: 5 , accident: "" }));
+console.log(betaChord1.AddNote({ note: 'G', octave: 3 , accident: "" }));
 
 console.log(betaChord2.AddNote({ note: 'A' , octave: 5}));
 console.log(betaChord2.AddNote({ note: 'C' , octave: 5}));
