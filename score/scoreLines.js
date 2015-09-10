@@ -27,11 +27,8 @@ var ScoreBeta = new function() {
         SCORE_LINE_LENGTH = 1500,
         SCORE_LINE_LEFT_MARGIN = 10,
         SCORE_LINE_HEADER_MARGIN = 10,
-        SCORE_TOP_MARGIN = 50, //min value for a top margin for the scores
-        LINE_OFFSET = 7.5;   //const offset of each note at the visual object
-
-
-
+        SCORE_TOP_MARGIN = 50; //min value for a top margin for the scores
+  
     //group to place the notes
     this.Chord = function(properties) {
         var selfRef = this,
@@ -53,9 +50,12 @@ var ScoreBeta = new function() {
             POS0_OCTAVE,  //variable to store the position 0 (first space from up) octave for correct positioning
 
             LINE_LOW_POS = -2, //* OFFSET,   //min coordinate where a aux line is not necessary
-            LINE_HIGH_POS = 8; // * OFFSET,  //max coordinate where a aux line is not necessary
+            LINE_HIGH_POS = 8, // * OFFSET,  //max coordinate where a aux line is not necessary
 
-            //downStemFlag;   //flag to whether the stem is down or not. If false, this chord has a up stem
+            LINE_OFFSET = 7.5,   //const offset of each note at the visual object
+
+            //variable to signalize whether a note has been added or removed from this chord and it was not yet organized
+            chordModified = false;   
 
         refRect.setAttribute("fill", "rgba(0,0,255,.5)");
         refRect.setAttribute("height", 10); 
@@ -152,6 +152,8 @@ var ScoreBeta = new function() {
             note.noteDraw = DrawNote(denominator);  //get the note draw
             group.appendChild(note.noteDraw);   //append the note drawing to the group
 
+            //note.noteDraw.setAttribute("opacity", ".5");
+
             if(note.accident) {   //if the note has an accident, 
                 note.accidentDraw = DrawNoteAtt(note.accident); //get its draw
                 group.appendChild(note.accidentDraw);   //append the accident drawing to the group if some
@@ -159,7 +161,8 @@ var ScoreBeta = new function() {
 
             notes.push(note);   //add the new note object to the notes array
 
-            organize();    //execute routine to organize the notes @ the chord
+            chordModified = true;
+            //organize();    //execute routine to organize the notes @ the chord
 
             return "INSERT_SUCCESS";
         }
@@ -195,22 +198,22 @@ var ScoreBeta = new function() {
 
             delete notes[noteIndex];    //clear the note ref at the array
 
-            organize();    //reorganize notes
+            chordModified = true;
+            //organize();    //reorganize notes
 
             return "REMOVE_SUCCESSFUL";
         }        
 
+        //Function to be called when you want to update the chord object positions 
+        this.Organize = function() {
+            if(!chordModified)  //if the chord hasn't be modified
+                return; //do nothing and return
 
-        //--------------------------------------------------------------------------------
-        //----------------------- PRIVATE METHODS ----------------------------------------
-        //--------------------------------------------------------------------------------
-
-        //Private function to be called when the chord is edited to rearrange its elements 
-        function organize() {
             //If there is no more notes on this chord
             if(ArrayLength(notes) == 0) {
                 group.appendChild(rest);    //show the rest element
-                setAuxLines(0,0,0); //remove all the aux lines
+                setStemLine();  //clear chord stem line
+                setAuxLines(); //remove all the aux lines
                 return; //do nothing else and return
             }
 
@@ -247,118 +250,20 @@ var ScoreBeta = new function() {
             downStemFlag = farValue <= 3;
             
             //put all the notes on their right positions
-            setNotesPositions(downStemFlag, lowValue);  
+            var adjCoord = setNotesPositions(downStemFlag, lowValue); 
 
             //Must set the chord stem with the extreme coordinates
             setStemLine(downStemFlag, lowValue, highValue);
 
             //set aux lines if needed
-            setAuxLines(-5, lowValue, highValue);   
-   
-/*
-            //ADJACENT NOTES DETECTION
-            
-            //Must put the notes in an ordered array by its coordinates to detect adjacent notes
-            var positionList = []; //List to keep the elements for adjacent verification 
+            setAuxLines(downStemFlag, lowValue, highValue, adjCoord[0], adjCoord[1]); 
 
-            for(var j = 0; j < notes.length; j++) { //iterate thru all the notes
-                if(notes[j]) {   //if the note is valid  
-                    //get the current pos offseted by the lowest value to ensure positive values
-                    var currPos = notes[j].yCoord - lowValue;   
-                    positionList[currPos] = notes[j];    //put the element at the index with same value than y coord offseted
-                }
-            }
-
-            //Since stem up and down influence in adjacent notes offset, iteration values must be set thru the flag value
-            //flag to signalize when a right before note were valid to detect adjacent
-            var prevValidNote = false,
-                posListInitValue = downStemFlag ? 0 : positionList.length + 1, //value to init the iteration of the position list
-                posListFinalValue = downStemFlag ? positionList.length : -1,    //value to stop and exit the iteration of the position list
-                posListIncValue = downStemFlag ? 1 : -1;    //value to increase the list on each iteration
-
-
-            for(var listIndex = posListInitValue ;; listIndex += posListIncValue) {
-                if(listIndex == posListFinalValue)  //if the l value has reched the final value
-                    break;  //stop and exit the iteration
-
-                if(!positionList[listIndex]) {  //if position not valid
-                    prevValidNote = false;  //reset the prev valid note flag
-                    continue;   //proceed the next iteration
-                }
-
-                var currNote = positionList[listIndex], //get the curr note reference
-                    finalYCoord = currNote.yCoord * LINE_OFFSET,    //set the note Y position based on its coord and general offset factor
-                    finalXCoord = 0;    //set standard X pos as 0
-
-                //if the immediatelly prev note were valid, means adjacent note
-                if(prevValidNote) { 
-                    //xCoord must be offseted
-                    //hard code note x offset for adjacent
-                    finalXCoord = denominator == 1 ? 21 : 17;
-                    //We must do this little hack since stem order chooses whether offset will be right or left
-                    finalXCoord *= -posListIncValue;    //and the iteration inc has the inverted logic for this
-                    //reset the prev valid note cause it is not necessary for the next one to move since this one moved
-                    prevValidNote = false;  
-                } else //otherwise
-                    prevValidNote = true;   //just set the prev valid not to move the next one if it is valid
-
-                //move the current note to its right position
-                SetTransform(currNote.noteDraw, { translate: [finalXCoord, finalYCoord] });
-            }*/ 
-
-
-/*
-            if(downStemFlag) {  //if downstem, notes must be left
-                for(var k = 0; k < positionList.length; k++) { //iterate thru all the position queue
-                    if(!positionList[k]) {  //if position not valid
-                        prevValidNote = false;  //reset the prev valid note flag
-                        continue;
-                    }
-
-                    var currNote = positionList[k], //get the curr note reference
-                        finalYCoord = currNote.yCoord * LINE_OFFSET,
-                        finalXCoord = 0;
-
-                    //if the immediatelly prev note were valid
-                    if(prevValidNote) { 
-                        //xCoord must be offseted
-                        finalXCoord = denominator == 1 ? -21 : -17; //hard code note x offset for adjacent (positive for den 1 since no stem)
-                        //reset the prev valid note cause it is not necessary for the next one to move since this one moved
-                        prevValidNote = false;  
-                    } else //otherwise
-                        prevValidNote = true;   //just set the prev valid not to move the next one if it is valid
-
-                    //move the current note to its right position
-                    SetTransform(currNote.noteDraw, { translate: [finalXCoord, finalYCoord] });
-                }
-
-            } else {    //if not, notes must be right
-
-                for(var k = positionList.length + 1; k >= 0; k--) { //iterate thru all the position queue
-                    if(!positionList[k]) {  //if position not valid
-                        prevValidNote = false;  //reset the prev valid note flag
-                        continue;
-                    }
-
-                    var currNote = positionList[k], //get the curr note reference
-                        finalYCoord = currNote.yCoord * LINE_OFFSET,
-                        finalXCoord = 0;
-
-                    //if the immediatelly prev note were valid
-                    if(prevValidNote) { 
-                        //xCoord must be offseted
-                        finalXCoord = denominator == 1 ? 21 : 17; //hard code note x offset for adjacent
-                        //reset the prev valid note cause it is not necessary for the next one to move since this one moved
-                        prevValidNote = false;  
-                    } else //otherwise
-                        prevValidNote = true;   //just set the prev valid not to move the next one if it is valid
-
-
-                    //move the current note to its right position
-                    SetTransform(currNote.noteDraw, { translate: [finalXCoord, finalYCoord] });
-                }
-            }*/
+            chordModified = false;  //clear the chord modified flag  
         }
+
+        //--------------------------------------------------------------------------------
+        //----------------------- PRIVATE METHODS ----------------------------------------
+        //--------------------------------------------------------------------------------
 
         //Function to place the notes positions, detecting adjacent notes colision
         function setNotesPositions(downStemFlag, lowValue) {
@@ -380,7 +285,10 @@ var ScoreBeta = new function() {
             var prevValidNote = false,
                 posListInitValue = downStemFlag ? 0 : positionList.length + 1, //value to init the iteration of the position list
                 posListFinalValue = downStemFlag ? positionList.length : -1,    //value to stop and exit the iteration of the position list
-                posListIncValue = downStemFlag ? 1 : -1;    //value to increase the list on each iteration
+                posListIncValue = downStemFlag ? 1 : -1,    //value to increase the list on each iteration
+
+                lowAdjValue = null, //var to store the lowest adjacent note coordinate value
+                highAdjValue = null;    //var to store the highest adjacent note coordinate value
 
 
             for(var listIndex = posListInitValue ;; listIndex += posListIncValue) {
@@ -397,7 +305,14 @@ var ScoreBeta = new function() {
                     finalXCoord = 0;    //set standard X pos as 0
 
                 //if the immediatelly prev note were valid, means adjacent note
-                if(prevValidNote) { 
+                if(prevValidNote) {
+
+                    if(!lowAdjValue || currNote.yCoord < lowAdjValue)
+                        lowAdjValue = currNote.yCoord;
+
+                    if(!highAdjValue || currNote.yCoord > highAdjValue)
+                        highAdjValue = currNote.yCoord;
+
                     //xCoord must be offseted
                     //hard code note x offset for adjacent
                     finalXCoord = denominator == 1 ? 21 : 17;
@@ -410,12 +325,13 @@ var ScoreBeta = new function() {
 
                 //move the current note to its right position
                 SetTransform(currNote.noteDraw, { translate: [finalXCoord, finalYCoord] });
-            } 
+            }
 
+            return [lowAdjValue, highAdjValue]; 
         }
 
         function setStemLine(downStemFlag, lowValue, highValue) {
-            if(denominator < 2 || ArrayLength(notes) == 0) {  //if the chord den is less than 2,
+            if(downStemFlag == undefined || denominator < 2 || ArrayLength(notes) == 0) {  //if the chord den is less than 2,
                 setStemLineObj();   //void call to clear any stem line
                 return; //do not and proceed the next chord (return)
             }
@@ -465,24 +381,87 @@ var ScoreBeta = new function() {
         }
 
         //function to set the aux lines for the chords
-        function setAuxLines(xCoord, lowValue, highValue) {
-                
-            var dAtt = "";  //path trail for the aux lines objects
-        
-            //if the coordinate overflow the score lines limits, got to draw auxiliar lines
-            if(lowValue < LINE_LOW_POS) {  //if the score over flow thru the upper part
-                var singleLine = denominator == 1 ? "l0,0,35,0" : "l0,0,28,0";
+        function setAuxLines(downStemFlag, lowValue, highValue, lowAdjValue, highAdjValue) {
+            if(downStemFlag == undefined) { //if the first attribute is not passed
+                auxLines.removeAttribute("d");   //clear all aux lines
+                return; //do nothing else and return
+            }
 
-                for(var lineYCoord = LINE_LOW_POS; lineYCoord > lowValue; lineYCoord -= 2)
-                    dAtt += "M" + xCoord + ", " + lineYCoord * LINE_OFFSET + singleLine;
-            } 
+            var dAtt = "",  //path trail for the aux lines objects
+                lineStartCoord,
+                lineEndCoord;
 
-            if(highValue > LINE_HIGH_POS) {  //if the score over flow thru the lower part
+            if(!lowAdjValue)    //if the low adj value is not valid
+                lowAdjValue = 0;    //put it as 0
 
-                var singleLine = denominator == 1 ? "l0,0,35,0" : "l0,0,28,0";
+            if(!highAdjValue)   //if the high adj value is not valid
+                highAdjValue = 0;   //put it as 0
 
-                for(var lineYCoord = LINE_HIGH_POS + 2; lineYCoord <= highValue + 1; lineYCoord += 2)      
-                    dAtt += "M" + xCoord + ", " + lineYCoord * LINE_OFFSET + singleLine;
+            if(downStemFlag) {  //if adj notes are on the left
+
+                //if the coordinate overflow the score lines limits, got to draw auxiliar lines
+
+                if(lowValue < LINE_LOW_POS) {  //if the score over flow thru the upper part                                     
+
+                    for(var lineYCoord = LINE_LOW_POS; lineYCoord > lowValue; lineYCoord -= 2) {
+                        if(lowAdjValue < lineYCoord) {
+                            lineStartCoord = denominator == 1 ? -25 : -21;
+                            lineEndCoord = denominator == 1 ? 53 : 43;
+                        } else {
+                            lineStartCoord = denominator == 1 ? -4 : -4;
+                            lineEndCoord = denominator == 1 ? 32 : 26;
+                        }
+
+                        dAtt += "M" + lineStartCoord + ", " + lineYCoord * LINE_OFFSET + "l0,0," + lineEndCoord + ",0";
+                    }
+                } 
+
+                if(highValue > LINE_HIGH_POS) {  //if the score over flow thru the lower part
+
+                    for(var lineYCoord = LINE_HIGH_POS + 2; lineYCoord <= highValue + 1; lineYCoord += 2) {
+                        if(highAdjValue + 1 >= lineYCoord) {
+                            lineStartCoord = denominator == 1 ? -25 : -21;
+                            lineEndCoord = denominator == 1 ? 53 : 43;
+                        } else {
+                            lineStartCoord = denominator == 1 ? -4 : -4;
+                            lineEndCoord = denominator == 1 ? 32 : 26;
+                        }
+
+                        dAtt += "M" + lineStartCoord + ", " + lineYCoord * LINE_OFFSET + "l0,0," + lineEndCoord + ",0";
+                    }
+                }            
+
+            } else {    //if they are on the right
+
+                //if the coordinate overflow the score lines limits, got to draw auxiliar lines
+
+                if(lowValue < LINE_LOW_POS) {  //if the score over flow thru the upper part                                     
+
+                    for(var lineYCoord = LINE_LOW_POS; lineYCoord > lowValue; lineYCoord -= 2) {
+                        if(lowAdjValue < lineYCoord) {
+                            lineStartCoord = denominator == 1 ? -25 : -21;
+                            lineEndCoord = denominator == 1 ? 53 : 43;
+                        } else {
+                            lineStartCoord = denominator == 1 ? -4 : -4;
+                            lineEndCoord = denominator == 1 ? 32 : 26;
+                        }
+
+                        dAtt += "M" + lineStartCoord + ", " + lineYCoord * LINE_OFFSET + "l0,0," + lineEndCoord + ",0";
+                    }
+                } 
+
+                if(highValue > LINE_HIGH_POS) {  //if the score over flow thru the lower part
+                    lineStartCoord = -4;    //on this cause, this coordinate is aways fixed                        
+                    for(var lineYCoord = LINE_HIGH_POS + 2; lineYCoord <= highValue + 1; lineYCoord += 2) {
+                        
+                        if(highAdjValue + 1 >= lineYCoord)
+                            lineEndCoord = denominator == 1 ? 54 : 43;
+                        else
+                            lineEndCoord = denominator == 1 ? 33 : 26;
+
+                        dAtt += "M" + lineStartCoord + ", " + lineYCoord * LINE_OFFSET + "l0,0," + lineEndCoord + ",0";
+                    }
+                }  
             }
 
             auxLines.setAttribute("d", dAtt);   //set the path trail attribute (d) to the auxlines path
@@ -541,6 +520,10 @@ var ScoreBeta = new function() {
             //the start position for the first chord
             var nextPos = MEASURE_LEFT_MARGIN;  //the measure left margin 
             chords.ForEach(function(chord) {
+
+                //Execute function to organize chord members
+                chord.Organize();   
+
                 //round the nextPos down for smooth look
                 chord.MoveTo(Math.floor(nextPos), 0);  //move the chord X pos to current nextposition keeping the Y value
                 nextPos += chord.GetWidth() + spaceUnitLength / chord.GetDenominator();    //get the gap value and add it to the next position
@@ -548,59 +531,6 @@ var ScoreBeta = new function() {
 
             //put the end bar at the end of the measure
             SetTransform(measureEndBar, { translate: [nextPos, 0] });
-
-            return;
-
-            //Draw the stem lines to the notes
-            chords.ForEach(function(chord) {
-                if(chord.GetDenominator() < 2 || chord.CountNotes() <= 0)  //if the chord den is less than 2,
-                    return; //do not and proceed the next chord (return)
-
-                var xCoord,
-                    highCoord = null ,   //highest of the chord
-                    lowCoord = null,    //lowest of the chord
-                    downStem,   //flag to signelize whether we will draw a down stem or up stem
-                    startStemCoord, //value of the final coord of the stem line
-                    finalStemCoord; //value of the final coord of the stem line
-                
-                //get the lower and higher coordinates
-                chord.ForEachNote(function(note) {
-                    if(lowCoord == null || note.yCoord < lowCoord)
-                        lowCoord = note.yCoord;
-                    if(highCoord == null || note.yCoord > highCoord)
-                        highCoord = note.yCoord;
-                });
-
-                //set the down stem flag based on data gathered
-                if(lowCoord == highCoord)   //if there is only one note
-                    downStem = lowCoord <= 3;   //choose stem orientation based on note place
-                else //if not
-                    //choose from the far way note from the middle
-                    //(the only way for the if the high coord abs is bigger than low abs, it must be in the lower half)
-                    downStem = (Math.abs(lowCoord - 3) < Math.abs(highCoord - 3)) ? false : true;   
-
-                if(downStem) {  //if the stem starts from the lowest coord
-                    //get the final coord for stem based on the high coordinate
-                    finalStemCoord = (highCoord + 7) * LINE_OFFSET + 8;
-                    //Check if the end coord pass the middle line of the score, if not, extend it to the middle line
-                    finalStemCoord = (finalStemCoord < 4 * LINE_OFFSET) ? 4 * LINE_OFFSET : finalStemCoord;
-                    //start coord for stem, offseted the note drawing to fit
-                    startStemCoord = lowCoord * 7.5 + 10;  
-                    //x coord for down stem
-                    xCoord = 1; 
-                } else {
-                    //x coord for up stem
-                    xCoord = 17;
-                    //get the final coord for stem based on the high coordinate
-                    finalStemCoord = (lowCoord - 7) * LINE_OFFSET + 7;
-                    //Check if the end coord pass the middle line of the score, if not, extend it to the middle line
-                    finalStemCoord = (finalStemCoord > 4 * LINE_OFFSET) ? 4 * LINE_OFFSET : finalStemCoord;
-                    //start coord for stem, offseted the note drawing to fit
-                    startStemCoord = highCoord * 7.5 + 5;
-                }
-                //set the chord stem
-                chord.SetStem(xCoord, startStemCoord, finalStemCoord);
-            });
         }
 
         this.InsertChord = function(chord, position) {
