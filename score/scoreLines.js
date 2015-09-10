@@ -67,7 +67,8 @@ var ScoreBeta = new function() {
         this.Draw = function() { return group; }
 
         this.MoveTo = function(x, y) {
-            SetTransform(group, { translate: [x, y] });
+            //compense negative values of the group with bbox due to offset adjacent notes or accidents notation
+            SetTransform(group, { translate: [x - GetBBox(group).x, y] });
         }
 
         this.Count = function() {
@@ -164,8 +165,8 @@ var ScoreBeta = new function() {
 
             //detect the lowest position value
 
-            var lowValue = 0,   //var to store the lowest value for y position
-                highValue = 0;   //var to store the higher position for aux lines
+            var lowValue = null,   //var to store the lowest value for y position
+                highValue = null;   //var to store the higher position for aux lines
 
             for(var i = 0; i < notes.length; i++) { //iterate thru all the notes
                 if(notes[i]) {   //if the note is valid
@@ -175,13 +176,16 @@ var ScoreBeta = new function() {
                     notes[i].yCoord = yCoord;   //register the y coord at the note element
 
                     //if the current y position is low than the actual lowest value
-                    if(yCoord < lowValue)   
+                    if(lowValue == null || yCoord < lowValue)   
                         lowValue = yCoord;  //update the lowest value
 
-                    if(yCoord > highValue)   
+                    if(highValue == null || yCoord > highValue)   
                         highValue = yCoord;  //update the lowest value
                 }
             }
+
+            //Method to detect stem pointed down
+            var downStem = (Math.abs(lowValue - 3) < Math.abs(highValue - 3)) ? false : true; 
 
             //generate the position list
             var positionList = []; //List to keep the elements for adjacent verification 
@@ -197,30 +201,58 @@ var ScoreBeta = new function() {
             }
 
             //flag to signalize when a right before note were valid to detect adjacent
-            var prevValidNote = false;    
+            var prevValidNote = false;
 
-            for(var k = positionList.length + 1; k >= 0; k--) { //iterate thru all the position queue
-                if(!positionList[k]) {  //if position not valid
-                    prevValidNote = false;  //reset the prev valid note flag
-                    continue;
+            if(downStem) {  //if downstem, notes must be left
+                for(var k = 0; k < positionList.length; k++) { //iterate thru all the position queue
+                    if(!positionList[k]) {  //if position not valid
+                        prevValidNote = false;  //reset the prev valid note flag
+                        continue;
+                    }
+
+                    var currNote = positionList[k], //get the curr note reference
+                        finalYCoord = currNote.yCoord * OFFSET,
+                        finalXCoord = 0;
+
+                    //if the immediatelly prev note were valid
+                    if(prevValidNote) { 
+                        //xCoord must be offseted
+                        finalXCoord = denominator == 1 ? 21 : -17; //hard code note x offset for adjacent (positive for den 1 since no stem)
+                        //reset the prev valid note cause it is not necessary for the next one to move since this one moved
+                        prevValidNote = false;  
+                    } else //otherwise
+                        prevValidNote = true;   //just set the prev valid not to move the next one if it is valid
+
+
+                    //move the current note to its right position
+                    SetTransform(currNote.noteDraw, { translate: [finalXCoord, finalYCoord] });
                 }
 
-                var currNote = positionList[k], //get the curr note reference
-                    finalYCoord = currNote.yCoord * OFFSET,
-                    finalXCoord = 0;
+            } else {    //if not, notes must be right
 
-                //if the immediatelly prev note were valid
-                if(prevValidNote) { 
-                    //xCoord must be offseted
-                    finalXCoord = denominator == 1 ? 21 : 17; //hard code note x offset for adjacent
-                    //reset the prev valid note cause it is not necessary for the next one to move since this one moved
-                    prevValidNote = false;  
-                } else //otherwise
-                    prevValidNote = true;   //just set the prev valid not to move the next one if it is valid
+                for(var k = positionList.length + 1; k >= 0; k--) { //iterate thru all the position queue
+                    if(!positionList[k]) {  //if position not valid
+                        prevValidNote = false;  //reset the prev valid note flag
+                        continue;
+                    }
+
+                    var currNote = positionList[k], //get the curr note reference
+                        finalYCoord = currNote.yCoord * OFFSET,
+                        finalXCoord = 0;
+
+                    //if the immediatelly prev note were valid
+                    if(prevValidNote) { 
+                        //xCoord must be offseted
+                        finalXCoord = denominator == 1 ? 21 : 17; //hard code note x offset for adjacent
+                        //reset the prev valid note cause it is not necessary for the next one to move since this one moved
+                        prevValidNote = false;  
+                    } else //otherwise
+                        prevValidNote = true;   //just set the prev valid not to move the next one if it is valid
 
 
-                //move the current note to its right position
-                SetTransform(currNote.noteDraw, { translate: [finalXCoord, finalYCoord] });
+                    //move the current note to its right position
+                    SetTransform(currNote.noteDraw, { translate: [finalXCoord, finalYCoord] });
+                }
             }
 
             //set aux lines if needed
