@@ -162,9 +162,16 @@ var ScoreBeta = new function() {
             notes.push(note);   //add the new note object to the notes array
 
             chordModified = true;
-            //organize();    //execute routine to organize the notes @ the chord
 
             return "INSERT_SUCCESS";
+        }
+
+        this.AddNoteCollection = function(noteCollection) {
+            var result = [];
+            for(var i = 0; i < noteCollection.length; i++)
+                result.push(selfRef.AddNote(noteCollection[i]));
+
+            return result;
         }
 
         this.DeleteNote = function(note) {
@@ -199,7 +206,6 @@ var ScoreBeta = new function() {
             delete notes[noteIndex];    //clear the note ref at the array
 
             chordModified = true;
-            //organize();    //reorganize notes
 
             return "REMOVE_SUCCESSFUL";
         }        
@@ -342,7 +348,20 @@ var ScoreBeta = new function() {
 
             var xCoord,
                 startStemCoord, //value of the final coord of the stem line
-                finalStemCoord; //value of the final coord of the stem line
+                finalStemCoord, //value of the final coord of the stem line
+                aditionalStemLength = 0;    //variable to add the additional length to the stem when more than two flags is needed
+            
+            switch(denominator) {
+
+                case 32: //add 1 space (2 offsets)
+                    aditionalStemLength = 2; 
+                    break;
+
+                case 64: //add 2 space(4 offsets)
+                    aditionalStemLength = 4; 
+                    break;
+            }   
+
 
             if(downStemFlag) {  //if the stem starts from the lowest coord
                 //x coord for down stem
@@ -353,6 +372,8 @@ var ScoreBeta = new function() {
                 finalStemCoord = (highValue + 7) * LINE_OFFSET + 8;
                 //Check if the end coord pass the middle line of the score, if not, extend it to the middle line
                 finalStemCoord = (finalStemCoord < (4 * LINE_OFFSET)) ? 4 * LINE_OFFSET : finalStemCoord;
+                //add aditional length for up to two flags
+                finalStemCoord += aditionalStemLength * LINE_OFFSET;
             } else {
                 //x coord for up stem
                 xCoord = 17;
@@ -362,6 +383,8 @@ var ScoreBeta = new function() {
                 finalStemCoord = (lowValue - 7) * LINE_OFFSET + 7;
                 //Check if the end coord pass the middle line of the score, if not, extend it to the middle line
                 finalStemCoord = (finalStemCoord > (4 * LINE_OFFSET)) ? 4 * LINE_OFFSET : finalStemCoord;
+                //add aditional length for up to two flags
+                finalStemCoord -= aditionalStemLength * LINE_OFFSET;
             }
             //set the chord stem
             setStemLineObj(xCoord, startStemCoord, finalStemCoord);
@@ -572,6 +595,14 @@ var ScoreBeta = new function() {
             group.appendChild(chord.Draw());
 
             return "SUCCESS";
+        }
+
+        this.AddChordCollection = function(chordCollection) {
+            var result = [];
+            for(var i = 0; i < chordCollection.length; i++)
+                result.push(selfRef.InsertChord(chordCollection[i]));
+
+            return result;
         }
 
         this.RemoveAt = function(position) {
