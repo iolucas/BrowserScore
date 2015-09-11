@@ -1,12 +1,12 @@
 
-var betaChord1 = new ScoreBeta.Chord({denominator: 2});
-var betaChord2 = new ScoreBeta.Chord({denominator: 2});
-var betaChord3 = new ScoreBeta.Chord({denominator: 4});
-var betaChord4 = new ScoreBeta.Chord({denominator: 4});
-var betaChord5 = new ScoreBeta.Chord({denominator: 4});
-var betaChord6 = new ScoreBeta.Chord({denominator: 4});
-var betaChord7 = new ScoreBeta.Chord({denominator: 1});
-var betaChord8 = new ScoreBeta.Chord({denominator: 1});
+var betaChord1 = new ScoreBeta.Chord({ denominator: 2 });
+var betaChord2 = new ScoreBeta.Chord({ denominator: 2 });
+var betaChord3 = new ScoreBeta.Chord({ denominator: 8 });
+var betaChord4 = new ScoreBeta.Chord({ denominator: 8 });
+var betaChord5 = new ScoreBeta.Chord({ denominator: 8 });
+var betaChord6 = new ScoreBeta.Chord({ denominator: 8 });
+var betaChord7 = new ScoreBeta.Chord({ denominator: 1 });
+var betaChord8 = new ScoreBeta.Chord({ denominator: 1 });
 
 /*betaChord1.AddNote({ note: 'E', octave: 3, accident: "" });
 betaChord1.AddNote({ note: 'F', octave: 3, accident: "" });
@@ -37,21 +37,23 @@ betaChord2.AddNote({ note: 'A' , octave: 6 });
 betaChord2.AddNote({ note: 'C' , octave: 6 });
 betaChord2.AddNote({ note: 'D' , octave: 6 });
 
-betaChord3.AddNote({ note: 'C' , octave: 4});
-betaChord3.AddNote({ note: 'E' , octave: 4});
-betaChord3.AddNote({ note: 'F' , octave: 4});
+betaChord3.AddNote({ note: 'G' , octave: 5});
+/*betaChord3.AddNote({ note: 'G' , octave: 4});
+betaChord3.AddNote({ note: 'A' , octave: 5});
+betaChord3.AddNote({ note: 'C' , octave: 5});*/
 
-betaChord4.AddNote({ note: 'D' , octave: 4});
-betaChord4.AddNote({ note: 'F' , octave: 4});
-betaChord4.AddNote({ note: 'A' , octave: 4});
+betaChord4.AddNote({ note: 'G' , octave: 5});
+/*betaChord4.AddNote({ note: 'E' , octave: 5});
+betaChord4.AddNote({ note: 'F' , octave: 5});
+betaChord4.AddNote({ note: 'G' , octave: 5});*/
 
-betaChord5.AddNote({ note: 'E', octave: 4, accident: "" });
-betaChord5.AddNote({ note: 'G', octave: 4, accident: "" });
-betaChord5.AddNote({ note: 'B', octave: 4, accident: "" });
+betaChord5.AddNote({ note: 'G', octave: 5, accident: "" });
+/*betaChord5.AddNote({ note: 'G', octave: 4, accident: "" });
+betaChord5.AddNote({ note: 'B', octave: 4, accident: "" });*/
 
-betaChord6.AddNote({ note: 'B', octave: 4, accident: "" });
-betaChord6.AddNote({ note: 'G', octave: 4, accident: "" });
-betaChord6.AddNote({ note: 'D', octave: 4, accident: "" });
+betaChord6.AddNote({ note: 'G', octave: 5, accident: "" });
+/*betaChord6.AddNote({ note: 'G', octave: 4, accident: "" });
+betaChord6.AddNote({ note: 'D', octave: 4, accident: "" });*/
 
 betaChord7.AddNote({ note: 'C', octave: 3, accident: "" });
 betaChord7.AddNote({ note: 'D', octave: 3, accident: "" });
@@ -105,7 +107,7 @@ function getMeasure() {
 }
 
 function getRandomChord() {
-	var chord = new ScoreBeta.Chord({ denominator: 4 }),
+	var chord = new ScoreBeta.Chord({ denominator: 4}),
 		randomNote = String.fromCharCode(65 + Math.round(Math.random() * 7)),
 		randomOctave = Math.round(Math.random() * 2) + 4;
 	chord.AddNote({ note: randomNote, octave: randomOctave });

@@ -40,6 +40,7 @@ var ScoreBeta = new function() {
 
             group = document.createElementNS(xmlns, "g"),
             rest = DrawRest(denominator),  //get the rest element draw
+            flag = DrawNoteFlag(denominator),   //get the note flag 
             auxLines = document.createElementNS(xmlns, "path"), //path to receive the aux lines to be draw
             stem =  document.createElementNS(xmlns, "line"),    //chord stem to be placed
 
@@ -71,7 +72,6 @@ var ScoreBeta = new function() {
         group.appendChild(stem);
         group.appendChild(refRect);
         group.appendChild(rest);
-
 
         //DEBUG PURPOSES
         if(!clef)
@@ -213,6 +213,7 @@ var ScoreBeta = new function() {
             if(ArrayLength(notes) == 0) {
                 group.appendChild(rest);    //show the rest element
                 setStemLine();  //clear chord stem line
+                setChordFlag();
                 setAuxLines(); //remove all the aux lines
                 return; //do nothing else and return
             }
@@ -253,7 +254,10 @@ var ScoreBeta = new function() {
             var adjCoord = setNotesPositions(downStemFlag, lowValue); 
 
             //Must set the chord stem with the extreme coordinates
-            setStemLine(downStemFlag, lowValue, highValue);
+            var finalStemCoord = setStemLine(downStemFlag, lowValue, highValue);
+
+            //set chord flag based on its denominator
+            setChordFlag(downStemFlag, finalStemCoord);
 
             //set aux lines if needed
             setAuxLines(downStemFlag, lowValue, highValue, adjCoord[0], adjCoord[1]); 
@@ -340,27 +344,29 @@ var ScoreBeta = new function() {
                 startStemCoord, //value of the final coord of the stem line
                 finalStemCoord; //value of the final coord of the stem line
 
-                if(downStemFlag) {  //if the stem starts from the lowest coord
-                    //x coord for down stem
-                    xCoord = 1; 
-                    //start coord for stem, offseted the note drawing to fit
-                    startStemCoord = lowValue * 7.5 + 10;  
-                    //get the final coord for stem based on the high coordinate
-                    finalStemCoord = (highValue + 7) * LINE_OFFSET + 8;
-                    //Check if the end coord pass the middle line of the score, if not, extend it to the middle line
-                    finalStemCoord = (finalStemCoord < (4 * LINE_OFFSET)) ? 4 * LINE_OFFSET : finalStemCoord;
-                } else {
-                    //x coord for up stem
-                    xCoord = 17;
-                    //start coord for stem, offseted the note drawing to fit
-                    startStemCoord = highValue * 7.5 + 5;
-                    //get the final coord for stem based on the high coordinate
-                    finalStemCoord = (lowValue - 7) * LINE_OFFSET + 7;
-                    //Check if the end coord pass the middle line of the score, if not, extend it to the middle line
-                    finalStemCoord = (finalStemCoord > (4 * LINE_OFFSET)) ? 4 * LINE_OFFSET : finalStemCoord;
-                }
-                //set the chord stem
-                setStemLineObj(xCoord, startStemCoord, finalStemCoord);
+            if(downStemFlag) {  //if the stem starts from the lowest coord
+                //x coord for down stem
+                xCoord = 1; 
+                //start coord for stem, offseted the note drawing to fit
+                startStemCoord = lowValue * 7.5 + 10;  
+                //get the final coord for stem based on the high coordinate
+                finalStemCoord = (highValue + 7) * LINE_OFFSET + 8;
+                //Check if the end coord pass the middle line of the score, if not, extend it to the middle line
+                finalStemCoord = (finalStemCoord < (4 * LINE_OFFSET)) ? 4 * LINE_OFFSET : finalStemCoord;
+            } else {
+                //x coord for up stem
+                xCoord = 17;
+                //start coord for stem, offseted the note drawing to fit
+                startStemCoord = highValue * 7.5 + 5;
+                //get the final coord for stem based on the high coordinate
+                finalStemCoord = (lowValue - 7) * LINE_OFFSET + 7;
+                //Check if the end coord pass the middle line of the score, if not, extend it to the middle line
+                finalStemCoord = (finalStemCoord > (4 * LINE_OFFSET)) ? 4 * LINE_OFFSET : finalStemCoord;
+            }
+            //set the chord stem
+            setStemLineObj(xCoord, startStemCoord, finalStemCoord);
+
+            return finalStemCoord;  //return the final stem coord to be used for place the note flag
         }
 
         function setStemLineObj(x, yStart, yEnd) {
@@ -378,6 +384,23 @@ var ScoreBeta = new function() {
             stem.setAttribute("x2", x);
             stem.setAttribute("y1", yStart);
             stem.setAttribute("y2", yEnd);
+        }
+
+        function setChordFlag(downStemFlag, finalStemCoord) {
+            //if no arguments are supplied, or denominator greater than 8, clear the flag and return
+            if(downStemFlag == undefined || denominator < 8) { 
+                if(flag.parentElement)  //if the flag element is appended
+                    flag.parentElement.removeChild(flag);   //remove it
+                    return; //do nothing else and return
+            }   
+
+            group.appendChild(flag);
+
+            if(downStemFlag) {
+                SetTransform(flag, { translate: [1, finalStemCoord + 1], scale: [1, -1]});
+            } else {
+                SetTransform(flag, { translate: [17, finalStemCoord - 1] });
+            }
         }
 
         //function to set the aux lines for the chords
