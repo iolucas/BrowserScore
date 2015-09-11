@@ -8,9 +8,7 @@ var betaChord6 = new ScoreBeta.Chord({ denominator: 4 });
 var betaChord7 = new ScoreBeta.Chord({ denominator: 1 });
 var betaChord8 = new ScoreBeta.Chord({ denominator: 1 });
 
-/*betaChord1.AddNote({ note: 'E', octave: 3, accident: "" });
-betaChord1.AddNote({ note: 'F', octave: 3, accident: "" });
-betaChord1.AddNote({ note: 'G', octave: 3, accident: "" });*/
+
 betaChord1.AddNoteCollection([
 	{ note: 'A', octave: 4, accident: "" },
 	{ note: 'B', octave: 4, accident: "" },
@@ -36,27 +34,27 @@ betaChord1.AddNoteCollection([
 ]);
 
 
-betaChord2.AddNote({ note: 'A' , octave: 6 });
-betaChord2.AddNote({ note: 'C' , octave: 6 });
-betaChord2.AddNote({ note: 'D' , octave: 6 });
+betaChord2.AddNoteCollection([
+	{ note: 'A' , octave: 6 },
+	{ note: 'C' , octave: 6 },
+	{ note: 'D' , octave: 6 }
+]);
 
 betaChord3.AddNote({ note: 'G' , octave: 4});
-/*betaChord3.AddNote({ note: 'G' , octave: 4});
 betaChord3.AddNote({ note: 'A' , octave: 5});
-betaChord3.AddNote({ note: 'C' , octave: 5});*/
+betaChord3.AddNote({ note: 'C' , octave: 5});
 
 betaChord4.AddNote({ note: 'G' , octave: 5});
-/*betaChord4.AddNote({ note: 'E' , octave: 5});
+betaChord4.AddNote({ note: 'E' , octave: 5});
 betaChord4.AddNote({ note: 'F' , octave: 5});
-betaChord4.AddNote({ note: 'G' , octave: 5});*/
 
 betaChord5.AddNote({ note: 'G', octave: 3, accident: "" });
-/*betaChord5.AddNote({ note: 'G', octave: 4, accident: "" });
-betaChord5.AddNote({ note: 'B', octave: 4, accident: "" });*/
+betaChord5.AddNote({ note: 'G', octave: 4, accident: "" });
+betaChord5.AddNote({ note: 'B', octave: 4, accident: "" });
 
 betaChord6.AddNote({ note: 'G', octave: 6, accident: "" });
-/*betaChord6.AddNote({ note: 'G', octave: 4, accident: "" });
-betaChord6.AddNote({ note: 'D', octave: 4, accident: "" });*/
+betaChord6.AddNote({ note: 'G', octave: 4, accident: "" });
+betaChord6.AddNote({ note: 'D', octave: 4, accident: "" });
 
 betaChord7.AddNote({ note: 'C', octave: 3, accident: "" });
 betaChord7.AddNote({ note: 'D', octave: 3, accident: "" });
@@ -72,7 +70,7 @@ var betaMeasure3 = new ScoreBeta.Measure();
 var betaMeasure4 = new ScoreBeta.Measure();
 
 betaMeasure1.AddChordCollection([
-	betaChord1, 
+	betaChord1,
 	betaChord2
 ]);
 
@@ -100,7 +98,7 @@ alphaScore.InsertMeasure(getMeasure());
 alphaScore.InsertMeasure(getMeasure());
 alphaScore.InsertMeasure(getMeasure());
 
-var lucasDen = 64
+var lucasDen = 32
 
 lucasChord2 = new ScoreBeta.Chord({ denominator: lucasDen });
 lucasChord3 = new ScoreBeta.Chord({ denominator: lucasDen });
@@ -110,13 +108,13 @@ lucasChord6 = new ScoreBeta.Chord({ denominator: lucasDen });
 lucasChord7 = new ScoreBeta.Chord({ denominator: lucasDen });
 lucasChord8 = new ScoreBeta.Chord({ denominator: lucasDen });
 
-lucasChord2.AddNote({ note: 'G', octave: 1 });
-lucasChord3.AddNote({ note: 'G', octave: 2 });
-lucasChord4.AddNote({ note: 'G', octave: 3 });
-lucasChord5.AddNote({ note: 'G', octave: 4 });
-lucasChord6.AddNote({ note: 'G', octave: 5 });
-lucasChord7.AddNote({ note: 'G', octave: 6 });
-lucasChord8.AddNote({ note: 'G', octave: 7 });
+lucasChord2.AddNote({ note: 'G', octave: 1, accident: getRandomAccident() });
+lucasChord3.AddNote({ note: 'G', octave: 2, accident: getRandomAccident() });
+lucasChord4.AddNote({ note: 'G', octave: 3, accident: getRandomAccident() });
+lucasChord5.AddNote({ note: 'G', octave: 4, accident: getRandomAccident() });
+lucasChord6.AddNote({ note: 'G', octave: 5, accident: getRandomAccident() });
+lucasChord7.AddNote({ note: 'G', octave: 6, accident: getRandomAccident() });
+lucasChord8.AddNote({ note: 'G', octave: 7, accident: getRandomAccident() });
 
 
 lucasMeasure = new ScoreBeta.Measure();
@@ -152,8 +150,38 @@ function getRandomChord() {
 	var chord = new ScoreBeta.Chord({ denominator: 4}),
 		randomNote = String.fromCharCode(65 + Math.round(Math.random() * 7)),
 		randomOctave = Math.round(Math.random() * 2) + 4;
-	chord.AddNote({ note: randomNote, octave: randomOctave });
+	chord.AddNote({ note: randomNote, octave: randomOctave, accident: getRandomAccident() });
 	return chord;
+}
+
+function getRandomAccident() {
+	var value = Math.round(Math.random() * 5),
+		acc = "";
+	
+	switch(value) {
+
+		case 1:
+			acc = "NATURAL";
+			break;
+		
+		case 2:
+			acc = "SHARP";
+			break;
+
+		case 3:
+			acc = "DOUBLE_SHARP";
+			break;
+
+		case 4:
+			acc = "FLAT";
+			break;
+
+		case 5:
+			acc = "DOUBLE_FLAT";
+			break;
+	}
+
+	return acc;
 }
 
 function log(msg) { console.log(msg); }
