@@ -12,6 +12,10 @@ var ScoreBeta = new function() {
         //CHORO IS COMING BACK, FOCUS ON IT
 
 
+        //MUST ENHANCE THE MEASURE ORGANIZER AND SCORE LINE ORGANIZER
+        //IN A WAY THAT THE LINES GET AWAYS SMOOTH (NOT MOVING STUFF TO DECIMAL COORDINATES)
+
+
         //IMPLEMENT MODE FOR CHORD IT SELF DRAW SYMBOLS AND ITS ATTRIBUTES
         //CAUSE SOME ADJUSTS ARE DEPENDENTS TO OTHER NOTES
         //
@@ -28,7 +32,8 @@ var ScoreBeta = new function() {
         SCORE_LINE_LENGTH = 1500,
         SCORE_LINE_LEFT_MARGIN = 10,
         SCORE_LINE_HEADER_MARGIN = 10,
-        SCORE_TOP_MARGIN = 50; //min value for a top margin for the scores
+        SCORE_TOP_MARGIN = 50, //min value for a top margin for the scores
+        DEBUG_RECTANGLES = true;
   
     //group to place the notes
     this.Chord = function(properties) {
@@ -46,10 +51,6 @@ var ScoreBeta = new function() {
             auxLines = document.createElementNS(xmlns, "path"), //path to receive the aux lines to be draw
             stem =  document.createElementNS(xmlns, "line"),    //chord stem to be placed
 
-        //for debug, not really necessary due to group grows, but coodinates origin remains the same
-            refRect = document.createElementNS(xmlns, "rect"),  //reference rectangle to be used as a fixed reference point
-            accRect = document.createElementNS(xmlns, "rect"),
-
             POS0_NOTE,  //variable to store the position 0 (first space from up) note for correct positioning
             POS0_OCTAVE,  //variable to store the position 0 (first space from up) octave for correct positioning
 
@@ -61,23 +62,29 @@ var ScoreBeta = new function() {
             //variable to signalize whether a note has been added or removed from this chord and it was not yet organized
             chordModified = false;   
 
-        refRect.setAttribute("fill", "rgba(0,0,255,.5)");
-        refRect.setAttribute("height", 10); 
-        refRect.setAttribute("width", 10);
+        if(DEBUG_RECTANGLES) {
+            //for debug, not really necessary due to group grows, but coodinates origin remains the same
+            var refRect = document.createElementNS(xmlns, "rect");  //reference rectangle to be used as a fixed reference point
+            refRect.setAttribute("fill", "rgba(0,0,255,.5)");
+            refRect.setAttribute("height", 12); 
+            refRect.setAttribute("width", 12);
+            chordGroup.appendChild(refRect);
 
-        accRect.setAttribute("fill", "orange");
-        accRect.setAttribute("height", 10); 
-        accRect.setAttribute("width", 10);
-        SetTransform(accRect, { translate: [-10, 0] });
-        accidentGroup.appendChild(accRect);
+            /*
+            var accRect = document.createElementNS(xmlns, "rect");
+            accRect.setAttribute("fill", "orange");
+            accRect.setAttribute("height", 10); 
+            accRect.setAttribute("width", 10);
+            SetTransform(accRect, { translate: [-10, 0] });
+            accidentGroup.appendChild(accRect);*/
+        }
 
         auxLines.setAttribute("stroke", "#000");    //set the aux lines color 
 
         stem.setAttribute("stroke", "#000");    //set the stem line color 
         stem.setAttribute("stroke-width", "2");    //set the stem line color
 
-        //append note group and accident group to the main chord group
-        chordGroup.appendChild(refRect);
+        //append note group and accident group to the main chord group       
         chordGroup.appendChild(accidentGroup);
         chordGroup.appendChild(noteGroup);
 
@@ -98,9 +105,10 @@ var ScoreBeta = new function() {
                 POS0_OCTAVE = 5; 
                 break;
 
-            /*case 'F':
-
-                break;*/
+            case 'F':
+                POS0_NOTE = 'G'.charCodeAt(0);
+                POS0_OCTAVE = 3; 
+                break;
 
             default:
                 throw "INVALID_CHORD_CLEF_SET: " + clef;
@@ -304,7 +312,7 @@ var ScoreBeta = new function() {
             SetTransform(accidentGroup, { translate: [-accidentBox.x, 0] });
 
             //place note imediatelly after the accident group
-            var noteGroupXCoord = accidentBox.width > 0 ? accidentBox.width - noteBox.x + 2 : 0;
+            var noteGroupXCoord = accidentBox.width > 0 ? accidentBox.width - noteBox.x + 2 : - noteBox.x;
             SetTransform(noteGroup, { translate: [noteGroupXCoord, 0] });
         }
 
@@ -339,8 +347,8 @@ var ScoreBeta = new function() {
 
                 //iterate thru the placeColumns to find the one the accident symbol fits
                 for(var columnIndex = 0; columnIndex < placeColumns.length; columnIndex++) {
-                    //if the current top coord is less than the column bottom coord
-                    if(accTopCoord < placeColumns[columnIndex].bottom) 
+                    //if the current top coord is less or equal than the column bottom coord
+                    if(accTopCoord <= placeColumns[columnIndex].bottom) 
                         continue;   //proceed the next iteration
 
                     //if the symbol fits the current column
@@ -389,78 +397,6 @@ var ScoreBeta = new function() {
 
                 SetTransform(currNote.accidentDraw, { translate: [accXCoord - accBox.width, accYCoord] });
                 //SetTransform(debRect(accBox), { translate: [accXCoord - accBox.width, accYCoord] });
-            }
-
-            return;
-
-            alert("paro!");
-
-            for(var k = 0; k < positionList.length; k++) {
-                currNote = positionList[k];    
-
-                //if the current item is invalid or this note has no accident
-                if(currNote == undefined || !currNote.accidentDraw)    
-                    continue;   //proceed next iterations
-
-                //get the accident symbol bbox
-                accidentBox = GetBBox(currNote.accidentDraw);
-                
-                var accYCoord = currNote.yCoord * LINE_OFFSET,  //get the y coord
-                    accTopCoord = accidentBox.y + accYCoord,    //get this accid obj top coord
-
-                    //get the x coord
-                    accXCoord = null;
-
-                for(var columnIndex = 0; columnIndex < placeColumns.length; columnIndex++) {
-                    //if the current top coord is less than the column bottom coord
-                    if(accTopCoord < placeColumns[columnIndex].bottom) 
-                        continue;   //proceed the next iteration
-
-                    //set the x coordinate as the column x
-                    accXCoord = placeColumns[columnIndex].x;
-
-                    //update this column bottom value 
-                    placeColumns[columnIndex].bottom = accidentBox.y + accidentBox.height + accYCoord;
-                    
-                    /* MUST SEARCH WAY TO FIX THE BAD POSITIONING IN CASE OF MULTIPLE DIFFERENT ACCIDENT SYMBOLS
-                    console.log(placeColumns[columnIndex].x);
-                    console.log(accXCoord);
-                    console.log("-------------------------------------------------------");*/
-
-                    break;  //exit the iteration
-                }
-
-                //if no place where found
-                if(accXCoord == null) {
-                    placeColumns.push({
-                        bottom: accidentBox.y + accidentBox.height + accYCoord,
-                        x: currColX
-                    });
-
-                    accXCoord = currColX;
-
-                    currColX -= accidentBox.width + 2;
-                }
-
-
-                //console.log(currNote.yCoord * LINE_OFFSET);
-                //console.log(accidentBox.y + accidentBox.width);
-                //console.log(accidentBox.y + accidentBox.width + currNote.yCoord * LINE_OFFSET);
-/*
-                if(lowerCoord == null || accidentBox.y + currNote.yCoord * LINE_OFFSET > lowerCoord) {
-                    lowerCoord = accidentBox.y + accidentBox.width + currNote.yCoord * LINE_OFFSET;
-                    nextX = 0;
-                }*/
-
-                //console.log("bottom before: " + lowerCoord);
-                //console.log("top current: " + (accidentBox.y + currNote.yCoord * LINE_OFFSET));
-
-                SetTransform(currNote.accidentDraw, { translate: [accXCoord, accYCoord] });
-                //SetTransform(debRect(accidentBox), { translate: [accXCoord, accYCoord] });
-
-                //lowerCoord = accidentBox.y + accidentBox.height + currNote.yCoord * LINE_OFFSET;
-
-                //nextX -= accidentBox.width + 1;
             }
         }
 
@@ -646,11 +582,8 @@ var ScoreBeta = new function() {
                 highAdjValue = 0;   //put it as 0
 
             if(downStemFlag) {  //if adj notes are on the left
-
                 //if the coordinate overflow the score lines limits, got to draw auxiliar lines
-
                 if(lowValue < LINE_LOW_POS) {  //if the score over flow thru the upper part                                     
-
                     for(var lineYCoord = LINE_LOW_POS; lineYCoord > lowValue; lineYCoord -= 2) {
                         if(lowAdjValue < lineYCoord) {
                             lineStartCoord = denominator == 1 ? -25 : -21;
@@ -659,13 +592,10 @@ var ScoreBeta = new function() {
                             lineStartCoord = denominator == 1 ? -4 : -4;
                             lineEndCoord = denominator == 1 ? 32 : 26;
                         }
-
                         dAtt += "M" + lineStartCoord + ", " + lineYCoord * LINE_OFFSET + "l0,0," + lineEndCoord + ",0";
                     }
                 } 
-
                 if(highValue > LINE_HIGH_POS) {  //if the score over flow thru the lower part
-
                     for(var lineYCoord = LINE_HIGH_POS + 2; lineYCoord <= highValue + 1; lineYCoord += 2) {
                         if(highAdjValue + 1 >= lineYCoord) {
                             lineStartCoord = denominator == 1 ? -25 : -21;
@@ -674,65 +604,59 @@ var ScoreBeta = new function() {
                             lineStartCoord = denominator == 1 ? -4 : -4;
                             lineEndCoord = denominator == 1 ? 32 : 26;
                         }
-
                         dAtt += "M" + lineStartCoord + ", " + lineYCoord * LINE_OFFSET + "l0,0," + lineEndCoord + ",0";
                     }
                 }            
-
             } else {    //if they are on the right
-
                 //if the coordinate overflow the score lines limits, got to draw auxiliar lines
-
                 lineStartCoord = -4;    //on this cause, this coordinate is aways fixed
-                
                 if(lowValue < LINE_LOW_POS) {  //if the score over flow thru the upper part                                     
-
                     for(var lineYCoord = LINE_LOW_POS; lineYCoord > lowValue; lineYCoord -= 2) {
                         if(lowAdjValue < lineYCoord)
                             lineEndCoord = denominator == 1 ? 53 : 43;
                         else
                             lineEndCoord = denominator == 1 ? 32 : 26;
-
                         dAtt += "M" + lineStartCoord + ", " + lineYCoord * LINE_OFFSET + "l0,0," + lineEndCoord + ",0";
                     }
                 } 
-
-                if(highValue > LINE_HIGH_POS) {  //if the score over flow thru the lower part
-                                            
+                if(highValue > LINE_HIGH_POS) {  //if the score over flow thru the lower part                     
                     for(var lineYCoord = LINE_HIGH_POS + 2; lineYCoord <= highValue + 1; lineYCoord += 2) {
-                        
                         if(highAdjValue + 1 >= lineYCoord)
                             lineEndCoord = denominator == 1 ? 54 : 43;
                         else
                             lineEndCoord = denominator == 1 ? 33 : 26;
-
                         dAtt += "M" + lineStartCoord + ", " + lineYCoord * LINE_OFFSET + "l0,0," + lineEndCoord + ",0";
                     }
                 }  
             }
-
             auxLines.setAttribute("d", dAtt);   //set the path trail attribute (d) to the auxlines path
         }
-
     }
+
+    //-----------------------------------------------------------
+    //-----------------------------------------------------------
+    //-------------------- MEASURE OBJECT -----------------------
+    //-----------------------------------------------------------
+    //-----------------------------------------------------------
 
     this.Measure = function() {
 
         var selfRef = this,
 
             group = document.createElementNS(xmlns, "g"),   //group to fit all the measure members
-            
-            //for debug, not really necessary due to group grows, but coodinates origin remains the same
-            refRect = document.createElementNS(xmlns, "rect"),  //reference rectangle to be used as a fixed reference point
             //measureEndBar = $Aria.Parse(DrawMeasureElement(MeasureElement.SimpleBar)),
             measureEndBar = DrawMeasureElement("SIMPLE_BAR"),
             chords = new List();    //ordered list to fit all the chords @ this measure
 
-        refRect.setAttribute("fill", "red");
-        refRect.setAttribute("height", 15); 
-        refRect.setAttribute("width", 15);    
-
-        group.appendChild(refRect); //append debug square
+        if(DEBUG_RECTANGLES) {
+            //for debug, not really necessary due to group grows, but coodinates origin remains the same
+            //reference rectangle to be used as a fixed reference point
+            var refRect = document.createElementNS(xmlns, "rect");
+            refRect.setAttribute("fill", "red");
+            refRect.setAttribute("height", 15); 
+            refRect.setAttribute("width", 15);    
+            group.appendChild(refRect); //append debug square
+        }
 
         group.appendChild(measureEndBar); //append measure end bar   
 
@@ -765,7 +689,7 @@ var ScoreBeta = new function() {
         //Function to update the spaces of the measure and organize chords
         this.UpdateGaps = function(spaceUnitLength) {
             //the start position for the first chord
-            var nextPos = MEASURE_LEFT_MARGIN;  //the measure left margin 
+            var nextPos = MEASURE_LEFT_MARGIN*0;  //the measure left margin 
             chords.ForEach(function(chord) {
 
                 //Execute function to organize chord members
@@ -831,18 +755,19 @@ var ScoreBeta = new function() {
         var selfRef = this,
 
             group = document.createElementNS(xmlns, "g"),   //group to fit all the score members
-
-            //for debug, not really necessary due to group grows, but coodinates origin remains the same
-            refRect = document.createElementNS(xmlns, "rect"),  //reference rectangle to be used as a fixed reference point
             header = document.createElementNS(xmlns, "g"),  //create the score header group, to hold the score elements
             linesDrawing = DrawScoreLines(lineLength),   //score lines draw
             measures = new List();    //ordered list to fit all the measures @ this score
 
-        refRect.setAttribute("fill", "yellow");
-        refRect.setAttribute("height", 20); 
-        refRect.setAttribute("width", 20);    
-
-        group.appendChild(refRect); //append debug square
+        if(DEBUG_RECTANGLES) {
+            //for debug, not really necessary due to group grows, but coodinates origin remains the same
+            //reference rectangle to be used as a fixed reference point
+            var refRect = document.createElementNS(xmlns, "rect");  
+            refRect.setAttribute("fill", "yellow");
+            refRect.setAttribute("height", 20); 
+            refRect.setAttribute("width", 20);    
+            group.appendChild(refRect); //append debug square
+        }
 
         group.appendChild(linesDrawing);
 
@@ -891,7 +816,7 @@ var ScoreBeta = new function() {
             measures.ForEach(function(measure) {   
                 measure.UpdateGaps(unitSize);   //update the gaps of the chords at the measure
                 measure.MoveTo(Math.floor(nextPos), 0); //move the measure to the next position available (round down for smooth look)
-                nextPos += measure.GetWidth();  //generate the next position
+                nextPos += measure.GetWidth() + MEASURE_LEFT_MARGIN;  //generate the next position
             
             //if the measure has notes ands current measure width is less than the min width,
                 if(measure.Count() > 0 && measure.GetWidth() < minLength)  
@@ -981,18 +906,18 @@ var ScoreBeta = new function() {
         var selfRef = this, //self reference
 
             group = document.createElementNS(xmlns, "g"),   //group to keep the visual objects
-            lines = new List(), //list to organize the score lines
+            lines = new List(); //list to organize the score lines
+            
+        if(DEBUG_RECTANGLES) {
             refRect = document.createElementNS(xmlns, "rect");  //reference rectangle to be used as a fixed reference point
-
-        refRect.setAttribute("fill", "#050");
-        refRect.setAttribute("height", 30); 
-        refRect.setAttribute("width", 30);
-
-        group.appendChild(refRect); //append debug square  
+            refRect.setAttribute("fill", "#050");
+            refRect.setAttribute("height", 30); 
+            refRect.setAttribute("width", 30);
+            group.appendChild(refRect); //append debug square 
+        } 
 
         //Add the first line
         createLine({ GClef: true, TimeSig44: true});
-
 
         this.Draw = function() { return group; }
 

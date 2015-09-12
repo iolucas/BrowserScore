@@ -10,8 +10,8 @@ var betaChord8 = new ScoreBeta.Chord({ denominator: 1 });
 
 
 function chord1Acc() {
-	//return getRandomAccident();
-	return "NATURAL";
+	return getRandomAccident();
+	//return "NATURAL";
 }
 
 betaChord1.AddNoteCollection([
@@ -95,11 +95,10 @@ document.documentElement.appendChild(alphaScore.Draw());
 alphaScore.MoveTo(150, 50.5);
 
 
-//alphaScore.InsertMeasure(betaMeasure1);
-/*alphaScore.InsertMeasure(betaMeasure2);
+alphaScore.InsertMeasure(betaMeasure1);
+alphaScore.InsertMeasure(betaMeasure2);
 alphaScore.InsertMeasure(betaMeasure3);
-alphaScore.InsertMeasure(betaMeasure4);*/
-
+alphaScore.InsertMeasure(betaMeasure4);
 /*
 alphaScore.InsertMeasure(getMeasure());
 alphaScore.InsertMeasure(getMeasure());
@@ -125,7 +124,7 @@ lucasChord8.AddNote({ note: 'G', octave: 7, accident: getRandomAccident() });
 
 
 lucasMeasure = new ScoreBeta.Measure();
-lucasMeasure.AddChordCollection([
+/*lucasMeasure.AddChordCollection([
 
 	lucasChord2,
 	lucasChord3,
@@ -136,12 +135,20 @@ lucasMeasure.AddChordCollection([
 	lucasChord8
 
 
-]);
+]);*/
+
+for(var oct = 0; oct < 10; oct++) {
+	for(var not = 0; not < 7; not++) {
+		var newChord = new ScoreBeta.Chord({ denominator: 4 });
+		newChord.AddNote({ note: String.fromCharCode(65 + not) , octave: oct });
+		lucasMeasure.InsertChord(newChord);
+	}
+}
 
 //alphaScore.InsertMeasure(lucasMeasure);
 
 
-GenerateRandomScore(alphaScore);
+//GenerateRandomScore(alphaScore);
 
 
 alphaScore.Organize();
