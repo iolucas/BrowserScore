@@ -9,28 +9,33 @@ var betaChord7 = new ScoreBeta.Chord({ denominator: 1 });
 var betaChord8 = new ScoreBeta.Chord({ denominator: 1 });
 
 
+function chord1Acc() {
+	//return getRandomAccident();
+	return "NATURAL";
+}
+
 betaChord1.AddNoteCollection([
-	{ note: 'A', octave: 4, accident: "" },
-	{ note: 'B', octave: 4, accident: "" },
-	{ note: 'C', octave: 4, accident: "" },
-	{ note: 'D', octave: 4, accident: "" },
-	{ note: 'E', octave: 4, accident: "" },
-	{ note: 'F', octave: 4, accident: "" },
-	{ note: 'G', octave: 4, accident: "" },
-	{ note: 'A', octave: 5, accident: "" },
-	{ note: 'B', octave: 5, accident: "" },
-	{ note: 'C', octave: 5, accident: "" },
-	{ note: 'D', octave: 5, accident: "" },
-	{ note: 'E', octave: 5, accident: "" },
-	{ note: 'F', octave: 5, accident: "" },
-	{ note: 'G', octave: 5, accident: "" },
-	{ note: 'A', octave: 6, accident: "" },
-	{ note: 'B', octave: 6, accident: "" },
-	{ note: 'C', octave: 6, accident: "" },
-	{ note: 'D', octave: 6, accident: "" },
-	{ note: 'E', octave: 6, accident: "" },
-	{ note: 'F', octave: 6, accident: "" },
-	{ note: 'G', octave: 6, accident: "" }
+	{ note: 'A', octave: 4, accident: chord1Acc() },
+	{ note: 'B', octave: 4, accident: chord1Acc() },
+	{ note: 'C', octave: 4, accident: chord1Acc() },
+	{ note: 'D', octave: 4, accident: chord1Acc() },
+	{ note: 'E', octave: 4, accident: chord1Acc() },
+	{ note: 'F', octave: 4, accident: chord1Acc() },
+	{ note: 'G', octave: 4, accident: chord1Acc() },
+	{ note: 'A', octave: 5, accident: chord1Acc() },
+	{ note: 'B', octave: 5, accident: chord1Acc() },
+	{ note: 'C', octave: 5, accident: chord1Acc() },
+	{ note: 'D', octave: 5, accident: chord1Acc() },
+	{ note: 'E', octave: 5, accident: chord1Acc() },
+	{ note: 'F', octave: 5, accident: chord1Acc() },
+	{ note: 'G', octave: 5, accident: chord1Acc() },
+	{ note: 'A', octave: 6, accident: chord1Acc() },
+	{ note: 'B', octave: 6, accident: chord1Acc() },
+	{ note: 'C', octave: 6, accident: chord1Acc() },
+	{ note: 'D', octave: 6, accident: chord1Acc() },
+	{ note: 'E', octave: 6, accident: chord1Acc() },
+	{ note: 'F', octave: 6, accident: chord1Acc() },
+	{ note: 'G', octave: 6, accident: chord1Acc() }
 ]);
 
 
@@ -89,16 +94,18 @@ var alphaScore = new ScoreBeta.Score();
 document.documentElement.appendChild(alphaScore.Draw());
 alphaScore.MoveTo(150, 50.5);
 
-alphaScore.InsertMeasure(betaMeasure1);
-alphaScore.InsertMeasure(betaMeasure2);
+
+//alphaScore.InsertMeasure(betaMeasure1);
+/*alphaScore.InsertMeasure(betaMeasure2);
 alphaScore.InsertMeasure(betaMeasure3);
-alphaScore.InsertMeasure(betaMeasure4);
+alphaScore.InsertMeasure(betaMeasure4);*/
 
+/*
 alphaScore.InsertMeasure(getMeasure());
 alphaScore.InsertMeasure(getMeasure());
-alphaScore.InsertMeasure(getMeasure());
+alphaScore.InsertMeasure(getMeasure());*/
 
-var lucasDen = 32
+var lucasDen = 32;
 
 lucasChord2 = new ScoreBeta.Chord({ denominator: lucasDen });
 lucasChord3 = new ScoreBeta.Chord({ denominator: lucasDen });
@@ -131,10 +138,32 @@ lucasMeasure.AddChordCollection([
 
 ]);
 
-alphaScore.InsertMeasure(lucasMeasure);
+//alphaScore.InsertMeasure(lucasMeasure);
+
+
+GenerateRandomScore(alphaScore);
+
 
 alphaScore.Organize();
 
+function GenerateRandomScore(score) {
+	var numberOfMeasures = getInt(1, 1);
+
+	for(var i = 0; i < numberOfMeasures; i++) {
+		var numberOfChords = getInt(1, 8),
+			measure = new ScoreBeta.Measure();
+
+		for(var j = 0; j < numberOfChords; j++) {
+			measure.InsertChord(getRandomChord());
+		}
+
+		score.InsertMeasure(measure);
+	}
+}
+
+function getInt(from, to) {
+	return Math.round(Math.random()*(to-from) + from);
+}
 
 
 function getMeasure() {
@@ -147,10 +176,17 @@ function getMeasure() {
 }
 
 function getRandomChord() {
-	var chord = new ScoreBeta.Chord({ denominator: 4}),
-		randomNote = String.fromCharCode(65 + Math.round(Math.random() * 7)),
-		randomOctave = Math.round(Math.random() * 2) + 4;
-	chord.AddNote({ note: randomNote, octave: randomOctave, accident: getRandomAccident() });
+	var numberOfNotes = getInt(10,20),
+		randDen = Math.pow(2, getInt(6,6));
+		chord = new ScoreBeta.Chord({ denominator: randDen });
+
+	for(var i = 0; i < numberOfNotes; i++) {
+		var randomNote = String.fromCharCode(65 + Math.round(Math.random() * 7)),
+			randomOctave = getInt(0,10);
+
+		chord.AddNote({ note: randomNote, octave: randomOctave, accident: getRandomAccident() });
+	}
+	
 	return chord;
 }
 

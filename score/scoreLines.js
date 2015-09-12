@@ -21,6 +21,7 @@ var ScoreBeta = new function() {
         //ADD MEASURES TYPES OF BARS
         //ADD TABLATURE SYSTEM
         //ADD POINTS AND LINKS TO NOTES
+        //ADD PLACEMENT TABLE FOR PLACE CORRECTLY ANY ACCIDENT SYMBOL
         //--------------------------------------------------------------  
 
     var MEASURE_LEFT_MARGIN = 20,  //constante value for the left margin of the measure
@@ -47,6 +48,7 @@ var ScoreBeta = new function() {
 
         //for debug, not really necessary due to group grows, but coodinates origin remains the same
             refRect = document.createElementNS(xmlns, "rect"),  //reference rectangle to be used as a fixed reference point
+            accRect = document.createElementNS(xmlns, "rect"),
 
             POS0_NOTE,  //variable to store the position 0 (first space from up) note for correct positioning
             POS0_OCTAVE,  //variable to store the position 0 (first space from up) octave for correct positioning
@@ -62,6 +64,12 @@ var ScoreBeta = new function() {
         refRect.setAttribute("fill", "rgba(0,0,255,.5)");
         refRect.setAttribute("height", 10); 
         refRect.setAttribute("width", 10);
+
+        accRect.setAttribute("fill", "orange");
+        accRect.setAttribute("height", 10); 
+        accRect.setAttribute("width", 10);
+        SetTransform(accRect, { translate: [-10, 0] });
+        accidentGroup.appendChild(accRect);
 
         auxLines.setAttribute("stroke", "#000");    //set the aux lines color 
 
@@ -296,13 +304,13 @@ var ScoreBeta = new function() {
             SetTransform(accidentGroup, { translate: [-accidentBox.x, 0] });
 
             //place note imediatelly after the accident group
-            var noteGroupXCoord = accidentBox.width > 0 ? accidentBox.width - noteBox.x + 1 : 0;
+            var noteGroupXCoord = accidentBox.width > 0 ? accidentBox.width - noteBox.x + 2 : 0;
             SetTransform(noteGroup, { translate: [noteGroupXCoord, 0] });
         }
 
         function setAccidentPositions(lowValue) {
+            //generate ordere list of the notes
             var positionList = []; //List to keep the elements for adjacent verification 
-
             for(var j = 0; j < notes.length; j++) { //iterate thru all the notes
                 if(notes[j]) {   //if the note is valid  
                     //get the current pos offseted by the lowest value to ensure positive values
@@ -312,12 +320,80 @@ var ScoreBeta = new function() {
             }
 
             var currNote,
-                nextX = 0,
-                lowerCoord = null,
                 accidentBox,
-                placeColumns = [],
-                lastWidth = 0,
-                currColX = 0;
+                placeColumns = [];
+
+            //iterate thru the position list to populate the place columns data
+            for(var k = 0; k < positionList.length; k++) {
+                currNote = positionList[k];    
+
+                //if the current item is invalid or this note has no accident
+                if(currNote == undefined || !currNote.accidentDraw)    
+                    continue;   //proceed next iterations
+
+                //get the accident symbol bbox
+                accidentBox = GetBBox(currNote.accidentDraw);
+                
+                var accYCoord = currNote.yCoord * LINE_OFFSET,  //get the y coord
+                    accTopCoord = accidentBox.y + accYCoord;   //get this accid obj top coord
+
+                //iterate thru the placeColumns to find the one the accident symbol fits
+                for(var columnIndex = 0; columnIndex < placeColumns.length; columnIndex++) {
+                    //if the current top coord is less than the column bottom coord
+                    if(accTopCoord < placeColumns[columnIndex].bottom) 
+                        continue;   //proceed the next iteration
+
+                    //if the symbol fits the current column
+                    currNote.accColumn = columnIndex;   
+
+                    //if the symbol width is greater than the current column index
+                    if(accidentBox.width > placeColumns[columnIndex].width)
+                        placeColumns[columnIndex].width = accidentBox.width;
+
+                    //update this column bottom value 
+                    placeColumns[columnIndex].bottom = accidentBox.y + accidentBox.height + accYCoord;
+
+                    break;  //exit the iteration
+                }
+
+                //if the symbol doesn't fit anywhere
+                if(currNote.accColumn == undefined) {
+                    //create a new column
+                    placeColumns.push({
+                        bottom: accidentBox.y + accidentBox.height + accYCoord,
+                        width: accidentBox.width
+                    });
+                    //set the new column index to the current note
+                    currNote.accColumn = placeColumns.length - 1;   
+                }
+            }
+
+            //iterate thru the place column to set the X position coordinates for each column
+            var currXCoord = 0; //current X coordinate to place the symbols
+            for(var i = 0; i < placeColumns.length; i++) {
+                placeColumns[i].xCoord = currXCoord;    //set the x coord for this column
+                currXCoord -= placeColumns[i].width + 2;    //generate the next column x position
+            }
+
+            //iterate again the position list, now to place the accident on their places        
+            for(var k = 0; k < positionList.length; k++) {
+                currNote = positionList[k];    
+
+                //if the current item is invalid or this note has no accident
+                if(currNote == undefined || !currNote.accidentDraw)    
+                    continue;   //proceed next iterations
+
+                var accYCoord = currNote.yCoord * LINE_OFFSET,  //get the y coord
+                    accXCoord = placeColumns[currNote.accColumn].xCoord,
+                    accBox = GetBBox(currNote.accidentDraw);
+
+                SetTransform(currNote.accidentDraw, { translate: [accXCoord - accBox.width, accYCoord] });
+                //SetTransform(debRect(accBox), { translate: [accXCoord - accBox.width, accYCoord] });
+            }
+
+            return;
+
+            alert("paro!");
 
             for(var k = 0; k < positionList.length; k++) {
                 currNote = positionList[k];    
@@ -340,21 +416,16 @@ var ScoreBeta = new function() {
                     if(accTopCoord < placeColumns[columnIndex].bottom) 
                         continue;   //proceed the next iteration
 
-                    /*console.log(columnIndex);
-                    console.log(placeColumns[columnIndex].x);
-                    console.log(placeColumns);*/
-
                     //set the x coordinate as the column x
                     accXCoord = placeColumns[columnIndex].x;
 
                     //update this column bottom value 
                     placeColumns[columnIndex].bottom = accidentBox.y + accidentBox.height + accYCoord;
                     
+                    /* MUST SEARCH WAY TO FIX THE BAD POSITIONING IN CASE OF MULTIPLE DIFFERENT ACCIDENT SYMBOLS
                     console.log(placeColumns[columnIndex].x);
                     console.log(accXCoord);
-                    console.log("-------------------------------------------------------");
-                    
-
+                    console.log("-------------------------------------------------------");*/
 
                     break;  //exit the iteration
                 }
