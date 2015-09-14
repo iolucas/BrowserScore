@@ -1,3 +1,33 @@
+var rChord = getRandomChord();
+
+document.documentElement.appendChild(rChord.Draw());
+
+rChord.Organize();
+
+rChord.MoveTo(300, 50 - GetBBox(rChord.Draw()).y);
+var rChordBox = GetBBox(rChord.Draw());
+
+var testRect = getTestRect(rChord.GetWidth(), rChordBox.height);
+testRect.MoveTo(300, 50);
+
+document.documentElement.appendChild(testRect);
+
+function getTestRect(width, height) {
+	var rect = document.createElementNS(xmlns, "rect");
+	rect.setAttribute("width", width);
+	rect.setAttribute("height", height);
+	rect.setAttribute("fill", "none");
+	rect.setAttribute("stroke", "#333");
+	rect.setAttribute("stroke-width", 1);
+
+	rect.MoveTo = function(x, y) {
+		rect.setAttribute("x", x);		
+		rect.setAttribute("y", y);
+	}
+
+	return rect;
+}
+
 
 var betaChord1 = new ScoreBeta.Chord({ denominator: 2 });
 var betaChord2 = new ScoreBeta.Chord({ denominator: 2 });
@@ -91,17 +121,17 @@ betaMeasure3.InsertChord(betaChord7);
 betaMeasure4.InsertChord(betaChord8);
 
 var alphaScore = new ScoreBeta.Score();
-document.documentElement.appendChild(alphaScore.Draw());
+//document.documentElement.appendChild(alphaScore.Draw());
 alphaScore.MoveTo(150, 50.5);
 
-
+/*
 alphaScore.InsertMeasure(betaMeasure1);
 alphaScore.InsertMeasure(betaMeasure2);
 alphaScore.InsertMeasure(betaMeasure3);
-alphaScore.InsertMeasure(betaMeasure4);
-/*
-alphaScore.InsertMeasure(getMeasure());
-alphaScore.InsertMeasure(getMeasure());
+alphaScore.InsertMeasure(betaMeasure4);*/
+
+//alphaScore.InsertMeasure(getMeasure());
+/*alphaScore.InsertMeasure(getMeasure());
 alphaScore.InsertMeasure(getMeasure());*/
 
 var lucasDen = 32;
@@ -177,14 +207,16 @@ function getMeasure() {
 	var measure = new ScoreBeta.Measure();
 	measure.InsertChord(getRandomChord());
 	measure.InsertChord(getRandomChord());
-	measure.InsertChord(getRandomChord());
-	measure.InsertChord(getRandomChord());
+	/*measure.InsertChord(new ScoreBeta.Chord({ denominator: 64 }));
+	measure.InsertChord(new ScoreBeta.Chord({ denominator: 64 }));*/
+	/*measure.InsertChord(getRandomChord());
+	measure.InsertChord(getRandomChord());*/
 	return measure;
 }
 
 function getRandomChord() {
 	var numberOfNotes = getInt(10,20),
-		randDen = Math.pow(2, getInt(6,6));
+		randDen = Math.pow(2, getInt(5,5));
 		chord = new ScoreBeta.Chord({ denominator: randDen });
 
 	for(var i = 0; i < numberOfNotes; i++) {
@@ -198,6 +230,7 @@ function getRandomChord() {
 }
 
 function getRandomAccident() {
+	//return "";
 	var value = Math.round(Math.random() * 5),
 		acc = "";
 	

@@ -10,18 +10,20 @@ var ScoreBeta = new function() {
         //MUST IDEALIZE HOW THE INTERFACE WILL LOOKS LIKE, HOW CONTENT WILL BE SPREAD
         //WHERE MOBILE FIRST FITS ON IT, IF ONLY NEWS OR INTERATIVE CONTENT TOO
         //CHORO IS COMING BACK, FOCUS ON IT
+        //MUST REDRAW ALL SYMBOLS THAT HAVE "FAKE WHITE SPACES" DUE TO THESE ARE MISS PLACING THE SCORE
 
 
         //MUST ENHANCE THE MEASURE ORGANIZER AND SCORE LINE ORGANIZER
         //IN A WAY THAT THE LINES GET AWAYS SMOOTH (NOT MOVING STUFF TO DECIMAL COORDINATES)
+        //MUST DISCOVER WHY DEBUG SYMBOLS OFF OFFSET THE MEASURES BACK
+        //(WAS BECAUSE THE METHOD TO SET THE NEXT MEASURE POSITION WAS COUTING THE MEASURE BBOX WIDTH, fixed adding the x pos to bbox width)
 
 
         //IMPLEMENT MODE FOR CHORD IT SELF DRAW SYMBOLS AND ITS ATTRIBUTES
         //CAUSE SOME ADJUSTS ARE DEPENDENTS TO OTHER NOTES
         //
         //CREATE METHOD TO HANDLE TO SCORES FOR G AND F CLEFS, 
-        //FINALIZE METHOD TO PUT THE ACCIDENT SYMBOLS CORRECTLY
-        //CREATE SYSTEM TO ADD THE NOTE FINISH, HASTES AND BANDEIROLAS
+        //CREATE SYSTEM TO ADD THE NOTE FINISH, DOTS, LIGATURES
         //ADD MEASURES TYPES OF BARS
         //ADD TABLATURE SYSTEM
         //ADD POINTS AND LINKS TO NOTES
@@ -46,6 +48,7 @@ var ScoreBeta = new function() {
             chordGroup = document.createElementNS(xmlns, "g"),  //general chord group to put its elements
             noteGroup = document.createElementNS(xmlns, "g"),   //group to add note related elements
             accidentGroup = document.createElementNS(xmlns, "g"),   //accident group to place accident related elements
+            auxLinesGroup = document.createElementNS(xmlns, "g"),   //aux lines group to place the necessary aux lines up and down
             rest = DrawRest(denominator),  //get the rest element draw
             flag = DrawNoteFlag(denominator),   //get the note flag 
             auxLines = document.createElementNS(xmlns, "path"), //path to receive the aux lines to be draw
@@ -58,6 +61,8 @@ var ScoreBeta = new function() {
             LINE_HIGH_POS = 8, // * OFFSET,  //max coordinate where a aux line is not necessary
 
             LINE_OFFSET = 7.5,   //const offset of each note at the visual object
+
+            currWidth = 0,  //variable to keep the current true width of the chord (discouting aux lines gaps)
 
             //variable to signalize whether a note has been added or removed from this chord and it was not yet organized
             chordModified = false;   
@@ -84,12 +89,15 @@ var ScoreBeta = new function() {
         stem.setAttribute("stroke", "#000");    //set the stem line color 
         stem.setAttribute("stroke-width", "2");    //set the stem line color
 
-        //append note group and accident group to the main chord group       
+        //append note group and accident group to the main chord group  
+        chordGroup.appendChild(auxLinesGroup);     
         chordGroup.appendChild(accidentGroup);
         chordGroup.appendChild(noteGroup);
 
-        //Append necessary chord visual objects to the chord group
-        noteGroup.appendChild(auxLines);
+        //append aux lines to the aux lines group
+        auxLinesGroup.appendChild(auxLines);
+
+        //Append necessary chord visual objects to the chord group   
         noteGroup.appendChild(stem);
         noteGroup.appendChild(rest);
 
@@ -125,8 +133,7 @@ var ScoreBeta = new function() {
 
         //Function to move this chord object with absolute positions
         this.MoveTo = function(x, y) {
-            //compense negative values of the group with bbox due to offset adjacent notes or accidents notation
-            SetTransform(chordGroup, { translate: [x - GetBBox(chordGroup).x, y] });
+            SetTransform(chordGroup, { translate: [x, y] });
         }
 
         //Function to get the current number of notes on this chord
@@ -146,7 +153,9 @@ var ScoreBeta = new function() {
 
         //Function to get the current width of this chord
         this.GetWidth = function() {
-            return GetBBox(chordGroup).width;    
+            return currWidth;
+            //return GetBBox(chordGroup).width;
+            //return GetBBox(accidentGroup).width + GetBBox(noteGroup).width + ;    
         }
 
         //Function to iterate thru all notes obj on this chord
@@ -306,14 +315,24 @@ var ScoreBeta = new function() {
         function setChordPositions() {
             //gets chord elements bboxes
             var accidentBox = GetBBox(accidentGroup),
-                noteBox = GetBBox(noteGroup);
+                noteBox = GetBBox(noteGroup),
+                ACC_NOTES_GAP = 5;
 
             //place accident group at 0,0 abs pos
             SetTransform(accidentGroup, { translate: [-accidentBox.x, 0] });
 
-            //place note imediatelly after the accident group
-            var noteGroupXCoord = accidentBox.width > 0 ? accidentBox.width - noteBox.x + 2 : - noteBox.x;
+            //place note and aux lines imediatelly after the accident group
+            var noteGroupXCoord;
+            if(accidentBox.width > 0) { //if there is accidents
+                noteGroupXCoord = accidentBox.width - noteBox.x + ACC_NOTES_GAP;
+                currWidth = accidentBox.width + noteBox.width + ACC_NOTES_GAP;
+            } else {
+                noteGroupXCoord = - noteBox.x; 
+                currWidth = noteBox.width;  
+            }
+
             SetTransform(noteGroup, { translate: [noteGroupXCoord, 0] });
+            SetTransform(auxLinesGroup, { translate: [noteGroupXCoord, 0] });
         }
 
         function setAccidentPositions(lowValue) {
@@ -648,7 +667,7 @@ var ScoreBeta = new function() {
             measureEndBar = DrawMeasureElement("SIMPLE_BAR"),
             chords = new List();    //ordered list to fit all the chords @ this measure
 
-        if(DEBUG_RECTANGLES) {
+        if(DEBUG_RECTANGLES && false) {
             //for debug, not really necessary due to group grows, but coodinates origin remains the same
             //reference rectangle to be used as a fixed reference point
             var refRect = document.createElementNS(xmlns, "rect");
@@ -667,7 +686,8 @@ var ScoreBeta = new function() {
         }
 
         this.GetWidth = function() {
-            return GetBBox(group).width;    
+            var thisBBox = GetBBox(group);
+            return thisBBox.width + thisBBox.x;    
         }
 
         this.Count = function() {
@@ -689,14 +709,14 @@ var ScoreBeta = new function() {
         //Function to update the spaces of the measure and organize chords
         this.UpdateGaps = function(spaceUnitLength) {
             //the start position for the first chord
-            var nextPos = MEASURE_LEFT_MARGIN*0;  //the measure left margin 
+            var nextPos = MEASURE_LEFT_MARGIN;  //the measure left margin 
             chords.ForEach(function(chord) {
 
                 //Execute function to organize chord members
                 chord.Organize();   
 
                 //round the nextPos down for smooth look
-                chord.MoveTo(Math.floor(nextPos), 0);  //move the chord X pos to current nextposition keeping the Y value
+                chord.MoveTo(nextPos, 0);  //move the chord X pos to current nextposition keeping the Y value
                 nextPos += chord.GetWidth() + spaceUnitLength / chord.GetDenominator();    //get the gap value and add it to the next position
             });
 
@@ -815,8 +835,8 @@ var ScoreBeta = new function() {
             //update the denominator unit size for every measure
             measures.ForEach(function(measure) {   
                 measure.UpdateGaps(unitSize);   //update the gaps of the chords at the measure
-                measure.MoveTo(Math.floor(nextPos), 0); //move the measure to the next position available (round down for smooth look)
-                nextPos += measure.GetWidth() + MEASURE_LEFT_MARGIN;  //generate the next position
+                measure.MoveTo(nextPos, 0); //move the measure to the next position available (round down for smooth look)
+                nextPos += measure.GetWidth();  //generate the next position
             
             //if the measure has notes ands current measure width is less than the min width,
                 if(measure.Count() > 0 && measure.GetWidth() < minLength)  
