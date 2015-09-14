@@ -1,32 +1,14 @@
-var rChord = getRandomChord();
 
-document.documentElement.appendChild(rChord.Draw());
 
-rChord.Organize();
+var debugSL = new ScoreBeta.ScoreLine(1500, { GClef: true, TimeSig44: true});
+debugSL.InsertMeasure(getMeasure());
+debugSL.InsertMeasure(getMeasure());
 
-rChord.MoveTo(300, 50 - GetBBox(rChord.Draw()).y);
-var rChordBox = GetBBox(rChord.Draw());
 
-var testRect = getTestRect(rChord.GetWidth(), rChordBox.height);
-testRect.MoveTo(300, 50);
-
-document.documentElement.appendChild(testRect);
-
-function getTestRect(width, height) {
-	var rect = document.createElementNS(xmlns, "rect");
-	rect.setAttribute("width", width);
-	rect.setAttribute("height", height);
-	rect.setAttribute("fill", "none");
-	rect.setAttribute("stroke", "#333");
-	rect.setAttribute("stroke-width", 1);
-
-	rect.MoveTo = function(x, y) {
-		rect.setAttribute("x", x);		
-		rect.setAttribute("y", y);
-	}
-
-	return rect;
-}
+document.documentElement.appendChild(debugSL.Draw());
+console.log(debugSL.UpdateDimensions(100));
+debugSL.MoveTo(20,20.5 - GetBBox(debugSL.Draw()).y);
+getDebugRect(1500, GetBBox(debugSL.Draw()).height, 20, 20.5);
 
 
 var betaChord1 = new ScoreBeta.Chord({ denominator: 2 });
@@ -181,7 +163,7 @@ for(var oct = 0; oct < 10; oct++) {
 //GenerateRandomScore(alphaScore);
 
 
-alphaScore.Organize();
+//alphaScore.Organize();
 
 function GenerateRandomScore(score) {
 	var numberOfMeasures = getInt(1, 1);
@@ -216,7 +198,7 @@ function getMeasure() {
 
 function getRandomChord() {
 	var numberOfNotes = getInt(10,20),
-		randDen = Math.pow(2, getInt(5,5));
+		randDen = Math.pow(2, getInt(0,6));
 		chord = new ScoreBeta.Chord({ denominator: randDen });
 
 	for(var i = 0; i < numberOfNotes; i++) {
@@ -258,6 +240,19 @@ function getRandomAccident() {
 	}
 
 	return acc;
+}
+
+function getDebugRect(width, height, x, y) {
+	var debRect = document.createElementNS(xmlns, "rect");
+	debRect.setAttribute("width", width);
+	debRect.setAttribute("height", height);
+	debRect.setAttribute("x", x);
+	debRect.setAttribute("y", y);
+	debRect.setAttribute("fill", "none");
+	debRect.setAttribute("stroke", "#333");
+	debRect.setAttribute("stroke-width", 1);
+	document.documentElement.appendChild(debRect);
+	return debRect;
 }
 
 function log(msg) { console.log(msg); }

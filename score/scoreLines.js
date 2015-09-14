@@ -27,7 +27,6 @@ var ScoreBeta = new function() {
         //ADD MEASURES TYPES OF BARS
         //ADD TABLATURE SYSTEM
         //ADD POINTS AND LINKS TO NOTES
-        //ADD PLACEMENT TABLE FOR PLACE CORRECTLY ANY ACCIDENT SYMBOL
         //--------------------------------------------------------------  
 
     var MEASURE_LEFT_MARGIN = 20,  //constante value for the left margin of the measure
@@ -316,7 +315,7 @@ var ScoreBeta = new function() {
             //gets chord elements bboxes
             var accidentBox = GetBBox(accidentGroup),
                 noteBox = GetBBox(noteGroup),
-                ACC_NOTES_GAP = 5;
+                ACC_NOTES_GAP = 5;  //GAP BETWEEN NOTES AND ACCIDENT SYMBOLS
 
             //place accident group at 0,0 abs pos
             SetTransform(accidentGroup, { translate: [-accidentBox.x, 0] });
@@ -399,7 +398,7 @@ var ScoreBeta = new function() {
             var currXCoord = 0; //current X coordinate to place the symbols
             for(var i = 0; i < placeColumns.length; i++) {
                 placeColumns[i].xCoord = currXCoord;    //set the x coord for this column
-                currXCoord -= placeColumns[i].width + 2;    //generate the next column x position
+                currXCoord -= placeColumns[i].width + 3;    //generate the next column x position with the gap
             }
 
             //iterate again the position list, now to place the accident on their places        
@@ -665,6 +664,7 @@ var ScoreBeta = new function() {
             group = document.createElementNS(xmlns, "g"),   //group to fit all the measure members
             //measureEndBar = $Aria.Parse(DrawMeasureElement(MeasureElement.SimpleBar)),
             measureEndBar = DrawMeasureElement("SIMPLE_BAR"),
+            currWidth = 0,  //var to store the current width of the measure
             chords = new List();    //ordered list to fit all the chords @ this measure
 
         if(DEBUG_RECTANGLES && false) {
@@ -672,8 +672,8 @@ var ScoreBeta = new function() {
             //reference rectangle to be used as a fixed reference point
             var refRect = document.createElementNS(xmlns, "rect");
             refRect.setAttribute("fill", "red");
-            refRect.setAttribute("height", 15); 
-            refRect.setAttribute("width", 15);    
+            refRect.setAttribute("height", 18); 
+            refRect.setAttribute("width", 18);    
             group.appendChild(refRect); //append debug square
         }
 
@@ -686,8 +686,9 @@ var ScoreBeta = new function() {
         }
 
         this.GetWidth = function() {
-            var thisBBox = GetBBox(group);
-            return thisBBox.width + thisBBox.x;    
+            return currWidth;
+            //var thisBBox = GetBBox(group);
+            //return thisBBox.width + thisBBox.x;    
         }
 
         this.Count = function() {
@@ -695,12 +696,13 @@ var ScoreBeta = new function() {
         }
 
         //function to get the fixed elements total length
-        this.GetElemLength = function() {
-            var length = 0;
+        /*this.GetElemLength = function() {
+            var length = MEASURE_LEFT_MARGIN;
             chords.ForEach(function(chord) {
                 length += chord.GetWidth();
             });
-        }
+            return length;
+        }*/
 
         this.ForEachChord = function(action) {
             chords.ForEach(action);//iterate thru all the chords and apply the specified action to it
@@ -719,6 +721,9 @@ var ScoreBeta = new function() {
                 chord.MoveTo(nextPos, 0);  //move the chord X pos to current nextposition keeping the Y value
                 nextPos += chord.GetWidth() + spaceUnitLength / chord.GetDenominator();    //get the gap value and add it to the next position
             });
+
+            //set the next position vector as the current measure width
+            currWidth = nextPos;    
 
             //put the end bar at the end of the measure
             SetTransform(measureEndBar, { translate: [nextPos, 0] });
@@ -797,7 +802,12 @@ var ScoreBeta = new function() {
         this.Draw = function() { return group; }
 
         this.MoveTo = function(x, y) {
-            SetTransform(group, { translate: [x, y] });
+            //get decimal deviation of the this object Y
+            var groupBBox = GetBBox(group),
+                decimalYDev = Math.ceil(groupBBox.y) - groupBBox.y;
+
+            //subtract the deviation to the Y movement to get a smooth look to the lines
+            SetTransform(group, { translate: [x, y - decimalYDev] });
         }
 
         //Get the current width of this score (must be appended to work)
@@ -817,8 +827,9 @@ var ScoreBeta = new function() {
                 denSum = 0; //denominators sum
 
             measures.ForEach(function(measure) { 
-                elemTotalLength += MEASURE_LEFT_MARGIN;  //sum the measure left margin   
+                elemTotalLength += MEASURE_LEFT_MARGIN;  //sum the measure left margin
                 measure.ForEachChord(function(chord){
+                    chord.Organize();   //Ensure chords are organized to get their correct width
                     //PROBABLY IN THE FUTURE WILL HAVE TO VERIFY THE DENOMINATOR FOR ELEM TOTAL LENGTH FOR THE FINAL FINISH OF THE NOTES
                     denSum += 1 / chord.GetDenominator();   //get denominator value
                     elemTotalLength += chord.GetWidth();    //get chord length
@@ -829,8 +840,7 @@ var ScoreBeta = new function() {
             var unitSize = (lineLength - elemTotalLength) / denSum,
             //update measure positions
                 nextPos = headerBox.width + headerBox.x,
-
-                minFlag = false;    
+                minFlag = false;
 
             //update the denominator unit size for every measure
             measures.ForEach(function(measure) {   
