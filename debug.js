@@ -57,7 +57,7 @@ betaChord2.AddNoteCollection([
 	{ note: 'D' , octave: 6 }
 ]);
 
-betaChord3.AddNote({ note: 'G' , octave: 4});
+betaChord3.AddNote({ note: 'A' , octave: 4});
 betaChord3.AddNote({ note: 'A' , octave: 5});
 betaChord3.AddNote({ note: 'C' , octave: 5});
 
@@ -105,6 +105,7 @@ betaMeasure4.InsertChord(betaChord8);
 var alphaScore = new ScoreBeta.Score();
 //document.documentElement.appendChild(alphaScore.Draw());
 alphaScore.MoveTo(150, 50.5);
+
 
 /*
 alphaScore.InsertMeasure(betaMeasure1);
@@ -202,7 +203,7 @@ function getRandomChord() {
 		chord = new ScoreBeta.Chord({ denominator: randDen });
 
 	for(var i = 0; i < numberOfNotes; i++) {
-		var randomNote = String.fromCharCode(65 + Math.round(Math.random() * 7)),
+		var randomNote = String.fromCharCode(65 + getInt(0,6)),
 			randomOctave = getInt(0,10);
 
 		chord.AddNote({ note: randomNote, octave: randomOctave, accident: getRandomAccident() });

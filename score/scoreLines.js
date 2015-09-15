@@ -15,9 +15,6 @@ var ScoreBeta = new function() {
 
         //MUST ENHANCE THE MEASURE ORGANIZER AND SCORE LINE ORGANIZER
         //IN A WAY THAT THE LINES GET AWAYS SMOOTH (NOT MOVING STUFF TO DECIMAL COORDINATES)
-        //MUST DISCOVER WHY DEBUG SYMBOLS OFF OFFSET THE MEASURES BACK
-        //(WAS BECAUSE THE METHOD TO SET THE NEXT MEASURE POSITION WAS COUTING THE MEASURE BBOX WIDTH, fixed adding the x pos to bbox width)
-
 
         //IMPLEMENT MODE FOR CHORD IT SELF DRAW SYMBOLS AND ITS ATTRIBUTES
         //CAUSE SOME ADJUSTS ARE DEPENDENTS TO OTHER NOTES
@@ -170,6 +167,9 @@ var ScoreBeta = new function() {
 
             if(!note.note || typeof note.octave != "number") return "INVALID_NOTE";
 
+            if(note.note.charCodeAt(0) < 65 || note.note.charCodeAt(0) > 71)
+                return "INVALID_NOTE_LETTER";                    
+
             //iterate thru all notes already placed to check if it is not equal to some of them
             for(var i = 0; i < notes.length; i++) { //iterate thru all the notes
                 if(notes[i]) {   //if the note is valid
@@ -187,6 +187,10 @@ var ScoreBeta = new function() {
                 note.accidentDraw = DrawNoteAtt(note.accident); //get its draw
                 accidentGroup.appendChild(note.accidentDraw);   //append the accident drawing to the group if some
             }
+
+            note.noteDraw.addEventListener("click", function(){
+                console.log(note);
+            });
 
             notes.push(note);   //add the new note object to the notes array
 
@@ -338,16 +342,19 @@ var ScoreBeta = new function() {
             //generate ordere list of the notes
             var positionList = []; //List to keep the elements for adjacent verification 
             for(var j = 0; j < notes.length; j++) { //iterate thru all the notes
-                if(notes[j]) {   //if the note is valid  
+                if(notes[j] && notes[j].accidentDraw) {   //if the note is valid and has an accident 
                     //get the current pos offseted by the lowest value to ensure positive values
                     var currPos = notes[j].yCoord - lowValue;   
                     positionList[currPos] = notes[j];    //put the element at the index with same value than y coord offseted
                 }
             }
 
+            if(positionList.length <= 0)    //if the position list is empty, means no accident on this chord
+                return; //do nothing else and return
+
             var currNote,
-                accidentBox,
-                placeColumns = [];
+                accidentBox, 
+                placeColumns = []; 
 
             //iterate thru the position list to populate the place columns data
             for(var k = 0; k < positionList.length; k++) {
@@ -361,13 +368,16 @@ var ScoreBeta = new function() {
                 accidentBox = GetBBox(currNote.accidentDraw);
                 
                 var accYCoord = currNote.yCoord * LINE_OFFSET,  //get the y coord
-                    accTopCoord = accidentBox.y + accYCoord;   //get this accid obj top coord
+                    accTopCoord = accidentBox.y + accYCoord,   //get this accid obj top coord
+                    accColumnSet = false;   //flag to signalize whether a column has been set to the current note
 
                 //iterate thru the placeColumns to find the one the accident symbol fits
                 for(var columnIndex = 0; columnIndex < placeColumns.length; columnIndex++) {
                     //if the current top coord is less or equal than the column bottom coord
                     if(accTopCoord <= placeColumns[columnIndex].bottom) 
                         continue;   //proceed the next iteration
+
+                    accColumnSet = true;
 
                     //if the symbol fits the current column
                     currNote.accColumn = columnIndex;   
@@ -383,7 +393,7 @@ var ScoreBeta = new function() {
                 }
 
                 //if the symbol doesn't fit anywhere
-                if(currNote.accColumn == undefined) {
+                if(!accColumnSet) {
                     //create a new column
                     placeColumns.push({
                         bottom: accidentBox.y + accidentBox.height + accYCoord,
@@ -435,14 +445,16 @@ var ScoreBeta = new function() {
         //Function to place the notes positions, detecting adjacent notes colision
         function setNotesPositions(downStemFlag, lowValue) {
             //ADJACENT NOTES DETECTION
-            
+
             //Must put the notes in an ordered array by its coordinates to detect adjacent notes
             var positionList = []; //List to keep the elements for adjacent verification 
 
             for(var j = 0; j < notes.length; j++) { //iterate thru all the notes
+
                 if(notes[j]) {   //if the note is valid  
                     //get the current pos offseted by the lowest value to ensure positive values
                     var currPos = notes[j].yCoord - lowValue;   
+                    
                     positionList[currPos] = notes[j];    //put the element at the index with same value than y coord offseted
                 }
             }
