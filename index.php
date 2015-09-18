@@ -15,12 +15,13 @@
             <header>
                 Compos.In
             </header>
+            <input type="text"></input>
         </nav>
         
         <section id="cavaco">
             <nav id="cavacoMenu"></nav>
             <div id="scorePage">
-                <object type="image/svg+xml" data="score/scorePage.svg">Error</object>
+                <object type="image/svg+xml" data="debug.svg">Error</object>
             </div>
         </section>
     </body>   

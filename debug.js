@@ -1,14 +1,14 @@
 
 
 var debugSL = new ScoreBeta.ScoreLine(1500, { GClef: true, TimeSig44: true});
-debugSL.InsertMeasure(getMeasure());
-debugSL.InsertMeasure(getMeasure());
+/*debugSL.InsertMeasure(getMeasure());
+debugSL.InsertMeasure(getMeasure());*/
 
 
-document.documentElement.appendChild(debugSL.Draw());
-console.log(debugSL.UpdateDimensions(100));
+//document.documentElement.appendChild(debugSL.Draw());
+debugSL.Organize();
 debugSL.MoveTo(20,20.5 - GetBBox(debugSL.Draw()).y);
-getDebugRect(1500, GetBBox(debugSL.Draw()).height, 20, 20.5);
+//getDebugRect(1500, GetBBox(debugSL.Draw()).height, 20, 20.5);
 
 
 var betaChord1 = new ScoreBeta.Chord({ denominator: 2 });
@@ -102,20 +102,27 @@ betaMeasure3.InsertChord(betaChord7);
 
 betaMeasure4.InsertChord(betaChord8);
 
-var alphaScore = new ScoreBeta.Score();
-//document.documentElement.appendChild(alphaScore.Draw());
-alphaScore.MoveTo(150, 50.5);
+var alphaScore = new ScoreBeta.Score(null, 300, null);
+document.documentElement.appendChild(alphaScore.Draw());
+alphaScore.MoveTo(0.5, 0.5);
 
 
-/*
+alphaScore.InsertMeasure(getMeasure());
+alphaScore.InsertMeasure(getMeasure());
 alphaScore.InsertMeasure(betaMeasure1);
 alphaScore.InsertMeasure(betaMeasure2);
 alphaScore.InsertMeasure(betaMeasure3);
-alphaScore.InsertMeasure(betaMeasure4);*/
+alphaScore.InsertMeasure(betaMeasure4);
 
-//alphaScore.InsertMeasure(getMeasure());
-/*alphaScore.InsertMeasure(getMeasure());
-alphaScore.InsertMeasure(getMeasure());*/
+alphaScore.InsertMeasure(getMeasure());
+alphaScore.InsertMeasure(getMeasure());
+alphaScore.InsertMeasure(getMeasure());
+alphaScore.InsertMeasure(getMeasure());
+alphaScore.InsertMeasure(getMeasure());
+alphaScore.InsertMeasure(getMeasure());
+alphaScore.InsertMeasure(getMeasure());
+alphaScore.InsertMeasure(getMeasure());
+alphaScore.InsertMeasure(getMeasure());
 
 var lucasDen = 32;
 
@@ -164,7 +171,7 @@ for(var oct = 0; oct < 10; oct++) {
 //GenerateRandomScore(alphaScore);
 
 
-//alphaScore.Organize();
+alphaScore.Organize2();
 
 function GenerateRandomScore(score) {
 	var numberOfMeasures = getInt(1, 1);
@@ -213,7 +220,7 @@ function getRandomChord() {
 }
 
 function getRandomAccident() {
-	//return "";
+	//return "DOUBLE_FLAT";
 	var value = Math.round(Math.random() * 5),
 		acc = "";
 	
