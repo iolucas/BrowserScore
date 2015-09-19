@@ -14,6 +14,11 @@ function DrawScoreLines(length) {
     scoreLines.setAttribute("stroke", "#000");
     return scoreLines;   
 }
+
+//function to get the score lines path
+function GetScoreLinesPath(length) {
+    return "M 0, 0 " + length + ", 0 M 0, 15 " + length + ", 15 M 0, 30 " + length + ", 30 M 0, 45 " + length + ", 45 M 0, 60 " + length + ", 60";
+}
                 
 //Function to draw general score lines elements
 function DrawScoreLinesElement(scoreElement) {

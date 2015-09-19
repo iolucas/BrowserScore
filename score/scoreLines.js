@@ -27,7 +27,7 @@ var ScoreBeta = new function() {
         //--------------------------------------------------------------  
 
     var MEASURE_LEFT_MARGIN = 20,  //constante value for the left margin of the measure
-        SCORE_LINE_LENGTH = 1500,
+        //SCORE_LINE_LENGTH = 1500,
         SCORE_LINE_LEFT_MARGIN = 10,
         SCORE_LINE_HEADER_MARGIN = 10,
         SCORE_TOP_MARGIN = 50, //min value for a top margin for the scores
@@ -679,9 +679,12 @@ var ScoreBeta = new function() {
             //measureEndBar = $Aria.Parse(DrawMeasureElement(MeasureElement.SimpleBar)),
             measureEndBar = DrawMeasureElement("SIMPLE_BAR"),
             currWidth = 0,  //var to store the current width of the measure
-            chords = new List();    //ordered list to fit all the chords @ this measure
+            chords = new List(),   //ordered list to fit all the chords @ this measure
+            //variable to signalize whether a note has been added or removed from this chord and it was not yet organized
+            measureModified = false,
+            lastUnitLengthValue = 0; 
 
-        if(DEBUG_RECTANGLES && false) {
+        if(DEBUG_RECTANGLES) {
             //for debug, not really necessary due to group grows, but coodinates origin remains the same
             //reference rectangle to be used as a fixed reference point
             var refRect = document.createElementNS(xmlns, "rect");
@@ -724,6 +727,11 @@ var ScoreBeta = new function() {
 
         //Function to update the spaces of the measure and organize chords
         this.UpdateGaps = function(spaceUnitLength) {
+
+            //if the measure hasn't been modified and the space unit is the same of the last time
+            if(!measureModified && lastUnitLengthValue == spaceUnitLength)
+                return; //do nothing and return
+
             //the start position for the first chord
             var nextPos = MEASURE_LEFT_MARGIN;  //the measure left margin 
             chords.ForEach(function(chord) {
@@ -741,29 +749,9 @@ var ScoreBeta = new function() {
 
             //put the end bar at the end of the measure
             SetTransform(measureEndBar, { translate: [nextPos, 0] });
-        }
 
-        //Function to get the minimal size of this measure
-        this.GetMinWidth = function() {
-            var minSize = MEASURE_LEFT_MARGIN,  //the measure left margin
-                highDen = 0;    //var to keep the highest denominator
-
-            //get the highest denominator on the chord
-            chords.ForEach(function(chord) {
-                if(chord.GetDenominator() > highDen)
-                    highDen = chord.GetDenominator();
-            });
-
-            var MIN_WIDTH_DEN_FACTOR = 10;
-
-            //get the chord min size
-            chords.ForEach(function(chord) {
-                //ensure the chord is organized
-                chord.Organize();   
-                minSize += chord.GetWidth() + highDen * MIN_WIDTH_DEN_FACTOR / chord.GetDenominator();
-            });
-
-            return minSize;
+            measureModified = false;    //clear the modified flag
+            lastUnitLengthValue = spaceUnitLength;
         }
 
         this.InsertChord = function(chord, position) {
@@ -780,6 +768,8 @@ var ScoreBeta = new function() {
 
             //append the object to the group
             group.appendChild(chord.Draw());
+
+            measureModified = true; //set the flag that the chord has been modified
 
             return "SUCCESS";
         }
@@ -799,6 +789,8 @@ var ScoreBeta = new function() {
             group.removeChild(removedChord.Draw());  //remove it from the line
             chords.RemoveAt(position);    //remove the chord from the list
 
+            measureModified = true; //set the flag that the chord has been modified
+
             return removedChord;
         }
 
@@ -811,15 +803,17 @@ var ScoreBeta = new function() {
         }
     }
 
-    this.ScoreLine = function(lineLength, properties) {
+    this.ScoreLine = function(properties) {
         //Creates a new score line passing the line length and the minimum measure length to be kept in a line, otherwise it will overflow
 
         var selfRef = this,
 
             group = document.createElementNS(xmlns, "g"),   //group to fit all the score members
             header = document.createElementNS(xmlns, "g"),  //create the score header group, to hold the score elements
-            linesDrawing = DrawScoreLines(lineLength),   //score lines draw
-            measures = new List();    //ordered list to fit all the measures @ this score
+            linesDrawing = document.createElementNS(xmlns, "path"),   //score lines path
+            measures = new List(),    //ordered list to fit all the measures @ this score
+            lineModified = false,
+            currLineLength = 0;
 
         if(DEBUG_RECTANGLES) {
             //for debug, not really necessary due to group grows, but coodinates origin remains the same
@@ -832,6 +826,7 @@ var ScoreBeta = new function() {
         }
 
         group.appendChild(linesDrawing);
+        linesDrawing.setAttribute("stroke", "#000");
 
         group.appendChild(header);  //append score header
         setScoreProperties(properties); //set the score properties
@@ -856,25 +851,11 @@ var ScoreBeta = new function() {
             measures.ForEach(action);//iterate thru all the measures and apply the specified action to it
         }
 
-        //Function to get the max free length of this line
-        //to be used to put measures to the next line or to 
-        //take measure from next lines up
-        this.GetMaxFreeLength = function() {
-            //Get line header width
-            var headerBox = GetBBox(header),
-                headerWidth = headerBox.width + headerBox.x,
-                measureMinWidths = 0;
-
-            measures.ForEach(function(measure) {
-                console.log("measure: " + measure.GetMinWidth());
-                measureMinWidths += measure.GetMinWidth();
-            });
-
-            return lineLength - headerWidth - measureMinWidths;
-        }
-
         //Function to update the spaces and dimensions of the measures inside the score
-        this.Organize = function() {
+        /*this.Organize = function(lLength) {
+            if(currLineLength != lLength)
+                linesDrawing.setAttribute("d", GetScoreLinesPath(lLength));
+
             //Get total fixed elements length
             var headerBox = GetBBox(header),
                 elemTotalLength = headerBox.width + headerBox.x,    //fixed elements length
@@ -891,7 +872,7 @@ var ScoreBeta = new function() {
             });
 
             //set measures denominators unit size
-            var unitSize = (lineLength - elemTotalLength) / denSum,
+            var unitSize = (lLength - elemTotalLength) / denSum,
             //update measure positions
                 nextPos = headerBox.width + headerBox.x;
 
@@ -901,10 +882,13 @@ var ScoreBeta = new function() {
                 measure.MoveTo(nextPos, 0); //move the measure to the next position available (round down for smooth look)
                 nextPos += measure.GetWidth();  //generate the next position
             });
-        }
+        }*/
 
                 //Function to update the spaces and dimensions of the measures inside the score
-        this.UpdateDimensions = function(minLength) {
+        this.UpdateDimensions = function(lineLength, minLength) {
+            if(currLineLength != lineLength)
+                linesDrawing.setAttribute("d", GetScoreLinesPath(lineLength));
+
             //Get total fixed elements length
             var headerBox = GetBBox(header),
                 elemTotalLength = headerBox.width + headerBox.x,    //fixed elements length
@@ -994,7 +978,7 @@ var ScoreBeta = new function() {
 
             measure.Draw().onclick = function() {
                 console.log(alphaScore.RemoveMeasure(measure));
-                alphaScore.Organize2();
+                alphaScore.Organize2(1500, 300);
                 //MUST SET MODE TO FLAG WHEN A LINE MUST BE ORGANIZED OR NOT TO AVOID USELESS PROCESS
             };
 
@@ -1022,7 +1006,7 @@ var ScoreBeta = new function() {
 
 
     //General score that will handle multiple scores, lines and add the drawings finish and attributes
-    this.Score = function(lineLength, minLength, properties) {
+    this.Score = function(scoreProperties) {
         var selfRef = this, //self reference
 
             group = document.createElementNS(xmlns, "g"),   //group to keep the visual objects
@@ -1042,7 +1026,7 @@ var ScoreBeta = new function() {
         } 
 
         //Add the first line
-        createLine({ GClef: true, TimeSig44: true});
+        createLine(scoreProperties);
 
         this.Draw = function() { return group; }
 
@@ -1051,7 +1035,7 @@ var ScoreBeta = new function() {
         }
 
         function createLine(prop) {
-            var newLine = new ScoreBeta.ScoreLine(SCORE_LINE_LENGTH, prop);   //create the line
+            var newLine = new ScoreBeta.ScoreLine(prop);   //create the line
             lines.Add(newLine); //add the line to the lines list
             group.appendChild(newLine.Draw()); //append new line to the group
             return newLine;
@@ -1153,7 +1137,7 @@ var ScoreBeta = new function() {
         }
 
         //function to organize the score elements sizes, creation of new lines, etc
-        this.Organize1 = function() {
+        /*this.Organize1 = function() {
 
             //iterate thru all lines and update their dimensions
             for(var i = 0; i < lines.Count(); i++) {
@@ -1305,10 +1289,10 @@ var ScoreBeta = new function() {
                 //get the next position summing the actual coordinate plus the current object height
                 nextYCoord += currBBox.height + SCORE_TOP_MARGIN;
             }
-        }
+        }*/
 
                 //function to organize the score elements sizes, creation of new lines, etc
-        this.Organize2 = function() {
+        this.Organize2 = function(lineLength, minLength) {
 
             //iterate thru all lines and update their dimensions
             for(var i = 0; i < lines.Count(); i++) {
@@ -1327,7 +1311,7 @@ var ScoreBeta = new function() {
                             console.log(line.InsertMeasure(nextLine.RemoveAt(0)));
                             //alert("oi");
                             //check whether it is ok
-                            if(line.UpdateDimensions(minLength)) {
+                            if(line.UpdateDimensions(lineLength, minLength)) {
                                 //if an overflow occurrs    
                                 exitFlag = true;    //set the exit flag
                                 break;  //exits this iteration
@@ -1346,7 +1330,7 @@ var ScoreBeta = new function() {
 
 
                 //while the update dimensions min width flag keep set, 
-                while(line.UpdateDimensions(minLength)) {
+                while(line.UpdateDimensions(lineLength, minLength)) {
                     //remove the last measure
                     overflowMeasures.push(line.RemoveAt(line.Count() -1));
                 }
@@ -1355,7 +1339,7 @@ var ScoreBeta = new function() {
                 if(overflowMeasures.length > 0) {
                     //if the current line is the last line, create a new one
                     if(lines.Count() - 1 == i)
-                        createLine({ GClef: true });
+                        createLine({ GClef: scoreProperties.GClef });
 
                     var nextLine = lines.GetItem(i + 1);  //get the next line ref
 

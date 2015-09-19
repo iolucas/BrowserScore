@@ -1,13 +1,13 @@
 
 
-var debugSL = new ScoreBeta.ScoreLine(1500, { GClef: true, TimeSig44: true});
+//var debugSL = new ScoreBeta.ScoreLine(1500, { GClef: true, TimeSig44: true});
 /*debugSL.InsertMeasure(getMeasure());
 debugSL.InsertMeasure(getMeasure());*/
 
 
 //document.documentElement.appendChild(debugSL.Draw());
-debugSL.Organize();
-debugSL.MoveTo(20,20.5 - GetBBox(debugSL.Draw()).y);
+//debugSL.Organize();
+//debugSL.MoveTo(20,20.5 - GetBBox(debugSL.Draw()).y);
 //getDebugRect(1500, GetBBox(debugSL.Draw()).height, 20, 20.5);
 
 
@@ -102,7 +102,7 @@ betaMeasure3.InsertChord(betaChord7);
 
 betaMeasure4.InsertChord(betaChord8);
 
-var alphaScore = new ScoreBeta.Score(null, 300, null);
+var alphaScore = new ScoreBeta.Score({ GClef: true, TimeSig44: true});
 document.documentElement.appendChild(alphaScore.Draw());
 alphaScore.MoveTo(0.5, 0.5);
 
@@ -171,7 +171,7 @@ for(var oct = 0; oct < 10; oct++) {
 //GenerateRandomScore(alphaScore);
 
 
-alphaScore.Organize2();
+alphaScore.Organize2(1500, 300);
 
 function GenerateRandomScore(score) {
 	var numberOfMeasures = getInt(1, 1);
