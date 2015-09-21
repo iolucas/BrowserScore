@@ -14,7 +14,6 @@
     <script xlink:href="ariajs/List.js" type="text/javascript" />
     <script xlink:href="ariajs/Aria.js" type="text/javascript" />
     <script xlink:href="score/ScoreElements.js" type="text/javascript" />
-    <script xlink:href="score/ScoreLines.js" type="text/javascript" />
     <script xlink:href="score/ScoreBuilder.js" type="text/javascript" />
     <script xlink:href="debug.js" type="text/javascript" />   
 </svg>
