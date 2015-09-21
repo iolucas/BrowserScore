@@ -1,24 +1,12 @@
 
-
-//var debugSL = new ScoreBeta.ScoreLine(1500, { GClef: true, TimeSig44: true});
-/*debugSL.InsertMeasure(getMeasure());
-debugSL.InsertMeasure(getMeasure());*/
-
-
-//document.documentElement.appendChild(debugSL.Draw());
-//debugSL.Organize();
-//debugSL.MoveTo(20,20.5 - GetBBox(debugSL.Draw()).y);
-//getDebugRect(1500, GetBBox(debugSL.Draw()).height, 20, 20.5);
-
-
-var betaChord1 = new ScoreBuilder.Chord({ denominator: 2 });
-var betaChord2 = new ScoreBuilder.Chord({ denominator: 2 });
-var betaChord3 = new ScoreBuilder.Chord({ denominator: 4 });
-var betaChord4 = new ScoreBuilder.Chord({ denominator: 4 });
-var betaChord5 = new ScoreBuilder.Chord({ denominator: 4 });
-var betaChord6 = new ScoreBuilder.Chord({ denominator: 4 });
-var betaChord7 = new ScoreBuilder.Chord({ denominator: 1 });
-var betaChord8 = new ScoreBuilder.Chord({ denominator: 1 });
+var betaChord1 = { den: 2 }
+var betaChord2 = { den: 2 }
+var betaChord3 = { den: 4 }
+var betaChord4 = { den: 4 }
+var betaChord5 = { den: 4 }
+var betaChord6 = { den: 4 }
+var betaChord7 = { den: 1 }
+var betaChord8 = { den: 1 }
 
 
 function chord1Acc() {
@@ -26,155 +14,148 @@ function chord1Acc() {
 	//return "NATURAL";
 }
 
-betaChord1.AddNoteCollection([
-	{ note: 'A', octave: 4, accident: chord1Acc() },
-	{ note: 'B', octave: 4, accident: chord1Acc() },
-	{ note: 'C', octave: 4, accident: chord1Acc() },
-	{ note: 'D', octave: 4, accident: chord1Acc() },
-	{ note: 'E', octave: 4, accident: chord1Acc() },
-	{ note: 'F', octave: 4, accident: chord1Acc() },
-	{ note: 'G', octave: 4, accident: chord1Acc() },
-	{ note: 'A', octave: 5, accident: chord1Acc() },
-	{ note: 'B', octave: 5, accident: chord1Acc() },
-	{ note: 'C', octave: 5, accident: chord1Acc() },
-	{ note: 'D', octave: 5, accident: chord1Acc() },
-	{ note: 'E', octave: 5, accident: chord1Acc() },
-	{ note: 'F', octave: 5, accident: chord1Acc() },
-	{ note: 'G', octave: 5, accident: chord1Acc() },
-	{ note: 'A', octave: 6, accident: chord1Acc() },
-	{ note: 'B', octave: 6, accident: chord1Acc() },
-	{ note: 'C', octave: 6, accident: chord1Acc() },
-	{ note: 'D', octave: 6, accident: chord1Acc() },
-	{ note: 'E', octave: 6, accident: chord1Acc() },
-	{ note: 'F', octave: 6, accident: chord1Acc() },
-	{ note: 'G', octave: 6, accident: chord1Acc() }
-]);
+betaChord1.notes = [
+	{ n: 'A', o: 4, a: chord1Acc() },
+	{ n: 'B', o: 4, a: chord1Acc() },
+	{ n: 'C', o: 4, a: chord1Acc() },
+	{ n: 'D', o: 4, a: chord1Acc() },
+	{ n: 'E', o: 4, a: chord1Acc() },
+	{ n: 'F', o: 4, a: chord1Acc() },
+	{ n: 'G', o: 4, a: chord1Acc() },
+	{ n: 'A', o: 5, a: chord1Acc() },
+	{ n: 'B', o: 5, a: chord1Acc() },
+	{ n: 'C', o: 5, a: chord1Acc() },
+	{ n: 'D', o: 5, a: chord1Acc() },
+	{ n: 'E', o: 5, a: chord1Acc() },
+	{ n: 'F', o: 5, a: chord1Acc() },
+	{ n: 'G', o: 5, a: chord1Acc() },
+	{ n: 'A', o: 6, a: chord1Acc() },
+	{ n: 'B', o: 6, a: chord1Acc() },
+	{ n: 'C', o: 6, a: chord1Acc() },
+	{ n: 'D', o: 6, a: chord1Acc() },
+	{ n: 'E', o: 6, a: chord1Acc() },
+	{ n: 'F', o: 6, a: chord1Acc() },
+	{ n: 'G', o: 6, a: chord1Acc() }
+];
 
 
-betaChord2.AddNoteCollection([
-	{ note: 'A' , octave: 6 },
-	{ note: 'C' , octave: 6 },
-	{ note: 'D' , octave: 6 }
-]);
+betaChord2.notes = [
+	{ n: 'A' , o: 6 },
+	{ n: 'C' , o: 6 },
+	{ n: 'D' , o: 6 }
+];
 
-betaChord3.AddNote({ note: 'A' , octave: 4});
-betaChord3.AddNote({ note: 'A' , octave: 5});
-betaChord3.AddNote({ note: 'C' , octave: 5});
+betaChord3.notes = [
+	{ n: 'A' , o: 4},
+	{ n: 'A' , o: 5},
+	{ n: 'C' , o: 5}
+];
 
-betaChord4.AddNote({ note: 'G' , octave: 5});
-betaChord4.AddNote({ note: 'E' , octave: 5});
-betaChord4.AddNote({ note: 'F' , octave: 5});
+betaChord4.notes = [
+	{ n: 'G' , o: 5},
+	{ n: 'E' , o: 5},
+	{ n: 'F' , o: 5}
+];
 
-betaChord5.AddNote({ note: 'G', octave: 3, accident: "" });
-betaChord5.AddNote({ note: 'G', octave: 4, accident: "" });
-betaChord5.AddNote({ note: 'B', octave: 4, accident: "" });
+betaChord5.notes = [
+	{ n: 'G', o: 3, a: "" },
+	{ n: 'G', o: 4, a: "" },
+	{ n: 'B', o: 4, a: "" }
+];
 
-betaChord6.AddNote({ note: 'G', octave: 6, accident: "" });
-betaChord6.AddNote({ note: 'G', octave: 4, accident: "" });
-betaChord6.AddNote({ note: 'D', octave: 4, accident: "" });
+betaChord6.notes = [
+	{ n: 'G', o: 6, a: "" },
+	{ n: 'G', o: 4, a: "" },
+	{ n: 'D', o: 4, a: "" }
+];
 
-betaChord7.AddNote({ note: 'C', octave: 3, accident: "" });
-betaChord7.AddNote({ note: 'D', octave: 3, accident: "" });
-betaChord7.AddNote({ note: 'E', octave: 3, accident: "" });
+betaChord7.notes = [
+	{ n: 'C', o: 3, a: "" },
+	{ n: 'D', o: 3, a: "" },
+	{ n: 'E', o: 3, a: "" }];
 
-betaChord8.AddNote({ note: 'C', octave: 5, accident: "" });
-betaChord8.AddNote({ note: 'D', octave: 5, accident: "" });
-betaChord8.AddNote({ note: 'E', octave: 5, accident: "" });
+betaChord8.notes = [
+	/*{ n: 'C', o: 5, a: "" },
+	{ n: 'D', o: 5, a: "" },
+	{ n: 'E', o: 5, a: "" }*/
+	{ n: 'B', o: 2, a: "SHARP" }
+];
 
-var betaMeasure1 = new ScoreBuilder.Measure();
-var betaMeasure2 = new ScoreBuilder.Measure();
-var betaMeasure3 = new ScoreBuilder.Measure();
-var betaMeasure4 = new ScoreBuilder.Measure();
+var betaMeasure1 = new Object();
+var betaMeasure2 = new Object();
+var betaMeasure3 = new Object();
+var betaMeasure4 = new Object();
 
-betaMeasure1.AddChordCollection([
+betaMeasure1.chords = [
 	betaChord1,
 	betaChord2
-]);
+];
 
-betaMeasure2.AddChordCollection([
+betaMeasure2.chords = [
 	betaChord3, 
 	betaChord4,
 	betaChord5, 
 	betaChord6
-]);
+];
 
-betaMeasure3.InsertChord(betaChord7);
+betaMeasure3.chords = [
+	betaChord7
+];
 
-betaMeasure4.InsertChord(betaChord8);
+betaMeasure4.chords = [
+	betaChord8
+];
 
-var alphaScore = new ScoreBuilder.Score({ GClef: true, TimeSig44: true});
-document.documentElement.appendChild(alphaScore.Draw());
-alphaScore.MoveTo(0.5, 0.5);
+/*
+var deltaChord = {
+	den: 4,
+	notes: [
+		{ n: 'G', o: 5 , a: "FLAT"}
+		//{ note: 'G', octave: 4, accident:  }
+	]
+}
 
-
-alphaScore.InsertMeasure(getMeasure());
-alphaScore.InsertMeasure(getMeasure());
-alphaScore.InsertMeasure(betaMeasure1);
-alphaScore.InsertMeasure(betaMeasure2);
-alphaScore.InsertMeasure(betaMeasure3);
-alphaScore.InsertMeasure(betaMeasure4);
-
-alphaScore.InsertMeasure(getMeasure());
-alphaScore.InsertMeasure(getMeasure());
-alphaScore.InsertMeasure(getMeasure());
-alphaScore.InsertMeasure(getMeasure());
-alphaScore.InsertMeasure(getMeasure());
-alphaScore.InsertMeasure(getMeasure());
-alphaScore.InsertMeasure(getMeasure());
-alphaScore.InsertMeasure(getMeasure());
-alphaScore.InsertMeasure(getMeasure());
-
-var lucasDen = 32;
-
-lucasChord2 = new ScoreBuilder.Chord({ denominator: lucasDen });
-lucasChord3 = new ScoreBuilder.Chord({ denominator: lucasDen });
-lucasChord4 = new ScoreBuilder.Chord({ denominator: lucasDen });
-lucasChord5 = new ScoreBuilder.Chord({ denominator: lucasDen });
-lucasChord6 = new ScoreBuilder.Chord({ denominator: lucasDen });
-lucasChord7 = new ScoreBuilder.Chord({ denominator: lucasDen });
-lucasChord8 = new ScoreBuilder.Chord({ denominator: lucasDen });
-
-lucasChord2.AddNote({ note: 'G', octave: 1, accident: getRandomAccident() });
-lucasChord3.AddNote({ note: 'G', octave: 2, accident: getRandomAccident() });
-lucasChord4.AddNote({ note: 'G', octave: 3, accident: getRandomAccident() });
-lucasChord5.AddNote({ note: 'G', octave: 4, accident: getRandomAccident() });
-lucasChord6.AddNote({ note: 'G', octave: 5, accident: getRandomAccident() });
-lucasChord7.AddNote({ note: 'G', octave: 6, accident: getRandomAccident() });
-lucasChord8.AddNote({ note: 'G', octave: 7, accident: getRandomAccident() });
+var deltaMeasure = {
+	chords: [deltaChord]
+}*/
 
 
-lucasMeasure = new ScoreBuilder.Measure();
-/*lucasMeasure.AddChordCollection([
+var deltaFile = {
+	clef: 'G',
+	timeSig: 44,
+	measures: [
+		getMeasure(),
+		betaMeasure1,
+		betaMeasure2,
+		betaMeasure3,
+		betaMeasure4
+	]
+}
 
-	lucasChord2,
-	lucasChord3,
-	lucasChord4,
-	lucasChord5,
-	lucasChord6,
-	lucasChord7,
-	lucasChord8
+
+var deltaScore = ScoreLoader.Open(deltaFile);
+document.documentElement.appendChild(deltaScore.Draw());
+deltaScore.Organize(1500, 300);
+deltaScore.MoveTo(10.5, 0.5);
+
+document.documentElement.test123 = function() {
+	return deltaScore;
+}
+
+console.log(deltaFile);
 
 
-]);*/
-
+/*
 for(var oct = 0; oct < 10; oct++) {
 	for(var not = 0; not < 7; not++) {
 		var newChord = new ScoreBuilder.Chord({ denominator: 4 });
 		newChord.AddNote({ note: String.fromCharCode(65 + not) , octave: oct });
 		lucasMeasure.InsertChord(newChord);
 	}
-}
-
-//alphaScore.InsertMeasure(lucasMeasure);
-
+}*/
 
 //GenerateRandomScore(alphaScore);
 
-document.documentElement.test123 = function() {
-	return alphaScore;
-}
-
-alphaScore.Organize(1500, 300);
 
 function GenerateRandomScore(score) {
 	var numberOfMeasures = getInt(1, 1);
@@ -197,26 +178,25 @@ function getInt(from, to) {
 
 
 function getMeasure() {
-	var measure = new ScoreBuilder.Measure();
-	measure.InsertChord(getRandomChord());
-	measure.InsertChord(getRandomChord());
-	/*measure.InsertChord(new ScoreBeta.Chord({ denominator: 64 }));
-	measure.InsertChord(new ScoreBeta.Chord({ denominator: 64 }));*/
-	/*measure.InsertChord(getRandomChord());
-	measure.InsertChord(getRandomChord());*/
+	var measure = {
+		chords: [
+			getRandomChord(),
+			getRandomChord()
+		]
+	}
 	return measure;
 }
 
 function getRandomChord() {
 	var numberOfNotes = getInt(10,20),
 		randDen = Math.pow(2, getInt(0,6));
-		chord = new ScoreBuilder.Chord({ denominator: randDen });
+		chord = { den: randDen , notes: [] };
 
 	for(var i = 0; i < numberOfNotes; i++) {
 		var randomNote = String.fromCharCode(65 + getInt(0,6)),
 			randomOctave = getInt(0,10);
 
-		chord.AddNote({ note: randomNote, octave: randomOctave, accident: getRandomAccident() });
+		chord.notes.push({ n: randomNote, o: randomOctave, a: getRandomAccident() });
 	}
 	
 	return chord;

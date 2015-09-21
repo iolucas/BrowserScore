@@ -167,15 +167,15 @@ var ScoreBuilder = new function() {
             //if the note object already exists at this chord, return message
             if(notes.indexOf(note) != -1) return "NOTE_ALREADY_ON_CHORD_SAME_OBJ";
 
-            if(!note.note || typeof note.octave != "number") return "INVALID_NOTE";
+            if(!note.n || typeof note.o != "number") return "INVALID_NOTE";
 
-            if(note.note.charCodeAt(0) < 65 || note.note.charCodeAt(0) > 71)
+            if(note.n.charCodeAt(0) < 65 || note.n.charCodeAt(0) > 71)
                 return "INVALID_NOTE_LETTER";                    
 
             //iterate thru all notes already placed to check if it is not equal to some of them
             for(var i = 0; i < notes.length; i++) { //iterate thru all the notes
                 if(notes[i]) {   //if the note is valid
-                    if((note.note == notes[i].note && note.octave == notes[i].octave))
+                    if((note.n == notes[i].n && note.o == notes[i].o))
                         return "NOTE_ALREADY_ON_CHORD_SAME_NOTE_AND_OCTAVE";
                 }
             }
@@ -185,8 +185,8 @@ var ScoreBuilder = new function() {
 
             //note.noteDraw.setAttribute("opacity", ".5");
 
-            if(note.accident) {   //if the note has an accident, 
-                note.accidentDraw = DrawNoteAtt(note.accident); //get its draw
+            if(note.a) {   //if the note has an accident, 
+                note.accidentDraw = DrawNoteAtt(note.a); //get its draw
                 accidentGroup.appendChild(note.accidentDraw);   //append the accident drawing to the group if some
             }
 
@@ -218,7 +218,7 @@ var ScoreBuilder = new function() {
                 for(var i = 0; i < notes.length; i++) { //iterate thru all the notes
                     if(notes[i]) {   //if the note is valid
                         //check if it is the same
-                        if((note.note == notes[i].note && note.octave == notes[i].octave)) {
+                        if((note.n == notes[i].n && note.o == notes[i].o)) {
                             noteIndex = i;    //set the note index
                             note = notes[i];    //get the valid note reference for this note values
                             break;  //exit the iteration
@@ -276,7 +276,7 @@ var ScoreBuilder = new function() {
                 if(notes[i]) {   //if the note is valid
 
                     //get the element y coordinate based on its values for note and octave
-                    var yCoord = -((notes[i].note.charCodeAt(0) - POS0_NOTE) + (notes[i].octave - POS0_OCTAVE) * 7); 
+                    var yCoord = -((notes[i].n.charCodeAt(0) - POS0_NOTE) + (notes[i].o - POS0_OCTAVE) * 7); 
                     notes[i].yCoord = yCoord;   //register the y coord at the note element for note placement later
 
                     //if the current y position is low than the actual lowest value
@@ -893,14 +893,14 @@ var ScoreBuilder = new function() {
 
             var nextPos = SCORE_LINE_LEFT_MARGIN;
 
-            if(props.GClef) {
+            if(props.clef && props.clef == 'G') {
                 var clef = DrawScoreLinesElement(ScoreElement.GClef);
                 header.appendChild(clef);
                 SetTransform(clef, { translate: [22 + nextPos, 13] });
                 nextPos += GetBBox(clef).width + SCORE_LINE_HEADER_MARGIN;
             }
             
-            if(props.TimeSig44) {
+            if(props.timeSig && props.timeSig == 44) {
                 var timeSig = DrawScoreLinesElement(ScoreElement.TimeSig44);
                 header.appendChild(timeSig);
                 SetTransform(timeSig, { translate: [nextPos, 0] });
@@ -940,11 +940,12 @@ var ScoreBuilder = new function() {
             //append the object to the group
             group.appendChild(measure.Draw());
 
+            /*
             measure.Draw().onclick = function() {
                 console.log(alphaScore.RemoveMeasure(measure));
                 alphaScore.Organize(1500, 300);
                 //MUST SET MODE TO FLAG WHEN A LINE MUST BE ORGANIZED OR NOT TO AVOID USELESS PROCESS
-            };
+            };*/
 
             return "SUCCESS";
         }
@@ -1117,7 +1118,7 @@ var ScoreBuilder = new function() {
 
                         while(nextLine.Count() > 0) {
                             //put a measure from the below line up
-                            console.log(line.InsertMeasure(nextLine.RemoveAt(0)));
+                            line.InsertMeasure(nextLine.RemoveAt(0));
                             //alert("oi");
                             //check whether it is ok
                             if(line.UpdateDimensions(lineLength, minLength)) {
@@ -1148,7 +1149,7 @@ var ScoreBuilder = new function() {
                 if(overflowMeasures.length > 0) {
                     //if the current line is the last line, create a new one
                     if(lines.Count() - 1 == i)
-                        createLine({ GClef: scoreProperties.GClef });
+                        createLine({ clef: scoreProperties.clef });
 
                     var nextLine = lines.GetItem(i + 1);  //get the next line ref
 
@@ -1208,7 +1209,7 @@ function GetBBox(element) {
     }
 }
 
-
+/*
 function createScoreLineHeader(properties){
     var lineHeaderContainer = $Aria.CreateContainer({ height: lineHeight });    //header container  
     lineHeaderContainer.SetBackgroundColor("rgba(0,128,0,.2)");
@@ -1230,7 +1231,7 @@ function createScoreLineHeader(properties){
     lineHeaderContainer.toString = function() { return "LineHeaderContainer"; }
 
     return lineHeaderContainer;
-}
+}*/
 
 
 
