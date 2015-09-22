@@ -139,7 +139,7 @@ function DrawNoteAtt(element) {
             break;
 
         default:
-            throw "INVALID_NOTE_ATT_TO_DRAW";
+            throw "INVALID_NOTE_ATT_TO_DRAW: " + element;
 
     }
 

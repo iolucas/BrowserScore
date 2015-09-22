@@ -12,6 +12,11 @@ var ScoreBuilder = new function() {
         //CHORO IS COMING BACK, FOCUS ON IT
         //MUST REDRAW ALL SYMBOLS THAT HAVE "FAKE WHITE SPACES" DUE TO THESE ARE MISS PLACING THE SCORE
 
+        //MUST GENERALIZE THE CLEFS AND LINES THEY ARE
+        //MUST GENERALIZE BEATS AND BEATS TIME FOR TIME SIGNATURES
+        //CHECK WHETHER IS NEEDED TO IMPLEMENT CHORD SECTIONS AS MUSIC XML, NOTES ON THE MEASURE, WITH THE X COORD SPECIFIED
+
+
         //MUST CREATE SYSTEM TO AVOID BUG WHEN TOO MUCH REDUCE THE SCREEN
         //TRY TO IMPROVE THE WAY SCREEN WILL BE RESIZE TO SAVE PROCESSING (MAYBE USE A DELAY WHILE RESIZING)
 
@@ -63,7 +68,7 @@ var ScoreBuilder = new function() {
             currWidth = 0,  //variable to keep the current true width of the chord (discouting aux lines gaps)
 
             //variable to signalize whether a note has been added or removed from this chord and it was not yet organized
-            chordModified = false;   
+            chordModified = false;   //must start as true to ensure init the curr width variable  
 
         if(DEBUG_RECTANGLES) {
             //for debug, not really necessary due to group grows, but coodinates origin remains the same
@@ -119,6 +124,9 @@ var ScoreBuilder = new function() {
             default:
                 throw "INVALID_CHORD_CLEF_SET: " + clef;
         }
+
+        //ensures the currwidth variable is initiated
+        setChordPositions();
 
         //--------------------------------------------------------------------------------
         //----------------------- PUBLIC METHODS -----------------------------------------
@@ -243,6 +251,14 @@ var ScoreBuilder = new function() {
             chordModified = true;
 
             return "REMOVE_SUCCESSFUL";
+        }
+
+        function getNoteCoord(note) {
+            //If the note is A or B, must add 1 to the octave to match the piano standard of notes and octaves
+            if(note.n == 'A' || note.n == 'B')
+                return -((note.n.charCodeAt(0) - POS0_NOTE) + (note.o + 1 - POS0_OCTAVE) * 7);
+
+            return -((note.n.charCodeAt(0) - POS0_NOTE) + (note.o - POS0_OCTAVE) * 7);
         }        
 
         //Function to be called when you want to update the chord object positions 
@@ -276,7 +292,8 @@ var ScoreBuilder = new function() {
                 if(notes[i]) {   //if the note is valid
 
                     //get the element y coordinate based on its values for note and octave
-                    var yCoord = -((notes[i].n.charCodeAt(0) - POS0_NOTE) + (notes[i].o - POS0_OCTAVE) * 7); 
+                    var yCoord = getNoteCoord(notes[i]);
+                    //var yCoord = -((notes[i].n.charCodeAt(0) - POS0_NOTE) + (notes[i].o - POS0_OCTAVE) * 7); 
                     notes[i].yCoord = yCoord;   //register the y coord at the note element for note placement later
 
                     //if the current y position is low than the actual lowest value

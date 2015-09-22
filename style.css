@@ -2,60 +2,74 @@
 
 html, body {
     margin: 0;
-    font-family: "Calibri";
+    font-family: "Ubuntu";
     height: 100%;
 }
-
 
 body {
-    background-color: #eee;
-    
-    
+    background-color: #222;
+    height: 100%;
 }
 
-header {
-    background-color: #333;
-    height: 50px;
+div#logo {
+    /*background-color: #333;*/
+    background: linear-gradient(45deg, #333 65%, #444 0%, #444 70%, #555 0%);
+    height: 100px;
     color: #fff;
     font-size: 30px;
-    line-height: 50px;
+    line-height: 100px;
     padding-left: 10px;
-    font-family: 'Ubuntu';    
 }
 
-#sideMenu {
-    background-color: #222; 
+#side-menu {
     width: 300px;
     float:left;
-    height: 100%;
+}
+
+.side-menu-but {
+    color: #fff;
+    padding-left: 30px;
+    line-height: 60px;
+    font-size: 20px;
+    border-bottom: 1px solid #333;
+    cursor: pointer;
+}
+
+#files {
+    display: none;
+}
+
+.side-menu-but:hover {
+    background-color: #777;
+}
+
+#general-content {
+    margin-left: 300px;
+    min-height: 100%;
+    background-color: #fff; 
+}
+
+#score-menu {
+    border-radius: 10px;
+    background-color: rgba(200,200,255,.95);
+    height: 150px;
+    width: calc(100% - 320px);
     position: fixed;
+    left: 310px;
+    top: 10px;
+    /*box-shadow: 0px 0px 2px rgba(0,0,0,.5);*/
 }
 
-#cavaco {
-    float:right;
-    height: 100%;
-    width: calc(100% - 300px);
+#score-page {
+    padding-top: 160px;
+    text-align: center; 
 }
 
-#cavacoMenu {
-    background-color:#ddd;
-    height: 100px;
-    width: 100%;
-    margin-bottom: 10px;
-    position: fixed;
-}
-
-#scorePage {
-/*    height: calc(100% - 100px);*/
-    text-align: center;
-    margin-top: 110px;
-}
-
-svg {
+/*svg {
     cursor: pointer;
 }
             
 svg:hover {
     -webkit-filter: drop-shadow( -0px -0px 3px #000 );
-    filter: drop-shadow( -0px -0px 0px #000 ); /* Same syntax as box-shadow */
-}
+    filter: drop-shadow( -0px -0px 0px #000 ); // Same syntax as box-shadow
+}*/

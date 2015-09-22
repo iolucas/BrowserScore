@@ -132,17 +132,30 @@ var deltaFile = {
 	]
 }
 
-
+/*
 var deltaScore = ScoreLoader.Open(deltaFile);
 document.documentElement.appendChild(deltaScore.Draw());
 deltaScore.Organize(1500, 300);
-deltaScore.MoveTo(10.5, 0.5);
+deltaScore.MoveTo(10.5, 0.5);*/
 
 document.documentElement.test123 = function() {
-	return deltaScore;
+	//return deltaScore;
 }
 
-console.log(deltaFile);
+document.documentElement.showFile = function(jsonObj) {
+	//return deltaScore;
+}
+
+document.documentElement.OpenFile = function(scoreFile) {
+	//console.log(scoreFile);
+	//console.log(deltaFile);
+
+
+	var scoreObj = ScoreLoader.Open(scoreFile);
+	document.documentElement.appendChild(scoreObj.Draw());
+	scoreObj.Organize(1500, 300);
+	scoreObj.MoveTo(15.5, 0.5);
+}
 
 
 /*
@@ -233,7 +246,7 @@ function getRandomAccident() {
 	return acc;
 }
 
-function getDebugRect(width, height, x, y) {
+function getDebugRect(width, height, x, y, parent) {
 	var debRect = document.createElementNS(xmlns, "rect");
 	debRect.setAttribute("width", width);
 	debRect.setAttribute("height", height);
@@ -242,7 +255,10 @@ function getDebugRect(width, height, x, y) {
 	debRect.setAttribute("fill", "none");
 	debRect.setAttribute("stroke", "#333");
 	debRect.setAttribute("stroke-width", 1);
-	document.documentElement.appendChild(debRect);
+	if(parent)
+		parent.appendChild(debRect);
+	else
+		document.documentElement.appendChild(debRect);
 	return debRect;
 }
 
