@@ -17,6 +17,10 @@ var ScoreBuilder = new function() {
         //CHECK WHETHER IS NEEDED TO IMPLEMENT CHORD SECTIONS AS MUSIC XML, NOTES ON THE MEASURE, WITH THE X COORD SPECIFIED
 
 
+        //MUST DETERMINE METAS AND PRIMARY OBJECTIVES
+        //CHECK MUSIC XML WEAKNESS
+
+
         //MUST CREATE SYSTEM TO AVOID BUG WHEN TOO MUCH REDUCE THE SCREEN
         //TRY TO IMPROVE THE WAY SCREEN WILL BE RESIZE TO SAVE PROCESSING (MAYBE USE A DELAY WHILE RESIZING)
 
@@ -125,8 +129,9 @@ var ScoreBuilder = new function() {
                 throw "INVALID_CHORD_CLEF_SET: " + clef;
         }
 
-        //ensures the currwidth variable is initiated
-        setChordPositions();
+        //ensures the currwidth variable is initiated with the rest symbol
+        currWidth = GetBBox(rest).width;
+        //setChordPositions();
 
         //--------------------------------------------------------------------------------
         //----------------------- PUBLIC METHODS -----------------------------------------
@@ -911,9 +916,12 @@ var ScoreBuilder = new function() {
             var nextPos = SCORE_LINE_LEFT_MARGIN;
 
             if(props.clef && props.clef == 'G') {
-                var clef = DrawScoreLinesElement(ScoreElement.GClef);
+                //var clef = DrawScoreLinesElement(ScoreElement.GClef);
+                //var clef = DrawScoreClef("G");
+                //var clef = DrawTimeSigNum(9);
+                var clef = DrawTimeSig("9", "8");
                 header.appendChild(clef);
-                SetTransform(clef, { translate: [22 + nextPos, 13] });
+                SetTransform(clef, { translate: [nextPos, 0] });
                 nextPos += GetBBox(clef).width + SCORE_LINE_HEADER_MARGIN;
             }
             

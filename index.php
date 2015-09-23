@@ -99,6 +99,7 @@
                 var jsonObj = JSON.parse(jsonStr);
                 var scoreObj = toComposinFormat(jsonObj);
                 score.OpenFile(scoreObj);
+                console.log(jsonObj);
             }
 
 

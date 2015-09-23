@@ -45,8 +45,9 @@ div#logo {
 
 #general-content {
     margin-left: 300px;
+    margin-bottom: 30px;
     min-height: 100%;
-    background-color: #fff; 
+    background-color: #f0f0f0;
 }
 
 #score-menu {
