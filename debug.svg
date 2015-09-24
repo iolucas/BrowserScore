@@ -11,6 +11,7 @@
         }
 
         ]]></style>
+        <script xlink:href="score/g-query.js" type="text/javascript" /> 
     <script xlink:href="ariajs/List.js" type="text/javascript" />
     <script xlink:href="ariajs/Aria.js" type="text/javascript" />
     <script xlink:href="score/ScoreLoader.js" type="text/javascript" />

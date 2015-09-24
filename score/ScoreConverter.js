@@ -98,12 +98,13 @@ function toComposinFormat(jsonObj) {
         for(var i = 0; i < fileMeasures.length; i++) {
             //if the measure object got the attribute member
             if(fileMeasures[i].attributes) {
+                neoScore.attributes = fileMeasures[i].attributes
                 //get and set the clef
-                neoScore.clef = fileMeasures[i].attributes.clef.sign;
+                /*neoScore.clef = fileMeasures[i].attributes.clef.sign;
 
                 //get and set the timesig
                 neoScore.timeSig = fileMeasures[i].attributes.time['beats'] + fileMeasures[i].attributes.time['beat-type']; 
-                neoScore.timeSig = parseInt(neoScore.timeSig); 
+                neoScore.timeSig = parseInt(neoScore.timeSig); */
             }
 
             //FORGET FOR NOW

@@ -534,7 +534,7 @@ function AriaElement(svgElement, setSizeInterface) {
         }
     }
 }
-
+/*
 //Function to set the transform attributes of a given element
 function SetTransform(element, values) {
     //get the transform string
@@ -569,7 +569,7 @@ function SetTransform(element, values) {
     //console.log(oldValues);
     element.setAttribute("transform", oldValues.substr(0, oldValues.length - 1));
 }
-
+*/
 //Function to get the transform attribute for a given element
 function GetTransform(element, property) {
     var tString = element.getAttribute("transform");

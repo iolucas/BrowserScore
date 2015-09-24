@@ -1,33 +1,23 @@
 xmlns="http://www.w3.org/2000/svg";
 xlink="http://www.w3.org/1999/xlink"; 
 
-//Wrapper to hold possible elements to draw
-var ScoreElement = {
-    GClef: 0,
-    TimeSig44: 1
-};
-
-//Function to draw score Lines
-function DrawScoreLines(length) {
-    var scoreLines = document.createElementNS(xmlns, "path");
-    scoreLines.setAttribute("d","M 0, 0 " + length + ", 0 M 0, 15 " + length + ", 15 M 0, 30 " + length + ", 30 M 0, 45 " + length + ", 45 M 0, 60 " + length + ", 60");
-    scoreLines.setAttribute("stroke", "#000");
-    return scoreLines;   
-}
-
-//function to get the score lines path
+//Function to get the score lines path
 function GetScoreLinesPath(length) {
-    return "M 0, 0 " + length + ", 0 M 0, 15 " + length + ", 15 M 0, 30 " + length + ", 30 M 0, 45 " + length + ", 45 M 0, 60 " + length + ", 60";
+    return "M 0, 0 " + length + 
+    ", 0 M 0, 15 " + length + 
+    ", 15 M 0, 30 " + length + 
+    ", 30 M 0, 45 " + length + 
+    ", 45 M 0, 60 " + length + 
+    ", 60";
 }
 
 //Function to Draw score clefs
 function DrawScoreClef(clef) {
-    var clefElem;
+    var clefElem = document.createElementNS(xmlns, "path");  //create new path
 
     switch(clef) {
 
         case "G":
-            clefElem = document.createElementNS(xmlns, "path");  //create new path
             clefElem.setAttribute("d", "M20.482,37.557c-1.598,0.521-2.917,1.401-3.96,2.64c-1.042,1.237-1.678,2.59-1.907,4.057c-0.227,1.466-0.039,2.916,0.563,4.35c0.602,1.434,1.735,2.59,3.396,3.471c0.391,0,0.637,0.163,0.734,0.488c0.097,0.326-0.05,0.489-0.439,0.489c-1.598-0.326-2.999-0.994-4.205-2.004c-2.248-1.857-3.486-4.251-3.714-7.185c-0.13-1.466,0.008-2.884,0.416-4.252c0.407-1.369,0.97-2.624,1.688-3.764c0.879-1.205,1.922-2.249,3.128-3.128c0.064-0.065,0.252-0.212,0.561-0.44c0.311-0.229,0.612-0.44,0.905-0.636c0.293-0.195,0.732-0.505,1.318-0.929l-1.807-8.7c-1.597,1.335-3.178,2.81-4.742,4.423c-1.564,1.613-2.981,3.316-4.252,5.108c-1.271,1.792-2.29,3.69-3.055,5.695c-0.766,2.004-1.148,4.114-1.148,6.33c0,2.053,0.432,3.984,1.295,5.792c0.864,1.809,2.013,3.381,3.446,4.716c1.435,1.336,3.088,2.388,4.962,3.154c1.873,0.766,3.771,1.148,5.693,1.148c0.066,0,0.368-0.033,0.905-0.099c0.537-0.064,1.107-0.146,1.709-0.244c0.604-0.097,1.159-0.204,1.664-0.317c0.504-0.115,0.758-0.237,0.758-0.366l-0.294-1.37C22.828,49.565,21.622,43.422,20.482,37.557z M22.192,37.361l4.009,19.406c2.313-0.881,3.876-2.388,4.691-4.521c0.815-2.134,1.002-4.302,0.563-6.501c-0.44-2.2-1.474-4.147-3.104-5.842C26.721,38.208,24.669,37.361,22.192,37.361z M17.059,11.21c1.01-0.522,1.947-1.304,2.813-2.346c0.862-1.042,1.659-2.159,2.395-3.349c0.732-1.189,1.368-2.403,1.905-3.642c0.537-1.239,0.97-2.362,1.296-3.373c0.357-1.076,0.603-2.282,0.733-3.618c0.129-1.336-0.082-2.46-0.635-3.372c-0.393-0.815-0.905-1.287-1.541-1.418c-0.635-0.13-1.271-0.082-1.906,0.147c-0.636,0.228-1.238,0.595-1.808,1.1c-0.571,0.505-0.987,0.953-1.248,1.344c-0.717,1.271-1.344,2.688-1.881,4.252c-0.538,1.564-0.905,3.186-1.1,4.864c-0.196,1.678-0.221,3.291-0.074,4.839C16.155,8.188,16.504,9.711,17.059,11.21z M15.593,12.725c-0.555-2.15-1.043-4.26-1.467-6.33c-0.424-2.069-0.636-4.196-0.636-6.379c0-1.597,0.115-3.348,0.343-5.254c0.229-1.906,0.644-3.764,1.246-5.572c0.604-1.809,1.435-3.43,2.492-4.864c1.061-1.434,2.469-2.477,4.229-3.129c0.163-0.064,0.326-0.097,0.49-0.097c0.227,0,0.496,0.13,0.805,0.391c0.311,0.26,0.637,0.643,0.979,1.148c0.342,0.505,0.643,1.026,0.904,1.564c0.261,0.537,0.456,0.904,0.588,1.1c0.878,1.662,1.521,3.43,1.93,5.303c0.406,1.874,0.644,3.74,0.709,5.598c0.129,2.802-0.025,5.572-0.464,8.309c-0.439,2.737-1.329,5.41-2.665,8.016c-0.455,0.782-0.921,1.573-1.394,2.371c-0.474,0.799-1.033,1.572-1.686,2.322c-0.131,0.131-0.367,0.367-0.709,0.708c-0.343,0.343-0.693,0.692-1.051,1.051c-0.358,0.358-0.677,0.693-0.953,1.002c-0.277,0.309-0.415,0.497-0.415,0.562l2.003,9.777c0.013,0.064,1.003,0,1.003,0c1.912,0.024,3.937,0.333,5.694,1.026c1.694,0.782,3.152,1.857,4.375,3.226c1.222,1.369,2.198,2.909,2.933,4.619c0.732,1.711,1.1,3.446,1.1,5.206c0,1.76-0.261,3.553-0.782,5.377c-1.336,3.454-3.471,6.012-6.403,7.674c-0.326,0.195-0.791,0.416-1.394,0.66c-0.602,0.244-0.84,0.627-0.709,1.149c0.784,3.55,1.312,5.994,1.59,7.332c0.276,1.339,0.48,3.065,0.61,5.181c0.13,2.023-0.221,3.843-1.051,5.472c-0.832,1.634-1.947,2.96-3.35,3.984c-1.399,1.029-2.679,1.629-3.836,1.813c-1.156,0.179-1.946,0.266-2.371,0.266c-1.466,0-2.899-0.278-4.301-0.833c-1.727-0.647-3.177-1.641-4.35-2.979c-1.173-1.339-1.76-2.967-1.76-4.885c0-1.209,0.35-2.449,1.051-3.72c0.701-1.27,1.622-2.184,2.762-2.732c1.271-0.655,2.42-0.833,3.445-0.543c1.027,0.295,1.874,0.852,2.543,1.666c0.668,0.814,1.134,1.801,1.393,2.955c0.261,1.16,0.245,2.239-0.05,3.25c-0.293,1.012-0.887,1.87-1.783,2.566c-0.896,0.703-2.143,1.018-3.739,0.956c0.651,1.173,1.564,1.913,2.737,2.221c1.173,0.315,2.38,0.333,3.617,0.074c1.238-0.26,2.403-0.741,3.495-1.443c1.092-0.697,1.947-1.457,2.566-2.271c0.392-0.586,0.685-1.351,0.88-2.294c0.195-0.951,0.311-1.932,0.343-2.962c0.031-1.023,0-1.825-0.099-2.393c-0.098-0.574-0.261-1.462-0.488-2.665c-0.977-3.942-1.598-6.421-1.857-7.434c-0.131-0.322-0.481-0.428-1.051-0.314c-0.57,0.115-1.051,0.221-1.442,0.314c-2.802,0.364-5.149,0.198-7.039-0.485c-2.933-0.782-5.515-2.175-7.747-4.179c-2.232-2.004-4.025-4.432-5.377-7.284C0.676,45.043,0,42.876,0,41.394c0-1.482,0-2.419,0-2.811c0-2.639,0.456-5.115,1.368-7.43c1.728-3.617,3.772-6.941,6.135-9.971C9.866,18.15,12.563,15.332,15.593,12.725z");
             break;
 
@@ -39,17 +29,14 @@ function DrawScoreClef(clef) {
             break;
 
         case "F":
-            clefElem = document.createElementNS(xmlns, "path");  //create new path
             clefElem.setAttribute("d", "M0,46.704c0-0.504,2.425-2.577,5.39-4.607c6.373-4.365,10.975-9.14,13.652-14.166c6.139-11.524,4.194-23.541-3.987-24.638C10.529,2.687,4.8,5.988,4.8,9.203c0,1.193,0.305,1.289,3.623,1.141c4.059-0.181,6.805,3.77,4.608,6.63C9.561,21.495,1.2,18.898,1.2,13.299c0-4.907,2.986-8.812,8.242-10.778C20.689-1.688,31.395,6.07,30.457,17.749c-0.768,9.572-9.102,18.512-25.281,27.119C1.337,46.909,0,47.384,0,46.704L0,46.704zM39.893,9.672c0,1.948-1.508,3.528-3.368,3.528c-1.859,0-3.367-1.58-3.367-3.528c0-1.949,1.508-3.528,3.367-3.528C38.385,6.145,39.893,7.724,39.893,9.672zM39.893,21.6c0,1.948-1.507,3.528-3.368,3.528c-1.859,0-3.367-1.58-3.367-3.528c0-1.949,1.508-3.528,3.367-3.528C38.386,18.072,39.893,19.651,39.893,21.6z");
             break;
 
         case "C":
-            clefElem = document.createElementNS(xmlns, "path");  //create new path
             clefElem.setAttribute("d", "M0,29.977V0.045H3.36h3.36v29.932v29.934H3.36H0V29.977z M9.748,0.034L12.192,0l0.025,14.4c0.016,9.025,0.225,14.355,0.603,14.355c0.883,0,3.56-4.269,5.187-8.272l1.417-3.487l1.227,2.773c1.467,3.313,3.583,4.865,6.277,4.599c3.217-0.317,4.416-2.579,4.716-8.897c0.432-9.045-1.304-12.906-6.01-13.375c-3.332-0.332-4.86,0.475-3.889,2.054c0.367,0.599,1.047,1.696,1.509,2.442c0.742,1.194,0.691,1.553-0.424,3.053c-1.646,2.212-3.62,2.474-5.479,0.729c-2.027-1.906-1.891-4.307,0.396-6.91c4.914-5.598,14.741-4.174,19.358,2.803c1.473,2.224,1.685,3.135,1.674,7.172c-0.014,5.029-0.901,7.414-3.745,10.05c-2.19,2.03-6.137,3.047-9.846,2.538c-2.924-0.403-3.058-0.354-4.283,1.581c-1.237,1.956-1.241,2.04-0.148,4.167c1.115,2.172,1.115,2.172,5.954,2.172c4.391,0,5.053,0.164,7.15,1.762c7.806,5.945,6.451,18.943-2.4,23.043c-6.44,2.98-15.577-0.652-15.577-6.193c0-2.211,1.907-4.254,3.97-4.254c1.718,0,3.972,1.938,3.972,3.418c0,0.535-0.575,1.783-1.279,2.77c-1.596,2.242-0.762,3.586,2.224,3.586c2.642,0,5.554-2.463,6.364-5.385c0.808-2.906,0.804-10.16-0.006-13.076c-1.578-5.68-8.335-5.383-10.447,0.459c-0.754,2.084-1.742,2.854-1.744,1.355c-0.001-1.502-3.535-8.121-5.11-9.574l-1.608-1.481l0.032,15.977l-0.058,13.762H9.748V0.034L9.748,0.034z");
             break;
 
         case "NEUTRAL_1":
-            clefElem = document.createElementNS(xmlns, "path");  //create new path
             clefElem.setAttribute("d", "M0,30.031V5.406h8.108h8.108v24.626v24.625H8.108H0V30.031z M13.814,30.031v-19.82H8.108H2.402v19.82v19.82h5.706h5.706V30.031L13.814,30.031z");
             break;
 
@@ -65,53 +52,53 @@ function DrawScoreClef(clef) {
     return clefElem;
 }
 
-//Function to draw the time signature
-function DrawTimeSig(beats, beatsType) {
+//Function to draw the time signature object
+function DrawTimeSig(beats, beatType) {
     var beatsGroup = document.createElementNS(xmlns, "g"),
-        beatsTypeGroup = document.createElementNS(xmlns, "g"),
+        beatTypeGroup = document.createElementNS(xmlns, "g"),
         nextPos = 0;
 
     for(var i = 0; i < beats.length; i++) {
-        var beatValue = parseInt(beats.charAt(i)),
-            beatElem = DrawTimeSigNum(beatValue);
+        var beatsValue = parseInt(beats.charAt(i)),
+            beatsElem = drawTimeSigNum(beatsValue);
 
-        beatsGroup.appendChild(beatElem);   
-        beatElem.setAttribute("transform", "translate(" + nextPos + " 0)");
+        beatsGroup.appendChild(beatsElem);   
+        beatsElem.setAttribute("transform", "translate(" + nextPos + " 0)");
 
         //update the next position value (must append to get the values)
-        nextPos += getTimeSigNextPos(beatValue);
+        nextPos += getTimeSigNextPos(beatsValue);
     }
 
     nextPos = 0;
 
-    for(var i = 0; i < beatsType.length; i++) {
-        var beatsTypeValue = parseInt(beatsType.charAt(i)),
-            beatsTypeElem = DrawTimeSigNum(beatsTypeValue);
+    for(var i = 0; i < beatType.length; i++) {
+        var beatTypeValue = parseInt(beatType.charAt(i)),
+            beatTypeElem = drawTimeSigNum(beatTypeValue);
 
-        beatsTypeGroup.appendChild(beatsTypeElem);   
-        beatsTypeElem.setAttribute("transform", "translate(" + nextPos + " 0)");
+        beatTypeGroup.appendChild(beatTypeElem);   
+        beatTypeElem.setAttribute("transform", "translate(" + nextPos + " 0)");
 
         //update the next position value
-        nextPos += getTimeSigNextPos(beatsTypeValue);
+        nextPos += getTimeSigNextPos(beatTypeValue);
     }
 
     //put the lower width value in the center
     document.documentElement.appendChild(beatsGroup);
-    document.documentElement.appendChild(beatsTypeGroup);
+    document.documentElement.appendChild(beatTypeGroup);
     var beatsLength = beatsGroup.getBBox().width,
-        beatsTypeLength = beatsTypeGroup.getBBox().width;
+        beatTypeLength = beatTypeGroup.getBBox().width;
 
-    if(beatsLength > beatsTypeLength) {
-        beatsTypeGroup.setAttribute("transform", "translate(" + (beatsLength - beatsTypeLength) / 2 + " 30)");
+    if(beatsLength > beatTypeLength) {
+        beatTypeGroup.setAttribute("transform", "translate(" + (beatsLength - beatTypeLength) / 2 + " 30)");
     } else {
-        beatsGroup.setAttribute("transform", "translate(" + (beatsTypeLength - beatsLength) / 2 + " 0)");
-        beatsTypeGroup.setAttribute("transform", "translate(0 30)");
+        beatsGroup.setAttribute("transform", "translate(" + (beatTypeLength - beatsLength) / 2 + " 0)");
+        beatTypeGroup.setAttribute("transform", "translate(0 30)");
     }
 
     var timeSigGroup = document.createElementNS(xmlns, "g");
 
     timeSigGroup.appendChild(beatsGroup);
-    timeSigGroup.appendChild(beatsTypeGroup);
+    timeSigGroup.appendChild(beatTypeGroup);
 
     return timeSigGroup;
 }
@@ -142,7 +129,7 @@ function getTimeSigNextPos(value) {
 }
 
 //Function to draw the number used in the time sig
-function DrawTimeSigNum(number) {
+function drawTimeSigNum(number) {
     var numberElem = document.createElementNS(xmlns, "path");  //create new path
 
     switch(number) {
@@ -182,35 +169,7 @@ function DrawTimeSigNum(number) {
     }
     return numberElem;
 }
-
-
-
-                
-//Function to draw general score lines elements
-function DrawScoreLinesElement(scoreElement) {
-    var sElem;  //var to store line the score element draw
-    
-    switch(scoreElement) {
-        
-        case ScoreElement.GClef:
-            sElem = document.createElementNS(xmlns, "path");  //create new path
-            sElem.setAttribute("d","M7.124-20.882C7.871-13.221,2.175-7.019-2.868-2.008c-2.29,2.2-0.38,0.364-1.577,1.458 c-0.251-1.175-0.733-4.244-0.687-5.172c0.318-6.604,5.685-16.146,10.387-19.665C6.011-23.975,6.634-23.86,7.124-20.882z M8.721,18.682C5.7,16.46,1.735,15.875-1.902,16.51c-0.469-3.076-0.938-6.151-1.407-9.225C2.452,1.578,8.718-5.048,9.046-13.642 c0.144-5.471-0.678-11.45-4.114-15.892c-4.167,0.315-7.106,5.284-9.317,8.375C-8.033-14.616-7.181-6.658-5.781,0.398 c-1.983,2.334-4.729,4.272-6.685,6.702c-5.775,5.656-10.807,13.308-9.815,21.758c0.45,8.171,6.347,15.771,14.387,17.714 c3.054,0.771,6.285,0.848,9.373,0.242c0.538,5.515,2.515,11.344,0.228,16.698c-1.719,3.916-6.833,7.362-10.62,5.371 c-1.47-0.773-0.278-0.125-1.171-0.618c2.621-0.629,4.9-2.538,5.539-3.834c2.054-3.589-0.979-8.919-5.282-8.23 c-5.543,0.112-7.819,7.695-4.253,11.481c3.301,3.727,9.394,3.216,13.307,0.78c4.442-2.893,5-8.686,4.492-13.631 c-0.172-1.664-0.988-6.546-1.089-8.303c1.709-0.61,0.512-0.144,2.925-1.102c6.517-2.58,10.676-10.438,8.808-17.452 C13.581,24.373,11.803,20.832,8.721,18.682z M10.094,32.789c0.524,4.879-2.58,10.59-7.546,12.157 c-0.333-1.947-0.421-2.479-0.644-3.616C0.722,35.301,0.08,29.109-0.832,22.996c3.983-0.412,8.475,1.331,9.861,5.352 C9.625,29.763,9.869,31.282,10.094,32.789z M-2.524,45.524c-6.235,0.347-12.254-3.908-13.81-10.002 c-1.835-5.275-1.295-11.349,2.013-15.941c2.733-4.171,6.388-7.608,9.873-11.134C-4,11.209-3.551,13.97-3.103,16.736 c-7.329,1.917-12.266,11.581-7.879,18.261c1.304,1.875,4.844,5.45,6.778,4.007c-2.702-1.675-4.909-4.557-4.435-7.91 c-0.201-3.142,3.358-7.135,6.499-7.838c1.075,7.031,2.307,14.885,3.382,21.919C0.002,45.417-1.262,45.524-2.524,45.524z"); //draw in the created path the G clef symbol
-            break;
             
-        case ScoreElement.TimeSig44:
-            sElem = document.createElementNS(xmlns, "path");  //create new path
-            sElem.setAttribute("d","M6.891,32 l9.176,0.053c0,0-5.978,9.233-13.003,15.76c-0.053,0,7.708,0.053,7.708,0.053l0.052-5.041l5.873-5.677 l 0.262,11.036l2.991-0.017l-0.002,1.715l-3.015-0.013l0.013,2.903c0,0,0.499,2.124,3.041,2.163c0,0.052,0.013,3.012,0.013,3.012L7.625,58l0.052-3.184c0,0,3.172,0.796,3.159-4.908c0-0.001-10.749-0.013-10.749-0.013L0,48.511C0,48.511,7.232,41.422,6.891,32zM6.891,2 l9.176,0.053c0,0-5.978,9.233-13.003,15.76c-0.053,0,7.708,0.053,7.708,0.053l0.053-5.041l5.873-5.677l0.262,11.036l2.991-0.017l-0.003,1.715l-3.015-0.013l0.013,2.903c0,0,0.499,2.124,3.041,2.163c0,0.052,0.014,3.012,0.014,3.012L7.625,28l0.053-3.184c0,0,3.172,0.796,3.159-4.908c0-0.001-10.749-0.013-10.749-0.013L0,18.511C0,18.511,7.232,11.422,6.891,2z"); //draw in the created path the G clef symbol
-            break;
-            
-        default:
-            return null; 
-    }
-    
-    sElem.setAttribute("class", "scoreElement");
-    return sElem;
-}
-
-
 function DrawNote(denominator) {
     var mElem = document.createElementNS(xmlns, "path"),  //var to store the measure element draw
         path;

@@ -24,21 +24,45 @@
         <section id="general-content">
             <nav id="score-menu"></nav>
             <div id="score-page">
-                <object id="svgPage" type="image/svg+xml" data="debug.svg" height="3700" width="1520">Error</object>
+                <!--<object id="svgPage" type="image/svg+xml" data="debug.svg" height="3700" width="1520">Error</object>-->
+                <svg id="svgContainer" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1520" height="2000">
+
+                </svg>
             </div>
         </section>
-        <script src="score/ScoreConverter.js"></script>
+        <script src="score/g-query.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+        <script src="score/ScoreConverter.js"></script>
+        <script src="ariajs/List.js"></script>
+        <!--<script src="ariajs/Aria.js"></script>-->
+        <script src="score/ScoreLoader.js"></script>
+        <script src="score/ScoreElements.js" type="text/javascript"></script>
+        <script src="score/ScoreBuilder.js"></script>
+        <script src="debug.js"></script>
         <script>
-            var svgPage = document.getElementById("svgPage");
-            svgPage.width = window.innerWidth - 400;
-            var score = null;
 
+            var svgContainer = document.getElementById("svgContainer"),
+                scoreObj = null;
+
+            function OpenScore(jsonStr) {
+                var composinObj = toComposinFormat(JSON.parse(jsonStr));
+
+                if(scoreObj)
+                    svgContainer.removeChild(scoreObj.Draw());
+                    
+                scoreObj = ScoreLoader.Open(composinObj);
+
+                svgContainer.appendChild(scoreObj.Draw());
+                
+                scoreObj.Organize(1500, 300);
+                scoreObj.MoveTo(15.5, 0.5);
+            }
+
+            //FILE OPEN STUFF
             var fileOpenBut = document.getElementById('files');
             fileOpenBut.addEventListener('change', handleFileSelect, false);
 
             function openFile() {
-                //ajaxSend();
                 fileOpenBut.click();
             }
 
@@ -61,6 +85,7 @@
                 reader.readAsText(file);
             }
 
+            //FILE POST STUFF
             function postFile(fileText) {
                 var request = $.ajax({
                     url: "openFile.php",
@@ -70,10 +95,7 @@
 
                 // Callback handler that will be called on success
                 request.done(function (response, textStatus, jqXHR){
-                    // Log a message to the console
-                    console.log("Reponded!");
-                    //console.log(JSON.parse(response));
-                    showFile(response);
+                    OpenScore(response);
                 });
 
                 // Callback handler that will be called on failure
@@ -87,29 +109,9 @@
 
                 // Callback handler that will be called regardless
                 // if the request failed or succeeded
-                request.always(function () {
-                    // Reenable the inputs
-                    //console.log("always");
-                });
+                request.always(function () {});
             }
 
-
-
-            function showFile(jsonStr) {
-                var jsonObj = JSON.parse(jsonStr);
-                var scoreObj = toComposinFormat(jsonObj);
-                score.OpenFile(scoreObj);
-                console.log(jsonObj);
-            }
-
-
-
-            window.onload = function() {
-                var svgDoc = svgPage.contentDocument;
-                score = svgDoc.documentElement;
-            }
-
-            
             /*
             window.onresize = function() {
                 svgPage.width = window.innerWidth - 400;
@@ -120,6 +122,5 @@
             }*/
 
         </script>
-
     </body>   
 </html>

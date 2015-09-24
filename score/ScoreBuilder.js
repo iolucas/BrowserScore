@@ -13,12 +13,14 @@ var ScoreBuilder = new function() {
         //MUST REDRAW ALL SYMBOLS THAT HAVE "FAKE WHITE SPACES" DUE TO THESE ARE MISS PLACING THE SCORE
 
         //MUST GENERALIZE THE CLEFS AND LINES THEY ARE
-        //MUST GENERALIZE BEATS AND BEATS TIME FOR TIME SIGNATURES
         //CHECK WHETHER IS NEEDED TO IMPLEMENT CHORD SECTIONS AS MUSIC XML, NOTES ON THE MEASURE, WITH THE X COORD SPECIFIED
 
+        //MUST ADD SCORE METADATA(COMPOSERS, MUSICIANS) AT THE TOP
 
         //MUST DETERMINE METAS AND PRIMARY OBJECTIVES
         //CHECK MUSIC XML WEAKNESS
+
+        //USE D3 SVG FOR THE GRAPHIC STUFF
 
 
         //MUST CREATE SYSTEM TO AVOID BUG WHEN TOO MUCH REDUCE THE SCREEN
@@ -130,7 +132,7 @@ var ScoreBuilder = new function() {
         }
 
         //ensures the currwidth variable is initiated with the rest symbol
-        currWidth = GetBBox(rest).width;
+        currWidth = rest.getBBox().width;
         //setChordPositions();
 
         //--------------------------------------------------------------------------------
@@ -144,7 +146,8 @@ var ScoreBuilder = new function() {
 
         //Function to move this chord object with absolute positions
         this.MoveTo = function(x, y) {
-            SetTransform(chordGroup, { translate: [x, y] });
+            //SetTransform(chordGroup, { translate: [x, y] });
+            chordGroup.translate(x, y);
         }
 
         //Function to get the current number of notes on this chord
@@ -272,7 +275,7 @@ var ScoreBuilder = new function() {
                 return; //do nothing and return
 
             //If there is no more notes on this chord
-            if(ArrayLength(notes) == 0) {
+            if(notes.getValidLength() == 0) {
                 rest.setAttribute("opacity", 1);
                 //chordGroup.appendChild(rest);    //show the rest element
                 setStemLine();  //clear chord stem line
@@ -343,12 +346,13 @@ var ScoreBuilder = new function() {
 
         function setChordPositions() {
             //gets chord elements bboxes
-            var accidentBox = GetBBox(accidentGroup),
-                noteBox = GetBBox(noteGroup),
+            var accidentBox = accidentGroup.getBBox(),
+                noteBox = noteGroup.getBBox(),
                 ACC_NOTES_GAP = 5;  //GAP BETWEEN NOTES AND ACCIDENT SYMBOLS
 
             //place accident group at 0,0 abs pos
-            SetTransform(accidentGroup, { translate: [-accidentBox.x, 0] });
+            //SetTransform(accidentGroup, { translate: [-accidentBox.x, 0] });
+            accidentGroup.translate(-accidentBox.x, 0);
 
             //place note and aux lines imediatelly after the accident group
             var noteGroupXCoord;
@@ -360,8 +364,10 @@ var ScoreBuilder = new function() {
                 currWidth = noteBox.width;  
             }
 
-            SetTransform(noteGroup, { translate: [noteGroupXCoord, 0] });
-            SetTransform(auxLinesGroup, { translate: [noteGroupXCoord, 0] });
+            //SetTransform(noteGroup, { translate: [noteGroupXCoord, 0] });
+            noteGroup.translate(noteGroupXCoord, 0);
+            //SetTransform(auxLinesGroup, { translate: [noteGroupXCoord, 0] });
+            auxLinesGroup.translate(noteGroupXCoord, 0);
         }
 
         function setAccidentPositions(lowValue) {
@@ -391,7 +397,7 @@ var ScoreBuilder = new function() {
                     continue;   //proceed next iterations
 
                 //get the accident symbol bbox
-                accidentBox = GetBBox(currNote.accidentDraw);
+                accidentBox = currNote.accidentDraw.getBBox();
                 
                 var accYCoord = currNote.yCoord * LINE_OFFSET,  //get the y coord
                     accTopCoord = accidentBox.y + accYCoord,   //get this accid obj top coord
@@ -447,9 +453,11 @@ var ScoreBuilder = new function() {
 
                 var accYCoord = currNote.yCoord * LINE_OFFSET,  //get the y coord
                     accXCoord = placeColumns[currNote.accColumn].xCoord,
-                    accBox = GetBBox(currNote.accidentDraw);
+                    accBox = currNote.accidentDraw.getBBox();
 
-                SetTransform(currNote.accidentDraw, { translate: [accXCoord - accBox.width, accYCoord] });
+                //SetTransform(currNote.accidentDraw, { translate: [accXCoord - accBox.width, accYCoord] });
+                currNote.accidentDraw.translate(accXCoord - accBox.width, accYCoord);
+                //THIS LINE BELOW WAS COMMENTED BEFORE CHANGE FOR TRANSLATE @ GQUERY
                 //SetTransform(debRect(accBox), { translate: [accXCoord - accBox.width, accYCoord] });
             }
         }
@@ -529,14 +537,15 @@ var ScoreBuilder = new function() {
                     prevValidNote = true;   //just set the prev valid not to move the next one if it is valid
 
                 //move the current note to its right position
-                SetTransform(currNote.noteDraw, { translate: [finalXCoord, finalYCoord] });
+                //SetTransform(currNote.noteDraw, { translate: [finalXCoord, finalYCoord] });
+                currNote.noteDraw.translate(finalXCoord, finalYCoord);
             }
 
             return [lowAdjValue, highAdjValue]; 
         }
 
         function setStemLine(downStemFlag, lowValue, highValue) {
-            if(downStemFlag == undefined || denominator < 2 || ArrayLength(notes) == 0) {  //if the chord den is less than 2,
+            if(downStemFlag == undefined || denominator < 2 || notes.getValidLength() == 0) {  //if the chord den is less than 2,
                 setStemLineObj();   //void call to clear any stem line
                 return; //do not and proceed the next chord (return)
             }
@@ -614,9 +623,12 @@ var ScoreBuilder = new function() {
             noteGroup.appendChild(flag);
 
             if(downStemFlag) {
-                SetTransform(flag, { translate: [1, finalStemCoord + 1], scale: [1, -1]});
+                flag.translate(1, finalStemCoord + 1);
+                flag.scale(1, -1);
+                //SetTransform(flag, { translate: [1, finalStemCoord + 1], scale: [1, -1]});
             } else {
-                SetTransform(flag, { translate: [17, finalStemCoord - 1] });
+                flag.translate(17, finalStemCoord - 1);
+                //SetTransform(flag, { translate: [17, finalStemCoord - 1] });
             }
         }
 
@@ -723,7 +735,8 @@ var ScoreBuilder = new function() {
         this.Draw = function() { return group; }
 
         this.MoveTo = function(x, y) {
-            SetTransform(group, { translate: [x, y] });
+            //SetTransform(group, { translate: [x, y] });
+            group.translate(x, y);
         }
 
         this.GetWidth = function() {
@@ -761,7 +774,8 @@ var ScoreBuilder = new function() {
             currWidth = nextPos;    
 
             //put the end bar at the end of the measure
-            SetTransform(measureEndBar, { translate: [nextPos, 0] });
+            //SetTransform(measureEndBar, { translate: [nextPos, 0] });
+            measureEndBar.translate(nextPos, 0);
 
             measureModified = false;    //clear the modified flag
             lastUnitLengthValue = spaceUnitLength;
@@ -822,13 +836,13 @@ var ScoreBuilder = new function() {
     //-----------------------------------------------------------
     //-----------------------------------------------------------
 
-    this.ScoreLine = function(properties) {
+    this.ScoreLine = function(scoreLineAttr) {
         //Creates a new score line passing the line length and the minimum measure length to be kept in a line, otherwise it will overflow
 
         var selfRef = this,
 
             group = document.createElementNS(xmlns, "g"),   //group to fit all the score members
-            header = document.createElementNS(xmlns, "g"),  //create the score header group, to hold the score elements
+            //header = document.createElementNS(xmlns, "g"),  //create the score header group, to hold the score elements
             linesDrawing = document.createElementNS(xmlns, "path"),   //score lines path
             measures = new List(),    //ordered list to fit all the measures @ this score
             lineModified = false,
@@ -847,18 +861,24 @@ var ScoreBuilder = new function() {
         group.appendChild(linesDrawing);
         linesDrawing.setAttribute("stroke", "#000");
 
+        var time1 = {}
+        time1["beats"] = "4";
+        time1["beat-type"] = "5";
+
+        header = drawScoreLineHeader(scoreLineAttr);
         group.appendChild(header);  //append score header
-        setScoreProperties(properties); //set the score properties
+        //setScoreProperties(properties); //set the score properties
 
         this.Draw = function() { return group; }
 
         this.MoveTo = function(x, y) {
             //get decimal deviation of the this object Y
-            var groupBBox = GetBBox(group),
+            var groupBBox = group.getBBox(),
                 decimalYDev = Math.ceil(groupBBox.y) - groupBBox.y;
 
             //subtract the deviation to the Y movement to get a smooth look to the lines
-            SetTransform(group, { translate: [x, y - decimalYDev] });
+            //SetTransform(group, { translate: [x, y - decimalYDev] });
+            group.translate(x, y - decimalYDev);
         }
 
         //Get the current width of this score (must be appended to work)
@@ -876,7 +896,7 @@ var ScoreBuilder = new function() {
                 linesDrawing.setAttribute("d", GetScoreLinesPath(lineLength));
 
             //Get total fixed elements length
-            var headerBox = GetBBox(header),
+            var headerBox = header.getBBox(),
                 elemTotalLength = headerBox.width + headerBox.x,    //fixed elements length
                 denSum = 0; //denominators sum
 
@@ -911,22 +931,47 @@ var ScoreBuilder = new function() {
             return minFlag;
         }
 
+        function drawScoreLineHeader(attr) {
+            var attrGroup = document.createElementNS(xmlns, "g"),
+                nextPos = SCORE_LINE_LEFT_MARGIN;
+
+            //if a clef has been specified
+            if(attr.clef) {
+                var clefObj = DrawScoreClef(attr.clef["sign"]);
+                attrGroup.appendChild(clefObj);
+                clefObj.translate(nextPos, 0);
+                //SetTransform(clefObj, { translate: [nextPos, 0] });
+                nextPos += clefObj.getBBox().width + SCORE_LINE_HEADER_MARGIN;
+            }
+
+            if(attr.key) {
+
+            }
+
+            if(attr.time) {
+                var timeObj = DrawTimeSig(attr.time["beats"], attr.time["beat-type"]);
+                attrGroup.appendChild(timeObj);
+                //SetTransform(timeObj, { translate: [nextPos, 0] });
+                timeObj.translate(nextPos, 0);
+                nextPos += timeObj.getBBox().width + SCORE_LINE_HEADER_MARGIN;
+            }
+
+            return attrGroup;
+        }
+/*
         function setScoreProperties(props) {
 
             var nextPos = SCORE_LINE_LEFT_MARGIN;
 
             if(props.clef && props.clef == 'G') {
-                //var clef = DrawScoreLinesElement(ScoreElement.GClef);
-                //var clef = DrawScoreClef("G");
-                //var clef = DrawTimeSigNum(9);
-                var clef = DrawTimeSig("9", "8");
+                var clef = DrawScoreClef("G");
                 header.appendChild(clef);
                 SetTransform(clef, { translate: [nextPos, 0] });
                 nextPos += GetBBox(clef).width + SCORE_LINE_HEADER_MARGIN;
             }
             
             if(props.timeSig && props.timeSig == 44) {
-                var timeSig = DrawScoreLinesElement(ScoreElement.TimeSig44);
+                var timeSig = DrawTimeSig("4", "4");
                 header.appendChild(timeSig);
                 SetTransform(timeSig, { translate: [nextPos, 0] });
                 nextPos += GetBBox(timeSig).width + SCORE_LINE_HEADER_MARGIN;
@@ -939,7 +984,7 @@ var ScoreBuilder = new function() {
             //finalMargin.setAttribute("width", 10);
             //header.appendChild(finalMargin);
             //SetTransform(finalMargin, { translate: [nextPos, 0] });    
-        }
+        }*/
 
         this.Find = function(measure) {
             return measures.Find(measure);
@@ -1001,7 +1046,7 @@ var ScoreBuilder = new function() {
     //-----------------------------------------------------------
 
     //General score that will handle multiple scores, lines and add the drawings finish and attributes
-    this.Score = function(scoreProperties) {
+    this.Score = function(scoreAttr) {
         var selfRef = this, //self reference
 
             group = document.createElementNS(xmlns, "g"),   //group to keep the visual objects
@@ -1016,12 +1061,13 @@ var ScoreBuilder = new function() {
         } 
 
         //Add the first line
-        createLine(scoreProperties);
+        createLine(scoreAttr);
 
         this.Draw = function() { return group; }
 
         this.MoveTo = function(x, y) {
-            SetTransform(group, { translate: [x, y] });
+            //SetTransform(group, { translate: [x, y] });
+            group.translate(x, y);
         }
 
         function createLine(prop) {
@@ -1174,7 +1220,7 @@ var ScoreBuilder = new function() {
                 if(overflowMeasures.length > 0) {
                     //if the current line is the last line, create a new one
                     if(lines.Count() - 1 == i)
-                        createLine({ clef: scoreProperties.clef });
+                        createLine({ clef: scoreAttr.clef });
 
                     var nextLine = lines.GetItem(i + 1);  //get the next line ref
 
@@ -1191,7 +1237,7 @@ var ScoreBuilder = new function() {
             var nextYCoord = SCORE_TOP_MARGIN;
             for(var i = 0; i < lines.Count(); i++) {
                 var line = lines.GetItem(i),    //get the current line ref
-                    currBBox = GetBBox(lines.GetItem(i).Draw());   //get current object bbox
+                    currBBox = lines.GetItem(i).Draw().getBBox();   //get current object bbox
                 //move the score line to the new coord compensing negative coordinates within it and rounding final value up
                 line.MoveTo(0, nextYCoord - currBBox.y);    
 
@@ -1202,6 +1248,7 @@ var ScoreBuilder = new function() {
     }
 }
 
+/*
 function ArrayLength(array) {
     var length = 0;
 
@@ -1210,8 +1257,9 @@ function ArrayLength(array) {
             length++;
 
     return length;
-}
+}*/
 
+/*
 function GetBBox(element) {
     var bBox;
     try {
@@ -1232,7 +1280,7 @@ function GetBBox(element) {
             
         return bBox;
     }
-}
+}*/
 
 /*
 function createScoreLineHeader(properties){
