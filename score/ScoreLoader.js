@@ -7,7 +7,7 @@ var ScoreLoader = new function() {
 
 		//create new score svg object
 		//var scoreObj = new ScoreBuilder.Score({ clef: musicFile.clef, timeSig: musicFile.timeSig });
-		var scoreObj = new ScoreBuilder.Score(musicFile.attributes);
+		var scoreObj = new ScoreBuilder.Score(musicFile.attributes, musicFile["work-title"]);
 
 		//iterate thru the measures of the music file
 		var measures = musicFile.measures ? musicFile.measures : [];

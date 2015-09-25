@@ -7,7 +7,7 @@ var ScoreBuilder = new function() {
     ///lets begin with the note element placing at a chord
 
         //----------------------------------------------------------------
-        //MUST IDEALIZE HOW THE INTERFACE WILL LOOKS LIKE, HOW CONTENT WILL BE SPREAD
+        //MUST IDEALIZE HOW THE INTERFACE WILL LOOK LIKE, HOW CONTENT WILL BE SPREAD
         //WHERE MOBILE FIRST FITS ON IT, IF ONLY NEWS OR INTERATIVE CONTENT TOO
         //CHORO IS COMING BACK, FOCUS ON IT
         //MUST REDRAW ALL SYMBOLS THAT HAVE "FAKE WHITE SPACES" DUE TO THESE ARE MISS PLACING THE SCORE
@@ -20,7 +20,13 @@ var ScoreBuilder = new function() {
         //MUST DETERMINE METAS AND PRIMARY OBJECTIVES
         //CHECK MUSIC XML WEAKNESS
 
+        //USE GOOGLE COMPRESSION ALGORITHM TO STORE STUFF
+
+        //ADOPT ALL POSIBLE NAMES FROM MUSIC XML
+
         //USE D3 SVG FOR THE GRAPHIC STUFF
+
+        //MUST CREATE A FALL BACK FOR THE THROWS TO INSTEAD A CRASH, POPUP A MESSAGE OF ERROR AND TRY AGAIN
 
 
         //MUST CREATE SYSTEM TO AVOID BUG WHEN TOO MUCH REDUCE THE SCREEN
@@ -133,7 +139,6 @@ var ScoreBuilder = new function() {
 
         //ensures the currwidth variable is initiated with the rest symbol
         currWidth = rest.getBBox().width;
-        //setChordPositions();
 
         //--------------------------------------------------------------------------------
         //----------------------- PUBLIC METHODS -----------------------------------------
@@ -861,10 +866,6 @@ var ScoreBuilder = new function() {
         group.appendChild(linesDrawing);
         linesDrawing.setAttribute("stroke", "#000");
 
-        var time1 = {}
-        time1["beats"] = "4";
-        time1["beat-type"] = "5";
-
         header = drawScoreLineHeader(scoreLineAttr);
         group.appendChild(header);  //append score header
         //setScoreProperties(properties); //set the score properties
@@ -942,18 +943,34 @@ var ScoreBuilder = new function() {
                 clefObj.translate(nextPos, 0);
                 //SetTransform(clefObj, { translate: [nextPos, 0] });
                 nextPos += clefObj.getBBox().width + SCORE_LINE_HEADER_MARGIN;
-            }
 
-            if(attr.key) {
+                //if the clef key is specified
+                if(attr.key && attr.key.fifths && attr.key.fifths != "0") {
+                    var keyObj = DrawKeySignature(parseInt(attr.key.fifths));
+                    //translate the key sig according to the clef
+                    switch(attr.clef["sign"]) {
+                        case 'F':
+                            keyObj.translate(0, 15);
+                            break;    
+                    }
+                    attrGroup.appendChild(keyObj);
+                    keyObj.translate(nextPos, 0);
+                    nextPos += keyObj.getBBox().width + SCORE_LINE_HEADER_MARGIN;
+                }
 
-            }
-
-            if(attr.time) {
-                var timeObj = DrawTimeSig(attr.time["beats"], attr.time["beat-type"]);
-                attrGroup.appendChild(timeObj);
-                //SetTransform(timeObj, { translate: [nextPos, 0] });
-                timeObj.translate(nextPos, 0);
-                nextPos += timeObj.getBBox().width + SCORE_LINE_HEADER_MARGIN;
+                //if the clef time has been specified
+                if(attr.time) {
+                    var timeObj;
+                    //if a time symbol has been specified, draw it
+                    if(attr.time["@attributes"] && attr.time["@attributes"]["symbol"])
+                        timeObj = DrawTimeSymbol(attr.time["@attributes"]["symbol"]);
+                    else //otherwise, draw the time sig instead    
+                        timeObj = DrawTimeSig(attr.time["beats"], attr.time["beat-type"]);     
+                    
+                    attrGroup.appendChild(timeObj);
+                    timeObj.translate(nextPos, 0);
+                    nextPos += timeObj.getBBox().width + SCORE_LINE_HEADER_MARGIN;
+                }
             }
 
             return attrGroup;
@@ -1046,7 +1063,7 @@ var ScoreBuilder = new function() {
     //-----------------------------------------------------------
 
     //General score that will handle multiple scores, lines and add the drawings finish and attributes
-    this.Score = function(scoreAttr) {
+    this.Score = function(scoreAttr, composer) {
         var selfRef = this, //self reference
 
             group = document.createElementNS(xmlns, "g"),   //group to keep the visual objects
@@ -1058,7 +1075,32 @@ var ScoreBuilder = new function() {
             refRect.setAttribute("height", 30); 
             refRect.setAttribute("width", 30);
             group.appendChild(refRect); //append debug square 
-        } 
+        }
+
+//-------------------------------------------------------------
+//----- FONT SIZES: -------------
+//Title: 24 center
+//Subtitle: 14 center
+//Composer: 12 right
+//Lyricist: 12 left
+//Copyright 8   center
+
+        var scoreHeader = $G.create("g");
+        console.log(scoreAttr);
+        if(composer) {
+            var titleText = $G.create("text");
+            titleText.textContent = composer;
+            titleText.setAttribute("font-size", "24pt");
+            scoreHeader.appendChild(titleText);
+        }
+
+
+        group.appendChild(scoreHeader);
+
+        scoreHeader.translate(100,50);
+        console.log(scoreHeader);
+
+//-------------------------------------------
 
         //Add the first line
         createLine(scoreAttr);

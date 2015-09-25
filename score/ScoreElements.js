@@ -22,7 +22,7 @@ function DrawScoreClef(clef) {
             break;
 
         case "G_OCT":
-            clefElem = DrawScoreClef("G_CLEF");
+            clefElem = DrawScoreClef("G");
             var currPath = clefElem.getAttribute("d");
             currPath += "M13.684,90.291c-0.512-0.678-0.852-1.361-1.022-1.872c-0.17-0.511-0.341-1.192-0.341-1.876c0-1.188,0.341-2.212,1.192-2.892c0.852-0.682,1.874-1.192,3.236-1.192c1.192,0,2.213,0.341,2.895,1.021c0.68,0.682,1.021,1.533,1.021,2.384c0,0.679-0.17,1.192-0.512,1.703c-0.34,0.511-0.682,1.021-1.191,1.362c-0.342,0.171-0.852,0.511-1.703,0.852c0.851,1.192,1.533,2.043,1.703,2.554s0.34,1.022,0.34,1.703c0,1.362-0.51,2.554-1.533,3.577c-1.021,1.022-2.213,1.531-3.746,1.531c-1.362,0-2.383-0.341-3.234-1.021c-0.852-0.682-1.192-1.702-1.192-2.725c0-0.681,0.169-1.364,0.511-2.046c0.341-0.679,0.851-1.188,1.533-1.703C12.151,90.974,12.833,90.633,13.684,90.291z M14.195,90.801c-0.341,0.342-0.682,0.682-0.852,0.851c-0.171,0.343-0.511,1.024-0.682,1.703c-0.17,0.682-0.341,1.533-0.341,2.555c0,0.682,0.171,1.193,0.341,1.533c0.171,0.341,0.682,0.512,1.192,0.512c0.511,0,1.021-0.343,1.362-0.852c0.511-0.68,0.852-1.531,0.852-2.554c0-0.681-0.17-1.194-0.341-1.874C15.557,91.994,14.875,91.651,14.195,90.801z M16.577,88.93c0.342-0.341,0.683-0.681,0.852-0.852c0.341-0.681,0.513-1.703,0.513-2.896c0-0.679-0.172-1.361-0.341-1.529c-0.172-0.173-0.511-0.683-0.852-0.683s-0.682,0.17-1.022,0.513c-0.34,0.509-0.511,1.19-0.511,2.212c0,0.514,0.171,1.024,0.341,1.533S16.068,88.246,16.577,88.93z";
             clefElem.setAttribute("d", currPath);
@@ -50,6 +50,115 @@ function DrawScoreClef(clef) {
     }
 
     return clefElem;
+}
+
+//Function to draw the key signature object
+function DrawKeySignature(fifth) {
+    var keySigGroup,
+        currSymbol;
+
+    switch(fifth) {
+
+        case 1:
+            keySigGroup = $G.create("g");
+            currSymbol = DrawNoteAtt("sharp");
+            keySigGroup.appendChild(currSymbol);
+            currSymbol.translate(0, -7.5);
+            break;
+
+        case 2:
+            keySigGroup = DrawKeySignature(1);
+            currSymbol = DrawNoteAtt("sharp");
+            currSymbol.translate(keySigGroup.getBBox().width + 2, 15);
+            keySigGroup.appendChild(currSymbol);
+            break;
+
+        case 3:
+            keySigGroup = DrawKeySignature(2);
+            currSymbol = DrawNoteAtt("sharp");
+            currSymbol.translate(keySigGroup.getBBox().width + 2, -15);
+            keySigGroup.appendChild(currSymbol);
+            break;
+
+        case 4:
+            keySigGroup = DrawKeySignature(3);
+            currSymbol = DrawNoteAtt("sharp");
+            currSymbol.translate(keySigGroup.getBBox().width + 2, 7.5);
+            keySigGroup.appendChild(currSymbol);
+            break;
+
+        case 5:
+            keySigGroup = DrawKeySignature(4);
+            currSymbol = DrawNoteAtt("sharp");
+            currSymbol.translate(keySigGroup.getBBox().width + 2, 30);
+            keySigGroup.appendChild(currSymbol);
+            break;
+
+        case 6:
+            keySigGroup = DrawKeySignature(5);
+            currSymbol = DrawNoteAtt("sharp");
+            currSymbol.translate(keySigGroup.getBBox().width + 2, 0);
+            keySigGroup.appendChild(currSymbol);
+            break;
+
+        case 7:
+            keySigGroup = DrawKeySignature(6);
+            currSymbol = DrawNoteAtt("sharp");
+            currSymbol.translate(keySigGroup.getBBox().width + 2, 22.5);
+            keySigGroup.appendChild(currSymbol);
+            break;
+
+        case -1:
+            keySigGroup = $G.create("g");
+            currSymbol = DrawNoteAtt("flat");
+            keySigGroup.appendChild(currSymbol);
+            currSymbol.translate(0, 22.5);
+            break;
+
+        case -2:
+            keySigGroup = DrawKeySignature(-1);
+            currSymbol = DrawNoteAtt("flat");
+            currSymbol.translate(keySigGroup.getBBox().width + 2, 0);
+            keySigGroup.appendChild(currSymbol);
+            break;
+
+        case -3:
+            keySigGroup = DrawKeySignature(-2);
+            currSymbol = DrawNoteAtt("flat");
+            currSymbol.translate(keySigGroup.getBBox().width + 2, 30);
+            keySigGroup.appendChild(currSymbol);
+            break;
+
+        case -4:
+            keySigGroup = DrawKeySignature(-3);
+            currSymbol = DrawNoteAtt("flat");
+            currSymbol.translate(keySigGroup.getBBox().width + 2, 7.5);
+            keySigGroup.appendChild(currSymbol);
+            break;
+
+        case -5:
+            keySigGroup = DrawKeySignature(-4);
+            currSymbol = DrawNoteAtt("flat");
+            currSymbol.translate(keySigGroup.getBBox().width + 2, 37.5);
+            keySigGroup.appendChild(currSymbol);
+            break;
+
+        case -6:
+            keySigGroup = DrawKeySignature(-5);
+            currSymbol = DrawNoteAtt("flat");
+            currSymbol.translate(keySigGroup.getBBox().width + 2, 15);
+            keySigGroup.appendChild(currSymbol);
+            break;
+
+        case -7:
+            keySigGroup = DrawKeySignature(-6);
+            currSymbol = DrawNoteAtt("flat");
+            currSymbol.translate(keySigGroup.getBBox().width + 2, 45);
+            keySigGroup.appendChild(currSymbol);
+            break;
+    }
+
+    return keySigGroup
 }
 
 //Function to draw the time signature object
@@ -101,6 +210,31 @@ function DrawTimeSig(beats, beatType) {
     timeSigGroup.appendChild(beatTypeGroup);
 
     return timeSigGroup;
+}
+
+//Function to draw the time symbols cut and common
+function DrawTimeSymbol(symbol) {
+    var timeSymbol = $G.create("path");  //create new path
+        timeSymbol.setAttribute("d", "M24.739,24.021c0-3.428-3.25-8.963-11.938-8.964C6.368,15.06,0.002,22.809,0,29.571c0.03,8.635,4.863,16.113,13.147,16.113c9.297-0.003,11.678-7.726,11.674-11.586c-0.331-0.001-0.767,0.003-1.038,0.005c-0.526,3.232-3.648,9.706-8.998,9.706c-5.83-0.001-7.287-5.19-7.285-13.569c0-10.549,3.453-13.306,7.607-13.308c3.29,0.005,5.091,1.752,5.347,2.192c0.154,0.245,0.166,0.571-0.048,0.799C17.905,19.905,15,21.648,15,25.16c0,2.101,1.483,4.485,4.7,4.485C22.139,29.644,24.731,27.764,24.739,24.021L24.739,24.021z");    
+
+    switch(symbol) {
+        case "common":
+            return timeSymbol;             
+
+        case "cut":
+            var timeSymbolGroup = $G.create("g"),
+                cutLine = $G.create("path");  //create new path
+
+            cutLine.setAttribute("d", "M11.918,4.693h1.271l-0.027,50.74h-1.243V4.693z");
+
+            timeSymbolGroup.appendChild(timeSymbol);
+            timeSymbolGroup.appendChild(cutLine);
+            
+            return timeSymbolGroup;
+            
+        default:
+            throw "INVALID_TIME_SYMBOL_TO_DRAW";
+    }
 }
 
 function getTimeSigNextPos(value) {
@@ -238,27 +372,27 @@ function DrawNoteAtt(element) {
     var mElem;  //var to store the measure element draw
 
     switch(element) {
-        case "NATURAL":
+        case "natural":
             mElem = document.createElementNS(xmlns, "path");  //create new path
             mElem.setAttribute("d", "M11.058-4v32.002H9.315V16.008L0,18.025v-32.393h1.674v12.499L11.058-4zM1.674,3.512v8.8l7.641-1.681v-8.8L1.674,3.512z");
             break;
 
-        case "FLAT":
+        case "flat":
             mElem = document.createElementNS(xmlns, "path");  //create new path
             mElem.setAttribute("d", "M1.548-22.403v19.941c0,0,0,1.344,0,4.033c1.786-1.722,3.791-2.604,6.013-2.647c1.389,0,2.58,0.61,3.572,1.828c0.874,1.134,1.33,2.394,1.37,3.78c0.04,1.092-0.219,2.353-0.774,3.781c-0.198,0.588-0.635,1.219-1.31,1.89c-0.516,0.503-1.051,1.029-1.607,1.575C5.875,14.047,2.937,16.336,0,18.646v-41.049H1.548 M6.371,2.958C5.894,2.369,5.279,2.075,4.525,2.075c-0.954,0-1.727,0.567-2.322,1.702c-0.437,0.881-0.655,2.961-0.655,6.238v5.418c0.04,0.168,1.151-0.861,3.334-3.087c1.19-1.175,1.965-2.563,2.322-4.159c0.159-0.63,0.238-1.26,0.238-1.891C7.442,4.911,7.085,3.797,6.371,2.958");
             break;
 
-        case "DOUBLE_FLAT":
+        case "flat-flat":
             mElem = document.createElementNS(xmlns, "path");  //create new path
             mElem.setAttribute("d", "M1.548-22.403v19.941c0,0,0,1.344,0,4.033c1.786-1.722,3.791-2.604,6.013-2.647c1.389,0,2.58,0.61,3.572,1.828c0.874,1.134,1.33,2.394,1.37,3.78c0.04,1.092-0.219,2.353-0.774,3.78c-0.198,0.588-0.635,1.22-1.31,1.891c-0.516,0.503-1.051,1.029-1.607,1.574C5.875,14.047,2.937,16.336,0,18.646v-41.049H1.548 M6.371,2.958C5.894,2.369,5.279,2.075,4.525,2.075c-0.954,0-1.727,0.567-2.322,1.702c-0.437,0.881-0.655,2.961-0.655,6.239v5.418c0.04,0.168,1.151-0.861,3.334-3.088c1.19-1.175,1.965-2.563,2.322-4.158c0.159-0.63,0.238-1.261,0.238-1.892C7.442,4.911,7.085,3.797,6.371,2.958M15.61-22.403v19.941c0,0,0,1.344,0,4.033c1.786-1.722,3.791-2.604,6.013-2.647c1.389,0,2.58,0.61,3.572,1.828c0.874,1.134,1.33,2.394,1.37,3.78c0.04,1.092-0.219,2.353-0.774,3.781c-0.198,0.588-0.635,1.22-1.31,1.891c-0.516,0.503-1.051,1.029-1.607,1.574c-2.937,2.27-5.875,4.559-8.812,6.869v-41.05H15.61 M20.434,2.958c-0.477-0.589-1.092-0.883-1.846-0.883c-0.954,0-1.727,0.567-2.322,1.702c-0.437,0.881-0.655,2.961-0.655,6.239v5.418c0.04,0.168,1.151-0.861,3.334-3.088c1.19-1.175,1.965-2.563,2.322-4.158c0.159-0.631,0.238-1.261,0.238-1.892C21.504,4.911,21.147,3.796,20.434,2.958");
             break;
 
-        case "SHARP":
+        case "sharp":
             mElem = document.createElementNS(xmlns, "path");  //create new path
             mElem.setAttribute("d", "M4.907,15.006V2.586l5.147-1.457v12.357L4.907,15.006L4.907,15.006zM15.042,12.002l-3.539,1.04V0.685l3.539-1.014v-5.133l-3.539,1.014v-12.626h-1.45v13.009L4.906-2.547v-12.277H3.539v12.745L0-1.063V4.08l3.539-1.013V15.4L0,16.411v5.122l3.539-1.014v12.555h1.367V20.07l5.147-1.452v12.214h1.449V18.16l3.539-1.018L15.042,12.002L15.042,12.002z");
             break;
 
-        case "DOUBLE_SHARP":
+        case "double-sharp":
             mElem = document.createElementNS(xmlns, "path");  //create new path
             mElem.setAttribute("d", "M0.451,0.436C0.348,0.491,0.254,0.57,0.169,0.675C0.085,0.779,0.028,0.883,0,0.988c0.015,0.26,0.086,1.008,0.213,2.245C0.34,4.47,0.436,5.243,0.502,5.553c0.108,0.443,0.443,0.66,1.003,0.652c0.459,0.003,0.919,0.046,1.379,0.132c0.459,0.083,0.869,0.19,1.229,0.319c0.211,0.082,0.429,0.194,0.652,0.338c0.224,0.145,0.391,0.282,0.502,0.414l0.15,0.15l-0.201,0.15C4.852,8.064,4.34,8.345,3.68,8.549c-0.66,0.206-1.385,0.31-2.175,0.314C0.945,8.854,0.61,9.072,0.502,9.515C0.436,9.827,0.34,10.608,0.213,11.86C0.085,13.113,0.015,13.868,0,14.13c0.034,0.109,0.115,0.228,0.244,0.357s0.248,0.21,0.357,0.245c0.283-0.016,1.046-0.095,2.288-0.239c1.243-0.141,2.019-0.247,2.326-0.313c0.247-0.063,0.418-0.188,0.514-0.376c0.097-0.188,0.143-0.514,0.138-0.979c0.027-0.38,0.075-0.748,0.145-1.104c0.07-0.354,0.155-0.671,0.256-0.953c0.082-0.236,0.195-0.477,0.338-0.72C6.752,9.804,6.89,9.626,7.022,9.515l0.15-0.15l0.15,0.15c0.132,0.111,0.27,0.289,0.414,0.533c0.145,0.244,0.257,0.484,0.338,0.72c0.102,0.282,0.187,0.599,0.256,0.953c0.071,0.356,0.119,0.724,0.145,1.104c-0.004,0.464,0.042,0.79,0.138,0.979c0.096,0.188,0.267,0.313,0.514,0.376c0.308,0.067,1.083,0.172,2.326,0.313c1.243,0.144,2.006,0.222,2.289,0.239c0.109-0.034,0.228-0.116,0.357-0.245c0.128-0.128,0.21-0.248,0.244-0.357c-0.015-0.262-0.084-1.017-0.212-2.27c-0.127-1.252-0.223-2.034-0.289-2.345C13.735,9.072,13.4,8.854,12.84,8.863c-0.46-0.003-0.919-0.047-1.379-0.132s-0.869-0.191-1.229-0.32C10.021,8.33,9.804,8.217,9.58,8.072C9.356,7.929,9.189,7.791,9.079,7.659L8.928,7.508l0.202-0.149c0.364-0.355,0.875-0.636,1.536-0.84c0.658-0.206,1.384-0.31,2.175-0.313c0.56,0.008,0.895-0.209,1.003-0.652c0.065-0.312,0.161-1.094,0.289-2.346c0.128-1.251,0.199-2.009,0.212-2.27c-0.033-0.11-0.115-0.228-0.244-0.357c-0.129-0.128-0.248-0.21-0.357-0.245c-0.283,0.016-1.046,0.096-2.289,0.238c-1.243,0.143-2.018,0.247-2.325,0.313C8.882,0.95,8.711,1.076,8.615,1.265C8.519,1.452,8.472,1.778,8.477,2.242C8.45,2.623,8.402,2.99,8.332,3.346c-0.07,0.354-0.155,0.672-0.257,0.953C7.994,4.536,7.881,4.777,7.737,5.02C7.592,5.264,7.455,5.441,7.323,5.553l-0.15,0.15l-0.15-0.15C6.89,5.441,6.752,5.264,6.608,5.02C6.464,4.777,6.351,4.536,6.27,4.299C6.168,4.019,6.083,3.701,6.013,3.346C5.943,2.99,5.895,2.623,5.868,2.242c0.005-0.464-0.042-0.79-0.138-0.977C5.634,1.076,5.463,0.95,5.216,0.888C4.961,0.82,4.23,0.717,3.022,0.574c-1.208-0.142-1.964-0.222-2.27-0.238C0.652,0.344,0.551,0.378,0.451,0.436L0.451,0.436L0.451,0.436z");
             break;

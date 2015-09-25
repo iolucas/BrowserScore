@@ -66,18 +66,10 @@ function getNoteObj(note) {
         console.log(note);
     }
 
-    if(note.accidental) {
-        if(note.accidental == "flat-flat")
-            noteObj.accident = "DOUBLE_FLAT";
-        else
-            noteObj.accident = note.accidental.toUpperCase();
+    noteObj.accident = note.accidental;
 
-        noteObj.accident = noteObj.accident.replace("-", "_");
-    }
-
-    //Check if it got a X coord
-    if(note["@attributes"] && note["@attributes"]["default-x"])
-        noteObj.xCoord = note["@attributes"]["default-x"];
+    //Check if it got a chord object
+    noteObj.chord = note.chord;
 
     return noteObj;
 }
@@ -88,29 +80,37 @@ function toComposinFormat(jsonObj) {
     var neoScore = { measures: [] }
 
     try {
+
+        var fileParts = jsonObj.part;
+
+        //Ensure the parts object is an array 
+        if(!(fileParts.length >= 0))
+            fileParts = [fileParts];
+
         //Get the measure array from the file
-        var fileMeasures = jsonObj.part.measure;
+        var fileMeasures = fileParts[0].measure;
         //Ensure the measures object is an array 
         if(!(fileMeasures.length >= 0))
             fileMeasures = [fileMeasures];
 
+        //Add all properties from the work field that are strings
+        if(jsonObj.work)
+            for(var member in jsonObj.work)
+                if(typeof jsonObj.work[member] == "string")
+                    neoScore[member] = jsonObj.work[member];
+
+        //Add all properties from the identification field that are strings
+        if(jsonObj.identification)
+            for(var member in jsonObj.identification)
+                if(typeof jsonObj.identification[member] == "string")
+                    neoScore[member] = jsonObj.identification[member];
+
         //iterate thru the fileMeasures array
         for(var i = 0; i < fileMeasures.length; i++) {
             //if the measure object got the attribute member
-            if(fileMeasures[i].attributes) {
+            if(fileMeasures[i].attributes)
                 neoScore.attributes = fileMeasures[i].attributes
-                //get and set the clef
-                /*neoScore.clef = fileMeasures[i].attributes.clef.sign;
 
-                //get and set the timesig
-                neoScore.timeSig = fileMeasures[i].attributes.time['beats'] + fileMeasures[i].attributes.time['beat-type']; 
-                neoScore.timeSig = parseInt(neoScore.timeSig); */
-            }
-
-            //FORGET FOR NOW
-            //create fileChords array to handle the file pseudo chords
-            //(since they are defined as having the same x coordinate on the score line)
-            //------------------------
 
             //Get the notes for the current measure
             var fileMeasureNotes = fileMeasures[i].note;
@@ -126,24 +126,11 @@ function toComposinFormat(jsonObj) {
                 //Get note obj 
                 var noteObj = getNoteObj(fileMeasureNotes[j]);
 
-                //if we already got a chord and the just got obj has a xCoord
-                if(fileMeasureChords.length > 0 && noteObj.xCoord) {
-                    //get the last note object inserted
-                    var lastChord = fileMeasureChords[fileMeasureChords.length - 1],
-                        lastChordLength = lastChord.length,
-                        lastNoteObj = lastChord[lastChordLength - 1];
-
-                    //if the last note and the current got the same x, they are a chord
-                    if(lastNoteObj.xCoord && lastNoteObj.xCoord == noteObj.xCoord)
-                        lastChord.push(noteObj);//push the current note to the chord
-                    else
-                        //put a new chord object on file measures chords array
-                        fileMeasureChords.push([noteObj]);  
-
-                } else { //if none of them
-                    //put a new chord object on file measures chords array
-                    fileMeasureChords.push([noteObj]);  
-                }
+                //if the chord array has been initiated and the note obj is a chord member
+                if(fileMeasureChords.length > 0 && noteObj.chord)
+                    fileMeasureChords[fileMeasureChords.length - 1].push(noteObj);  //push the note to the last chord
+                else //if not
+                    fileMeasureChords.push([noteObj]); //put a new chord object on file measures chords array 
             }
 
             var neoMeasure = { chords: [] };

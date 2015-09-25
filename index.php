@@ -30,6 +30,7 @@
                 </svg>
             </div>
         </section>
+        <script src="xml2json.js"></script>
         <script src="score/g-query.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
         <script src="score/ScoreConverter.js"></script>
@@ -41,11 +42,19 @@
         <script src="debug.js"></script>
         <script>
 
+
+            //TERMINAR ADICIONAR SIMBOLOS PARTITURA E ADICIONAR BUILDERS PARA ELES
+
+
+
             var svgContainer = document.getElementById("svgContainer"),
                 scoreObj = null;
 
             function OpenScore(jsonStr) {
                 var composinObj = toComposinFormat(JSON.parse(jsonStr));
+
+                console.log(JSON.parse(jsonStr));
+                //console.log(composinObj);
 
                 if(scoreObj)
                     svgContainer.removeChild(scoreObj.Draw());
@@ -77,12 +86,80 @@
 
                 reader.onloadend = function() {
                     if(reader.readyState == 2) {
-                        postFile(reader.result);
-                        //console.log(reader.result);
+                        //var xmlobj = parseXml(reader.result);
+                        //console.log(xmlobj.documentElement.getElementsByTagName("measure"));    
+
+                        //var jsonstr = xml2json(xmlobj);
+                        //console.log(jsonstr);
+                        //console.log(JSON.parse(jsonstr.replace("undefined", "")));
+                        
+                        postFile(replaceCreator(reader.result));
+                        //console.log(replaceCreator(reader.result));
                     }
                 }
 
                 reader.readAsText(file);
+            }
+
+            function parseXml(xml) {
+   var dom = null;
+   if (window.DOMParser) {
+      try { 
+         dom = (new DOMParser()).parseFromString(xml, "text/xml"); 
+      } 
+      catch (e) { dom = null; }
+   }
+   else if (window.ActiveXObject) {
+      try {
+         dom = new ActiveXObject('Microsoft.XMLDOM');
+         dom.async = false;
+         if (!dom.loadXML(xml)) // parse error ..
+
+            window.alert(dom.parseError.reason + dom.parseError.srcText);
+      } 
+      catch (e) { dom = null; }
+   }
+   else
+      alert("cannot parse xml string!");
+   return dom;
+}
+
+            //function to replace the creator from music xml to easily find composer and lyricist
+            function replaceCreator(xmlString) {
+                //return xmlString;
+
+                var changeArray = [];
+                    composerIndex = xmlString.indexOf("<creator type=\"composer\">"),
+                    poetIndex = xmlString.indexOf("<creator type=\"poet\">"),
+                    lyricistIndex = xmlString.indexOf("<creator type=\"lyricist\">"),
+                    artistIndex = xmlString.indexOf("<creator type=\"artist\">"),
+                    tabberIndex = xmlString.indexOf("<creator type=\"tabber\">");
+
+                if(composerIndex > -1)
+                    changeArray[composerIndex] = "composer";
+
+                if(poetIndex > -1)
+                    changeArray[poetIndex] = "poet";
+
+                if(lyricistIndex > -1)
+                    changeArray[lyricistIndex] = "lyricist";
+
+                if(artistIndex > -1)
+                    changeArray[artistIndex] = "artist";
+
+                if(tabberIndex > -1)
+                    changeArray[tabberIndex] = "tabber";
+
+                for(var i = 0; i < changeArray.length; i++) {
+                    if(changeArray[i] == undefined)
+                        continue;
+
+                    xmlString = xmlString
+                        .replace("<creator type=\"" + changeArray[i] + "\">", "<" + changeArray[i] + ">")
+                        .replace("</creator>", "</" + changeArray[i] + ">");    
+                }
+
+                return xmlString;
             }
 
             //FILE POST STUFF
