@@ -46,7 +46,7 @@ function DrawScoreClef(clef) {
             break;
 
         default:
-            throw "INVALID_CLEF_ELEMENT_TO_DRAW";
+            throw "INVALID_CLEF_ELEMENT_TO_DRAW: " + clef;
     }
 
     return clefElem;
@@ -166,6 +166,12 @@ function DrawTimeSig(beats, beatType) {
     var beatsGroup = document.createElementNS(xmlns, "g"),
         beatTypeGroup = document.createElementNS(xmlns, "g"),
         nextPos = 0;
+
+    if(typeof beats == "number")
+        beats = beats.toString();
+
+    if(typeof beatType == "number")
+        beatType = beatType.toString();
 
     for(var i = 0; i < beats.length; i++) {
         var beatsValue = parseInt(beats.charAt(i)),

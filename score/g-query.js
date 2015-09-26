@@ -30,35 +30,43 @@ SVGGraphicsElement.prototype.getBBox = function () {	//set the new one
         else //if not suceed
             throw "BBOX_NOT_VALID";	//crash the try block (firefox crashes automatically, chrome doesn't)
     } catch(e) { //if it is not valid,
-        
-        var elementParent = this.parentElement, //got the element parent if any
-            auxParent;  //aux parent to append the element for get its bbBox
 
-        //check if we are in a svg doc or html doc
-        if(document.documentElement.tagName == "svg") {
-            auxParent = document.documentElement; //set the svg doc parent element    
+        //recursively checks the parent element of the current element to find the highest not null
+        var higherNotNullElement = this;
+        for(;;) {
+            if(higherNotNullElement.parentElement)
+                higherNotNullElement = higherNotNullElement.parentElement;
+            else
+                break;               
+        }
 
-        } else if(document.documentElement.tagName == "HTML") {
-            //inits the svg aux doc
-            auxParent = $G.create("svg");
-            document.body.appendChild(auxParent);
-        } else
+        //if the last element is one of the root tags, means the element is completely appended and the bbox cleared is the right one
+        if(higherNotNullElement.tagName == "HTML" || higherNotNullElement.tagName == "svg")
+            return bBox;    //return the bBox before the catch (cleared)
+
+        var auxParent;  //aux parent to append the element for get its bbBox
+
+        //if the root document is already a svg, 
+        if(document.documentElement.tagName == "svg")
+            auxParent = document.documentElement; //set the svg doc parent element as the auxParent
+        else if(document.documentElement.tagName == "HTML") { //if is a HTML
+            auxParent = $G.create("svg");   //creates a svg doc for it
+            document.body.appendChild(auxParent);   //append the svg doc to the html doc body
+        }
+        else //if neither one of them, throw error
             throw "G-QUERY_ERROR__UNKNOWN_DOC_TYPE";
 
-        auxParent.appendChild(this);  //append element to the auxiliar parent to be able to get its bbox
+        //append the higher element to the auxiliar parent to be able to get this element bbox
+        auxParent.appendChild(higherNotNullElement);  
         bBox = this.__oldGetBBox();   //get this element bBox
+        //remove higher element from its aux parent
+        auxParent.removeChild(higherNotNullElement); 
 
-        if(elementParent) //if the element had a parent
-            elementParent.appendChild(this);    //put the element back to its parent
-        else //if not,
-            auxParent.removeChild(this);  //just remove element from its aux parent
-
-        //if the aux parent has a parent element, dettach it and delete it
         if(auxParent.parentElement)
-            auxParent.parentElement.removeChild(auxParent);  
+            auxParent.parentElement.removeChild(auxParent);
 
         delete auxParent;
-        return bBox;    
+        return bBox;
     }
 }
 
@@ -188,6 +196,9 @@ Array.prototype.getValidLength = function() {
 /*
 var test = $G.create("rect");
 
+//var svgDoc123 = $G.create("svg");
+//svgDoc123.appendChild(test);
+//document.body.appendChild(svgDoc123);
 
 
 test.setAttribute("width", 100);

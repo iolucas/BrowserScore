@@ -18,7 +18,7 @@ var ScoreLoader = new function() {
 			var chords = measures[i].chords ? measures[i].chords : [];
 
 			for(var j = 0; j < chords.length; j++) {
-				var chordObj = new ScoreBuilder.Chord({ denominator: chords[j].den });
+				var chordObj = new ScoreBuilder.Chord(chords[j].den);
 				
 				var notes = chords[j].notes ? chords[j].notes : [];
 

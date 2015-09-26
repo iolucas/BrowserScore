@@ -52,20 +52,22 @@ var ScoreBuilder = new function() {
         SCORE_TOP_MARGIN = 50, //min value for a top margin for the scores
         DEBUG_RECTANGLES = true;
   
+
+    //first note will define the denominator
     //group to place the notes
-    this.Chord = function(properties) {
+    this.Chord = function(chordDen) {
         var selfRef = this,
 
             notes = [], //Array to set the notes at this chord
 
-            denominator = properties.denominator,    //chord general denominator
-            clef = properties.clef, //of this chord for note position stuff
+            chordDenominator = chordDen,    //chord general denominator
+            //clef,// = properties.clef, //of this chord for note position stuff
             chordGroup = document.createElementNS(xmlns, "g"),  //general chord group to put its elements
             noteGroup = document.createElementNS(xmlns, "g"),   //group to add note related elements
             accidentGroup = document.createElementNS(xmlns, "g"),   //accident group to place accident related elements
             auxLinesGroup = document.createElementNS(xmlns, "g"),   //aux lines group to place the necessary aux lines up and down
-            rest = DrawRest(denominator),  //get the rest element draw
-            flag = DrawNoteFlag(denominator),   //get the note flag 
+            rest = DrawRest(chordDenominator),  //get the rest element draw
+            flag = DrawNoteFlag(chordDenominator),   //get the note flag 
             auxLines = document.createElementNS(xmlns, "path"), //path to receive the aux lines to be draw
             stem =  document.createElementNS(xmlns, "line"),    //chord stem to be placed
 
@@ -78,6 +80,8 @@ var ScoreBuilder = new function() {
             LINE_OFFSET = 7.5,   //const offset of each note at the visual object
 
             currWidth = 0,  //variable to keep the current true width of the chord (discouting aux lines gaps)
+
+            lastClef = "",  //variable to hold the last clef used to detect clef change to avoid unnecessary organize chords
 
             //variable to signalize whether a note has been added or removed from this chord and it was not yet organized
             chordModified = false;   //must start as true to ensure init the curr width variable  
@@ -116,27 +120,6 @@ var ScoreBuilder = new function() {
         noteGroup.appendChild(stem);
         noteGroup.appendChild(rest);
 
-        //DEBUG PURPOSES
-        if(!clef)
-            clef = 'G';
-
-        //Set POS0_NOTE and POS0_OCTAVE according to the clef
-        switch(clef) {
-
-            case 'G':
-                POS0_NOTE = 'E'.charCodeAt(0);
-                POS0_OCTAVE = 5; 
-                break;
-
-            case 'F':
-                POS0_NOTE = 'G'.charCodeAt(0);
-                POS0_OCTAVE = 3; 
-                break;
-
-            default:
-                throw "INVALID_CHORD_CLEF_SET: " + clef;
-        }
-
         //ensures the currwidth variable is initiated with the rest symbol
         currWidth = rest.getBBox().width;
 
@@ -151,7 +134,6 @@ var ScoreBuilder = new function() {
 
         //Function to move this chord object with absolute positions
         this.MoveTo = function(x, y) {
-            //SetTransform(chordGroup, { translate: [x, y] });
             chordGroup.translate(x, y);
         }
 
@@ -162,11 +144,11 @@ var ScoreBuilder = new function() {
 
         //Function to get the Denominator of this chord
         this.GetDenominator = function() { 
-            return denominator; 
+            return chordDenominator; 
         }
 
         //Function to set a new denominator. TO BE IMPLEMENTED
-        this.SetDenominator = function(denominator) {
+        this.SetDenominator = function(newChordDen) {
             throw "SetDenominator function still to be implemented.";
         }
 
@@ -201,7 +183,7 @@ var ScoreBuilder = new function() {
                 }
             }
 
-            note.noteDraw = DrawNote(denominator);  //get the note draw
+            note.noteDraw = DrawNote(chordDenominator);  //get the note draw
             noteGroup.appendChild(note.noteDraw);   //append the note drawing to the group
 
             //note.noteDraw.setAttribute("opacity", ".5");
@@ -267,22 +249,34 @@ var ScoreBuilder = new function() {
         }
 
         function getNoteCoord(note) {
+            var matchValue = 0;
+
             //If the note is A or B, must add 1 to the octave to match the piano standard of notes and octaves
             if(note.n == 'A' || note.n == 'B')
-                return -((note.n.charCodeAt(0) - POS0_NOTE) + (note.o + 1 - POS0_OCTAVE) * 7);
+                matchValue = 1;
 
-            return -((note.n.charCodeAt(0) - POS0_NOTE) + (note.o - POS0_OCTAVE) * 7);
+            return -((note.n.charCodeAt(0) - POS0_NOTE) + (note.o + matchValue - POS0_OCTAVE) * 7);
         }        
 
         //Function to be called when you want to update the chord object positions 
-        this.Organize = function() {
-            if(!chordModified)  //if the chord hasn't be modified
+        this.Organize = function(clef) {
+            if(!chordModified) //&& clef == lastClef)  //if the chord hasn't be modified and the clef is the same last time
                 return; //do nothing and return
+
+            //DEBUG PURPOSES
+            if(!clef)
+                clef = "G2";
+
+            if(clef)    //if a clef has been specified 
+                lastClef = clef;    //updates the last clef variable
+            else if(lastClef)//if not, if we already got a last clef
+                clef = lastClef;    //set the last as the current
+            else //if none of them
+                throw "NO_CLEF_OR_LAST_CLEF_HAS_BEEN_SET";  //crash with an error            
 
             //If there is no more notes on this chord
             if(notes.getValidLength() == 0) {
-                rest.setAttribute("opacity", 1);
-                //chordGroup.appendChild(rest);    //show the rest element
+                rest.setAttribute("opacity", 1);    //show the rest element
                 setStemLine();  //clear chord stem line
                 setChordFlag();
                 setAuxLines(); //remove all the aux lines
@@ -290,10 +284,32 @@ var ScoreBuilder = new function() {
                 return; //do nothing else and return
             }
 
-            rest.setAttribute("opacity", 0);
-            //if(rest.parentElement)  //if the rest element is attached, 
-                //rest.parentElement.removeChild(rest);  //detach it
+            rest.setAttribute("opacity", 0);    //hide the rest element
 
+            //Set POS0_NOTE and POS0_OCTAVE according to the clef
+            switch(clef) {
+
+                case "G2":
+                    POS0_NOTE = 'E'.charCodeAt(0);
+                    POS0_OCTAVE = 5; 
+                    break;
+
+                case "F4":
+                    POS0_NOTE = 'G'.charCodeAt(0);
+                    POS0_OCTAVE = 3; 
+                    break;
+
+                case "C3":
+                    throw "CLEF_TO_BE_IMPLEMENTED";
+                    break;
+
+                case "C4":
+                    throw "CLEF_TO_BE_IMPLEMENTED";
+                    break;
+
+                default:
+                    throw "INVALID_CHORD_CLEF_SET: " + clef;
+            }
             
             //DETECT THE LOWEST AND THE HIGHEST NOTES COORDINATES FOR THIS CHORD
             var lowValue = null,   //var to store the lowest value for y position
@@ -356,7 +372,6 @@ var ScoreBuilder = new function() {
                 ACC_NOTES_GAP = 5;  //GAP BETWEEN NOTES AND ACCIDENT SYMBOLS
 
             //place accident group at 0,0 abs pos
-            //SetTransform(accidentGroup, { translate: [-accidentBox.x, 0] });
             accidentGroup.translate(-accidentBox.x, 0);
 
             //place note and aux lines imediatelly after the accident group
@@ -533,7 +548,7 @@ var ScoreBuilder = new function() {
 
                     //xCoord must be offseted
                     //hard code note x offset for adjacent
-                    finalXCoord = denominator == 1 ? 21 : 17;
+                    finalXCoord = chordDenominator == 1 ? 21 : 17;
                     //We must do this little hack since stem order chooses whether offset will be right or left
                     finalXCoord *= -posListIncValue;    //and the iteration inc has the inverted logic for this
                     //reset the prev valid note cause it is not necessary for the next one to move since this one moved
@@ -550,7 +565,7 @@ var ScoreBuilder = new function() {
         }
 
         function setStemLine(downStemFlag, lowValue, highValue) {
-            if(downStemFlag == undefined || denominator < 2 || notes.getValidLength() == 0) {  //if the chord den is less than 2,
+            if(downStemFlag == undefined || chordDenominator < 2 || notes.getValidLength() == 0) {  //if the chord den is less than 2,
                 setStemLineObj();   //void call to clear any stem line
                 return; //do not and proceed the next chord (return)
             }
@@ -561,10 +576,10 @@ var ScoreBuilder = new function() {
                 additionalStemLength = 0;    //variable to add the additional length to the stem when more than two flags is needed
             
             //if we got more than 2 flags at the note/chord (denominator >= 32)    
-            if(denominator >= 32) {
+            if(chordDenominator >= 32) {
                 additionalStemLength = 2;    //aditional length receives 2
                 for(var i = 64 ;; i *= 2) { //increase aux var to verify how much additional space to add
-                    if(denominator < i || i > 1000) //safety condition
+                    if(chordDenominator < i || i > 1000) //safety condition
                         break;
 
                     additionalStemLength += 2;
@@ -619,7 +634,7 @@ var ScoreBuilder = new function() {
 
         function setChordFlag(downStemFlag, finalStemCoord) {
             //if no arguments are supplied, or denominator greater than 8, clear the flag and return
-            if(downStemFlag == undefined || denominator < 8) { 
+            if(downStemFlag == undefined || chordDenominator < 8) { 
                 if(flag.parentElement)  //if the flag element is appended
                     flag.parentElement.removeChild(flag);   //remove it
                     return; //do nothing else and return
@@ -659,11 +674,11 @@ var ScoreBuilder = new function() {
                 if(lowValue < LINE_LOW_POS) {  //if the score over flow thru the upper part                                     
                     for(var lineYCoord = LINE_LOW_POS; lineYCoord > lowValue; lineYCoord -= 2) {
                         if(lowAdjValue < lineYCoord) {
-                            lineStartCoord = denominator == 1 ? -25 : -21;
-                            lineEndCoord = denominator == 1 ? 53 : 43;
+                            lineStartCoord = chordDenominator == 1 ? -25 : -21;
+                            lineEndCoord = chordDenominator == 1 ? 53 : 43;
                         } else {
-                            lineStartCoord = denominator == 1 ? -4 : -4;
-                            lineEndCoord = denominator == 1 ? 32 : 26;
+                            lineStartCoord = chordDenominator == 1 ? -4 : -4;
+                            lineEndCoord = chordDenominator == 1 ? 32 : 26;
                         }
                         dAtt += "M" + lineStartCoord + ", " + lineYCoord * LINE_OFFSET + "l0,0," + lineEndCoord + ",0";
                     }
@@ -671,11 +686,11 @@ var ScoreBuilder = new function() {
                 if(highValue > LINE_HIGH_POS) {  //if the score over flow thru the lower part
                     for(var lineYCoord = LINE_HIGH_POS + 2; lineYCoord <= highValue + 1; lineYCoord += 2) {
                         if(highAdjValue + 1 >= lineYCoord) {
-                            lineStartCoord = denominator == 1 ? -25 : -21;
-                            lineEndCoord = denominator == 1 ? 53 : 43;
+                            lineStartCoord = chordDenominator == 1 ? -25 : -21;
+                            lineEndCoord = chordDenominator == 1 ? 53 : 43;
                         } else {
-                            lineStartCoord = denominator == 1 ? -4 : -4;
-                            lineEndCoord = denominator == 1 ? 32 : 26;
+                            lineStartCoord = chordDenominator == 1 ? -4 : -4;
+                            lineEndCoord = chordDenominator == 1 ? 32 : 26;
                         }
                         dAtt += "M" + lineStartCoord + ", " + lineYCoord * LINE_OFFSET + "l0,0," + lineEndCoord + ",0";
                     }
@@ -686,18 +701,18 @@ var ScoreBuilder = new function() {
                 if(lowValue < LINE_LOW_POS) {  //if the score over flow thru the upper part                                     
                     for(var lineYCoord = LINE_LOW_POS; lineYCoord > lowValue; lineYCoord -= 2) {
                         if(lowAdjValue < lineYCoord)
-                            lineEndCoord = denominator == 1 ? 53 : 43;
+                            lineEndCoord = chordDenominator == 1 ? 53 : 43;
                         else
-                            lineEndCoord = denominator == 1 ? 32 : 26;
+                            lineEndCoord = chordDenominator == 1 ? 32 : 26;
                         dAtt += "M" + lineStartCoord + ", " + lineYCoord * LINE_OFFSET + "l0,0," + lineEndCoord + ",0";
                     }
                 } 
                 if(highValue > LINE_HIGH_POS) {  //if the score over flow thru the lower part                     
                     for(var lineYCoord = LINE_HIGH_POS + 2; lineYCoord <= highValue + 1; lineYCoord += 2) {
                         if(highAdjValue + 1 >= lineYCoord)
-                            lineEndCoord = denominator == 1 ? 54 : 43;
+                            lineEndCoord = chordDenominator == 1 ? 54 : 43;
                         else
-                            lineEndCoord = denominator == 1 ? 33 : 26;
+                            lineEndCoord = chordDenominator == 1 ? 33 : 26;
                         dAtt += "M" + lineStartCoord + ", " + lineYCoord * LINE_OFFSET + "l0,0," + lineEndCoord + ",0";
                     }
                 }  
@@ -711,6 +726,9 @@ var ScoreBuilder = new function() {
     //-------------------- MEASURE OBJECT -----------------------
     //-----------------------------------------------------------
     //-----------------------------------------------------------
+
+    //System that will check measure elements order to implement them, such in case middle changes of clef or time sig
+
 
     this.Measure = function() {
 
@@ -740,7 +758,6 @@ var ScoreBuilder = new function() {
         this.Draw = function() { return group; }
 
         this.MoveTo = function(x, y) {
-            //SetTransform(group, { translate: [x, y] });
             group.translate(x, y);
         }
 
@@ -784,6 +801,23 @@ var ScoreBuilder = new function() {
 
             measureModified = false;    //clear the modified flag
             lastUnitLengthValue = spaceUnitLength;
+        }
+
+        //Function to insert all the sorts of elements at the measure: 
+        //chords, starts and ending bars, clef, time or key sig change etc
+        this.InsertElem = function(mElem) {
+            //must have a mElem list that in the time of organizing
+            //will navigate thru it determing furter actions to other elements
+            //must know what happen when a clef, time or key change reaches the end of the line
+            //Clefs can be change any time in the measure
+            //time sigs are change only one per measure and is added to the previous measure to be shown
+
+            KEEP ADAPTING THE MEASURE SYSTEM TO THE NEW REQUIREMENTS
+            REMOVE THE SCORE LINE SYSTEM, KEEPS ONLY A SCORE WHICH WILL HAVE AN ARRAY FOR LINES TO PUT THE MEASURES
+
+
+            //measure organizer will have a variable called first measure of the line, to add the necessary clefs and stuff to it
+
         }
 
         this.InsertChord = function(chord, position) {
@@ -966,7 +1000,7 @@ var ScoreBuilder = new function() {
                         timeObj = DrawTimeSymbol(attr.time["@attributes"]["symbol"]);
                     else //otherwise, draw the time sig instead    
                         timeObj = DrawTimeSig(attr.time["beats"], attr.time["beat-type"]);     
-                    
+
                     attrGroup.appendChild(timeObj);
                     timeObj.translate(nextPos, 0);
                     nextPos += timeObj.getBBox().width + SCORE_LINE_HEADER_MARGIN;
@@ -1063,7 +1097,7 @@ var ScoreBuilder = new function() {
     //-----------------------------------------------------------
 
     //General score that will handle multiple scores, lines and add the drawings finish and attributes
-    this.Score = function(scoreAttr, composer) {
+    this.Score = function(scoreAttr) {
         var selfRef = this, //self reference
 
             group = document.createElementNS(xmlns, "g"),   //group to keep the visual objects
@@ -1084,7 +1118,7 @@ var ScoreBuilder = new function() {
 //Composer: 12 right
 //Lyricist: 12 left
 //Copyright 8   center
-
+        /*
         var scoreHeader = $G.create("g");
         console.log(scoreAttr);
         if(composer) {
@@ -1098,7 +1132,7 @@ var ScoreBuilder = new function() {
         group.appendChild(scoreHeader);
 
         scoreHeader.translate(100,50);
-        console.log(scoreHeader);
+        console.log(scoreHeader);*/
 
 //-------------------------------------------
 

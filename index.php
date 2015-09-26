@@ -44,22 +44,121 @@
 
 
             //TERMINAR ADICIONAR SIMBOLOS PARTITURA E ADICIONAR BUILDERS PARA ELES
+            window.onload = function() {
+
+                var timeObj = {}
+                timeObj["beats"] = 4;
+                timeObj["beat-type"] = 4;
+
+                var deltaFile = {
+                    attributes: {
+                        clef: {sign:'G'},
+                        time: timeObj
+                    },
+
+                    measures: [
+                        getMeasure(),
+                        getMeasure(),
+                        getMeasure(),
+                        getMeasure(),
+                        getMeasure()
+                    ]
+                }
+
+                OpenScore(deltaFile);
+
+            }
+
+            function getInt(from, to) {
+                return Math.round(Math.random()*(to-from) + from);
+            }
+
+            function getMeasure() {
+                var measure = {
+                    chords: [
+                        getRandomChord(),
+                        getRandomChord(),
+                        //{ den: 1 , notes: [{n: 'B', o: 5, a: ""}] }
+                    ]
+                }
+                return measure;
+            }
+
+            function getRandomChord() {
+                var numberOfNotes = getInt(0,30),
+                    randDen = Math.pow(2, getInt(0,6));
+                    chord = { den: randDen , notes: [] };
+
+                for(var i = 0; i < numberOfNotes; i++) {
+                    var randomNote = String.fromCharCode(65 + getInt(0,6)),
+                        randomOctave = getInt(3,6);
+
+                    chord.notes.push({ n: randomNote, o: randomOctave, a: getRandomAccident() });
+                }
+                
+                return chord;
+            }
+
+            function getRandomAccident() {
+                //return "";
+                var value = Math.round(Math.random() * 5),
+                    acc = "";
+                
+                switch(value) {
+
+                    case 1:
+                        acc = "natural";
+                        break;
+                    
+                    case 2:
+                        acc = "sharp";
+                        break;
+
+                    case 3:
+                        acc = "double-sharp";
+                        break;
+
+                    case 4:
+                        acc = "flat";
+                        break;
+
+                    case 5:
+                        acc = "flat-flat";
+                        break;
+                }
+
+                return acc;
+            }
 
 
 
+            
             var svgContainer = document.getElementById("svgContainer"),
                 scoreObj = null;
 
-            function OpenScore(jsonStr) {
-                var composinObj = toComposinFormat(JSON.parse(jsonStr));
+            //debug();
 
-                console.log(JSON.parse(jsonStr));
+            function debug() {
+                var chord = new ScoreBuilder.Chord({ denominator: 1 });
+                chord.AddNote({n: 'G', o:3 });
+                chord.Organize();
+                svgContainer.appendChild(chord.Draw());
+                chord.Draw().translate(100, 100);
+
+
+            }
+
+            function OpenScore(jsonStr) {
+                //var composinObj = toComposinFormat(JSON.parse(jsonStr));
+
+                //console.log(JSON.parse(jsonStr));
                 //console.log(composinObj);
 
                 if(scoreObj)
                     svgContainer.removeChild(scoreObj.Draw());
                     
-                scoreObj = ScoreLoader.Open(composinObj);
+                //scoreObj = ScoreLoader.Open(composinObj);
+                scoreObj = ScoreLoader.Open(jsonStr);
 
                 svgContainer.appendChild(scoreObj.Draw());
                 
@@ -72,7 +171,7 @@
             fileOpenBut.addEventListener('change', handleFileSelect, false);
 
             function openFile() {
-                fileOpenBut.click();
+                //fileOpenBut.click();
             }
 
             function handleFileSelect(evt) {
