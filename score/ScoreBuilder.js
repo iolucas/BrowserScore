@@ -127,6 +127,9 @@ var ScoreBuilder = new function() {
         //----------------------- PUBLIC METHODS -----------------------------------------
         //--------------------------------------------------------------------------------
 
+        //Prop to hold this object name for measure objects use
+        this.objName = "chord";
+
         //Function to return the appendble object of this chord
         this.Draw = function() { 
             return chordGroup; 
@@ -737,8 +740,11 @@ var ScoreBuilder = new function() {
             group = document.createElementNS(xmlns, "g"),   //group to fit all the measure members
             //measureEndBar = $Aria.Parse(DrawMeasureElement(MeasureElement.SimpleBar)),
             measureEndBar = DrawMeasureElement("SIMPLE_BAR"),
+            startBar,
+            endBar,
             currWidth = 0,  //var to store the current width of the measure
-            chords = new List(),   //ordered list to fit all the chords @ this measure
+            //chords = new List(),   //ordered list to fit all the chords @ this measure
+            mElements = new List(), //ordered list to place measure elements on this measure
             //variable to signalize whether a note has been added or removed from this chord and it was not yet organized
             measureModified = false,
             lastUnitLengthValue = 0; 
@@ -766,11 +772,15 @@ var ScoreBuilder = new function() {
         }
 
         this.Count = function() {
-            return chords.Count();
+            return mElements.Count();
         }
 
-        this.ForEachChord = function(action) {
+        /*this.ForEachChord = function(action) {
             chords.ForEach(action);//iterate thru all the chords and apply the specified action to it
+        }*/
+
+        this.ForEachElem = function(action) {
+            mElements.ForEach(action);//iterate thru all the measure elements and apply the specified action to it
         }
 
         //Function to update the spaces of the measure and organize chords
@@ -782,14 +792,16 @@ var ScoreBuilder = new function() {
 
             //the start position for the first chord
             var nextPos = MEASURE_LEFT_MARGIN;  //the measure left margin 
-            chords.ForEach(function(chord) {
+            mElements.ForEach(function(mElem) {
+                if(mElem.objName == "chord") {
 
-                //Execute function to organize chord members
-                chord.Organize();   
+                    //Execute function to organize chord members
+                    mElem.Organize();   
 
-                //round the nextPos down for smooth look
-                chord.MoveTo(nextPos, 0);  //move the chord X pos to current nextposition keeping the Y value
-                nextPos += chord.GetWidth() + spaceUnitLength / chord.GetDenominator();    //get the gap value and add it to the next position
+                    //round the nextPos down for smooth look
+                    mElem.MoveTo(nextPos, 0);  //move the chord X pos to current nextposition keeping the Y value
+                    nextPos += mElem.GetWidth() + spaceUnitLength / mElem.GetDenominator();    //get the gap value and add it to the next position
+                }
             });
 
             //set the next position vector as the current measure width
@@ -805,22 +817,49 @@ var ScoreBuilder = new function() {
 
         //Function to insert all the sorts of elements at the measure: 
         //chords, starts and ending bars, clef, time or key sig change etc
-        this.InsertElem = function(mElem) {
+        this.InsertElem = function(mElem, position) {
+            //KEEP ADAPTING THE MEASURE SYSTEM TO THE NEW REQUIREMENTS
+            //REMOVE THE SCORE LINE SYSTEM, KEEPS ONLY A SCORE WHICH WILL HAVE AN ARRAY FOR LINES TO PUT THE MEASURES
+            
+            //measure will ignore all time sig 
+            //if the clef, time or key change is the same as before, notting will happen
+
+
             //must have a mElem list that in the time of organizing
             //will navigate thru it determing furter actions to other elements
             //must know what happen when a clef, time or key change reaches the end of the line
             //Clefs can be change any time in the measure
             //time sigs are change only one per measure and is added to the previous measure to be shown
 
-            KEEP ADAPTING THE MEASURE SYSTEM TO THE NEW REQUIREMENTS
-            REMOVE THE SCORE LINE SYSTEM, KEEPS ONLY A SCORE WHICH WILL HAVE AN ARRAY FOR LINES TO PUT THE MEASURES
-
-
             //measure organizer will have a variable called first measure of the line, to add the necessary clefs and stuff to it
 
+            //start bars must be @ the beginning and when find an end bar, stop the iteration thru elements
+            //if no end bar is found, add a simple bar
+
+
+//----------------------------------
+
+            //if the measure element object already exists at this measure, return a message
+            if(mElements.Find(mElem) != -1) return "MEASURE_ELEMENT_ALREADY_ON_PLACED"; 
+            //(check the need to implement timing verification in the future to avoid a measure is overflowed with note symbols))
+            
+            //Object validation successful
+
+            //if the type of the position variable is different from number or the position is bigger or the size of the list
+            if(typeof position != "number" || position >= mElements.Count())    
+                mElements.Add(mElem);    //insert with add method at the last position
+            else //otherwise
+                mElements.Insert(position, mElem); //insert element reference at the position to the list
+
+            //append the visual object to the group
+            group.appendChild(mElem.Draw());
+
+            measureModified = true; //set the flag that the chord has been modified
+
+            return "MEASURE_ELEMENT_INSERTED_SUCCESSFULLY";
         }
 
-        this.InsertChord = function(chord, position) {
+        /*this.InsertChord = function(chord, position) {
             //if the chord object already exists at this measure, return a message
             if(chords.Find(chord) != -1) return "CHORD_ALREADY_ON_MEASURE"; 
             //implement timing verification in the future
@@ -838,7 +877,7 @@ var ScoreBuilder = new function() {
             measureModified = true; //set the flag that the chord has been modified
 
             return "SUCCESS";
-        }
+        }*/
 
         this.AddChordCollection = function(chordCollection) {
             var result = [];
@@ -937,11 +976,14 @@ var ScoreBuilder = new function() {
 
             measures.ForEach(function(measure) { 
                 elemTotalLength += MEASURE_LEFT_MARGIN;  //sum the measure left margin
-                measure.ForEachChord(function(chord){
-                    chord.Organize();   //Ensure chords are organized to get their correct width
-                    //PROBABLY IN THE FUTURE WILL HAVE TO VERIFY THE DENOMINATOR FOR ELEM TOTAL LENGTH FOR THE FINAL FINISH OF THE NOTES
-                    denSum += 1 / chord.GetDenominator();   //get denominator value
-                    elemTotalLength += chord.GetWidth();    //get chord length
+
+                measure.ForEachElem(function(mElem){
+                    if(mElem.objName == "chord") {
+                        mElem.Organize();   //Ensure chords are organized to get their correct width
+                        //PROBABLY IN THE FUTURE WILL HAVE TO VERIFY THE DENOMINATOR FOR ELEM TOTAL LENGTH FOR THE FINAL FINISH OF THE NOTES
+                        denSum += 1 / mElem.GetDenominator();   //get denominator value
+                        elemTotalLength += mElem.GetWidth();    //get chord length
+                    }
                 });
             });
 

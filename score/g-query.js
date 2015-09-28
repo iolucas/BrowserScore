@@ -154,7 +154,7 @@ SVGGraphicsElement.prototype.scale = function(x, y) {
         oldValues = oldValues.replace(oldValues.substring(startIndex, endIndex + 1), "");
     }
 
-    //if the angle hasn't been informed, return
+    //if the x value hasn't been informed, return
 	if(x == undefined) {
 		this.setAttribute("transform", oldValues);	
 		return;		

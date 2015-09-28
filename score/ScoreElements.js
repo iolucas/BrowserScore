@@ -413,6 +413,103 @@ function DrawNoteAtt(element) {
 }
 
 
+function DrawBar(bar) {
+    var barGroup = $G.create("g");
+
+    switch(bar) {
+        case "simple":
+            var simpleBar = getBarElem("light");
+            barGroup.appendChild(simpleBar);
+            break;
+
+        case "end":
+            var lightBar = getBarElem("light"),
+                heavyBar = getBarElem("heavy");
+            heavyBar.translate(7);
+            barGroup.appendChild(lightBar);
+            barGroup.appendChild(heavyBar); 
+            break;
+
+        case "repeat_b":
+            var lightBar = getBarElem("light"),
+                heavyBar = getBarElem("heavy"),
+                dots = getBarElem("dots");
+            lightBar.translate(10);
+            heavyBar.translate(17);
+            barGroup.appendChild(dots);
+            barGroup.appendChild(lightBar);
+            barGroup.appendChild(heavyBar);
+            break;
+
+        case "repeat_f":
+            var lightBar = getBarElem("light"),
+                heavyBar = getBarElem("heavy"),
+                dots = getBarElem("dots");
+            lightBar.translate(12);
+            dots.translate(17);
+            barGroup.appendChild(heavyBar);
+            barGroup.appendChild(lightBar);
+            barGroup.appendChild(dots);
+            break;
+
+        case "double":
+            var light1 = getBarElem("light"),
+                light2 = getBarElem("light");
+            light2.translate(7, 0);
+            barGroup.appendChild(light1);
+            barGroup.appendChild(light2);
+            break;
+
+        case "dashed":
+            var dashed = getBarElem("dashed");
+            barGroup.appendChild(dashed);
+            break;
+
+        default:
+            throw "INVALID_BAR_TO_DRAW";
+    }
+
+    return barGroup;
+
+    function getBarElem(elem) {
+        var barElem;
+        switch(elem) {
+            case "light":
+                barElem = $G.create("rect");
+                barElem.setAttribute("height", 60);
+                barElem.setAttribute("width", 1);
+            break;
+
+            case "heavy":
+                barElem = $G.create("rect");
+                barElem.setAttribute("height", 60);
+                barElem.setAttribute("width", 6);
+            break;
+
+            case "dots":
+                var dot1 = $G.create("circle"),
+                    dot2 = $G.create("circle");
+                dot1.setAttribute("r", 3);
+                dot2.setAttribute("r", 3);
+                dot1.translate(3, 22.5);
+                dot2.translate(3, 37.5);
+                barElem = $G.create("g");
+                barElem.appendChild(dot1);
+                barElem.appendChild(dot2);
+                break;
+
+            case "dashed":
+                barElem = $G.create("line");
+                barElem.setAttribute("y2", 60);
+                barElem.setAttribute("stroke", "#000");
+                barElem.setAttribute("stroke-dasharray", "7, 4");
+                break;
+        }
+        return barElem;
+    }
+}
+
+
 function DrawMeasureElement(element) {
     var mElem;  //var to store the measure element draw
 
@@ -423,7 +520,7 @@ function DrawMeasureElement(element) {
             mElem.setAttribute("stroke", "#000");
             break;
 
-        case "AUX_LINE1":
+        /*case "AUX_LINE1":
             mElem = document.createElementNS(xmlns, "line");  //create new line
             mElem.setAttribute("x2", 35);
             mElem.setAttribute("stroke", "#000");
@@ -435,7 +532,7 @@ function DrawMeasureElement(element) {
             mElem.setAttribute("x2", 28);
             mElem.setAttribute("stroke", "#000");
             //mElem.setAttribute("stroke-width", "3");
-            break;
+            break;*/
 
         default:
             throw "INVALID_MEASURE_ELEMENT_TO_DRAW";

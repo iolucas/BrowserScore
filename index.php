@@ -46,7 +46,33 @@
             //TERMINAR ADICIONAR SIMBOLOS PARTITURA E ADICIONAR BUILDERS PARA ELES
             window.onload = function() {
 
-                var timeObj = {}
+                    
+                var measureObj = new ScoreBuilder.Measure();   
+
+                var chordObj = new ScoreBuilder.Chord(4);
+                measureObj.InsertElem(chordObj);
+                chordObj.AddNote({n: 'A', o: 5});
+                
+                KEEP DOING METHODS TO INSERT BARS @ THE MEASURES
+
+
+
+                svgContainer.appendChild(measureObj.Draw());
+                
+                measureObj.UpdateGaps(200);
+                measureObj.MoveTo(15.5, 150.5);
+
+                var bar1 = DrawBar("repeat_f");
+                var bar2 = DrawBar("repeat_b");
+
+                svgContainer.appendChild(bar1);
+                svgContainer.appendChild(bar2);
+                bar1.translate(77, 61);
+                bar2.scale(-1, 1);
+                bar2.translate(-100, 0)
+                console.log(bar2);
+
+                /*var timeObj = {}
                 timeObj["beats"] = 4;
                 timeObj["beat-type"] = 4;
 
@@ -65,7 +91,7 @@
                     ]
                 }
 
-                OpenScore(deltaFile);
+                OpenScore(deltaFile);*/
 
             }
 
