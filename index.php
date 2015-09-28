@@ -44,35 +44,62 @@
 
 
             //TERMINAR ADICIONAR SIMBOLOS PARTITURA E ADICIONAR BUILDERS PARA ELES
+            //KEEP DOING METHODS TO INSERT BARS @ THE MEASURES
             window.onload = function() {
 
                     
-                var measureObj = new ScoreBuilder.Measure();   
+                /*var measureObj1 = new ScoreBuilder.Measure(),
+                    measureObj2 = new ScoreBuilder.Measure(),
 
-                var chordObj = new ScoreBuilder.Chord(4);
-                measureObj.InsertElem(chordObj);
-                chordObj.AddNote({n: 'A', o: 5});
+                    chordObj1 = new ScoreBuilder.Chord(4),
+                    chordObj2 = new ScoreBuilder.Chord(4),
+                    chordObj3 = new ScoreBuilder.Chord(4),
+                    chordObj4 = new ScoreBuilder.Chord(4),
+                    chordObj5 = new ScoreBuilder.Chord(4),
+                    chordObj6 = new ScoreBuilder.Chord(4),
+                    chordObj7 = new ScoreBuilder.Chord(4),
+                    chordObj8 = new ScoreBuilder.Chord(4);
+
+                chordObj1.AddNote({n: 'A', o: 5});
+                chordObj2.AddNote({n: 'C', o: 6, a: "flat"});
+                chordObj3.AddNote({n: 'F', o: 5, a: "flat"});
+                chordObj4.AddNote({n: 'G', o: 5});
+
+                chordObj5.AddNote({n: 'A', o: 4, a: "flat"});
+                chordObj6.AddNote({n: 'C', o: 5});
+                chordObj7.AddNote({n: 'F', o: 4});
+                chordObj8.AddNote({n: 'G', o: 4, a: "flat"});
+
+                measureObj1.InsertElem(chordObj1);
+                measureObj1.InsertElem(chordObj2);
+                measureObj1.InsertElem(chordObj3);
+                measureObj1.InsertElem(chordObj4);
+
+                measureObj2.InsertElem(chordObj5);
+                measureObj2.InsertElem(chordObj6);
+                measureObj2.InsertElem(chordObj7);
+                measureObj2.InsertElem(chordObj8);
+
+
                 
-                KEEP DOING METHODS TO INSERT BARS @ THE MEASURES
-
-
-
-                svgContainer.appendChild(measureObj.Draw());
                 
-                measureObj.UpdateGaps(200);
-                measureObj.MoveTo(15.5, 150.5);
+                svgContainer.appendChild(measureObj1.Draw());
+                svgContainer.appendChild(measureObj2.Draw());
+                
+                measureObj1.MoveTo(115.5, 150.5);
+                measureObj2.MoveTo(115.5, 250.5);
 
-                var bar1 = DrawBar("repeat_f");
-                var bar2 = DrawBar("repeat_b");
+                measureObj1.SetEndBar("repeat_b");
+                measureObj1.UpdateGaps(200);
 
-                svgContainer.appendChild(bar1);
-                svgContainer.appendChild(bar2);
-                bar1.translate(77, 61);
-                bar2.scale(-1, 1);
-                bar2.translate(-100, 0)
-                console.log(bar2);
+                measureObj2.SetEndBar("repeat_b");
+                measureObj2.UpdateGaps(200);
 
-                /*var timeObj = {}
+                console.log(measureObj1.GetChordsInfo());
+                console.log(measureObj2.GetChordsInfo());*/
+
+
+                var timeObj = {}
                 timeObj["beats"] = 4;
                 timeObj["beat-type"] = 4;
 
@@ -91,7 +118,7 @@
                     ]
                 }
 
-                OpenScore(deltaFile);*/
+                OpenScore(deltaFile);
 
             }
 

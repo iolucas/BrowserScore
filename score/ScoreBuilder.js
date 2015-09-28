@@ -123,6 +123,13 @@ var ScoreBuilder = new function() {
         //ensures the currwidth variable is initiated with the rest symbol
         currWidth = rest.getBBox().width;
 
+        var noteRect = $G.create("rect");
+        noteRect.setAttribute("width", 5);
+        noteRect.setAttribute("height", 5);
+        noteRect.setAttribute("fill", "yellow");
+        noteGroup.appendChild(noteRect);
+
+
         //--------------------------------------------------------------------------------
         //----------------------- PUBLIC METHODS -----------------------------------------
         //--------------------------------------------------------------------------------
@@ -148,6 +155,10 @@ var ScoreBuilder = new function() {
         //Function to get the Denominator of this chord
         this.GetDenominator = function() { 
             return chordDenominator; 
+        }
+
+        this.GetChordRef = function() {
+
         }
 
         //Function to set a new denominator. TO BE IMPLEMENTED
@@ -361,7 +372,16 @@ var ScoreBuilder = new function() {
             //set chord elements (accident group and notes group) correct places
             setChordPositions(); 
 
-            chordModified = false;  //clear the chord modified flag  
+            chordModified = false;  //clear the chord modified flag
+
+
+            CHANGE CHORD SYSTEM FOR THE MIDDLE OF THE MAIN ELEMENT BE ALWAYS THE REFERENCE
+
+            //DEBUG NOTE RECT RESIZE
+            if(chordDenominator == 1)
+                noteRect.setAttribute("width", 14.7);   //MIDDLE OF WHOLE NOTE
+            else
+                noteRect.setAttribute("width", 10); //MIDDLE OF HALF NOTE AND LESSER
         }
 
         //--------------------------------------------------------------------------------
@@ -737,9 +757,9 @@ var ScoreBuilder = new function() {
 
         var selfRef = this,
 
-            group = document.createElementNS(xmlns, "g"),   //group to fit all the measure members
+            measureGroup = document.createElementNS(xmlns, "g"),   //group to fit all the measure members
             //measureEndBar = $Aria.Parse(DrawMeasureElement(MeasureElement.SimpleBar)),
-            measureEndBar = DrawMeasureElement("SIMPLE_BAR"),
+            //measureEndBar = DrawMeasureElement("SIMPLE_BAR"),
             startBar,
             endBar,
             currWidth = 0,  //var to store the current width of the measure
@@ -756,15 +776,15 @@ var ScoreBuilder = new function() {
             refRect.setAttribute("fill", "red");
             refRect.setAttribute("height", 18); 
             refRect.setAttribute("width", 18);    
-            group.appendChild(refRect); //append debug square
+            measureGroup.appendChild(refRect); //append debug square
         }
 
-        group.appendChild(measureEndBar); //append measure end bar   
+        //measureGroup.appendChild(measureEndBar); //append measure end bar   
 
-        this.Draw = function() { return group; }
+        this.Draw = function() { return measureGroup; }
 
         this.MoveTo = function(x, y) {
-            group.translate(x, y);
+            measureGroup.translate(x, y);
         }
 
         this.GetWidth = function() {
@@ -792,6 +812,9 @@ var ScoreBuilder = new function() {
 
             //the start position for the first chord
             var nextPos = MEASURE_LEFT_MARGIN;  //the measure left margin 
+            if(startBar)    //if a start bar has been set
+                nextPos += startBar.getBBox().width;
+
             mElements.ForEach(function(mElem) {
                 if(mElem.objName == "chord") {
 
@@ -809,11 +832,67 @@ var ScoreBuilder = new function() {
 
             //put the end bar at the end of the measure
             //SetTransform(measureEndBar, { translate: [nextPos, 0] });
-            measureEndBar.translate(nextPos, 0);
+            //measureEndBar.translate(nextPos, 0);
+
+            if(endBar)  //if a end bar has been set
+                endBar.translate(nextPos - endBar.getBBox().width + 0); //put the end bar at the end of the measure
 
             measureModified = false;    //clear the modified flag
             lastUnitLengthValue = spaceUnitLength;
         }
+
+        //Function to set the start bar of the measure
+        this.SetStartBar = function(bar) {
+            if(bar) {  //if the bar variable has been passed
+                //if a start bar has already been set
+                if(startBar) {
+                    if(startBar.barType == bar) //if the bar passed is equal to the current one,
+                        return; //do nothing an return
+
+                    //if it is not equal
+                    measureGroup.removeChild(startBar);    //remove the current start bar
+                }
+
+                startBar = DrawBar(bar);    //get the bar visual obj
+                startBar.barType = bar; //store the bar type at the bar visual objects
+                measureGroup.appendChild(startBar); //append the start bar visual obj to the measure group
+                measureModified = true; //set the measure modified flag
+
+            } else {    //if no bar variable has been passed
+                if(startBar) {  //if the start bar has been set
+                    measureGroup.removeChild(startBar);    //remove it from the measure group
+                    delete startBar;    //clear the startBar obj
+                    measureModified = true; //set the measure modified flag
+                }
+            }    
+        }
+
+        //Function to set the end bar of the measure
+        this.SetEndBar = function(bar) {
+            if(bar) {  //if the bar variable has been passed
+                //if a end bar has already been set
+                if(endBar) {
+                    if(endBar.barType == bar) //if the bar passed is equal to the current one,
+                        return; //do nothing an return
+
+                    //if it is not equal
+                    measureGroup.removeChild(endBar);    //remove the current end bar
+                }
+
+                endBar = DrawBar(bar);    //get the bar visual obj
+                endBar.barType = bar; //store the bar type at the bar visual objects
+                measureGroup.appendChild(endBar); //append the end bar visual obj to the measure group
+                measureModified = true; //set the measure modified flag
+                
+            } else {    //if no bar variable has been passed
+                if(endBar) {  //if the end bar has been set
+                    measureGroup.removeChild(endBar);    //remove it from the measure group
+                    delete endBar;    //clear the endBar obj
+                    measureModified = true; //set the measure modified flag
+                }
+            }   
+        }
+
 
         //Function to insert all the sorts of elements at the measure: 
         //chords, starts and ending bars, clef, time or key sig change etc
@@ -852,7 +931,7 @@ var ScoreBuilder = new function() {
                 mElements.Insert(position, mElem); //insert element reference at the position to the list
 
             //append the visual object to the group
-            group.appendChild(mElem.Draw());
+            measureGroup.appendChild(mElem.Draw());
 
             measureModified = true; //set the flag that the chord has been modified
 
@@ -891,7 +970,7 @@ var ScoreBuilder = new function() {
             if(position < 0 || position >= chords.Count()) return "ERROR_POSITION_OUT_OF_BOUNDS";
 
             var removedChord = chords.GetItem(position);    //get the chord handler from the list
-            group.removeChild(removedChord.Draw());  //remove it from the line
+            measureGroup.removeChild(removedChord.Draw());  //remove it from the line
             chords.RemoveAt(position);    //remove the chord from the list
 
             measureModified = true; //set the flag that the chord has been modified
@@ -905,6 +984,14 @@ var ScoreBuilder = new function() {
                 return "ERROR_CHORD_NOT_FOUND";
             else 
                 return selfRef.RemoveAt(position);
+        }
+
+        this.GetChordsInfo = function() {
+            var infoArray = [];
+            mElements.ForEach(function(chord) {
+                infoArray.push({ den: chord.GetDenominator(), width: chord.GetWidth() });
+            });
+            return infoArray;
         }
     }
 

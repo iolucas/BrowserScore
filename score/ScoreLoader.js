@@ -27,6 +27,10 @@ var ScoreLoader = new function() {
 
 				measureObj.InsertElem(chordObj);
 			}
+			if(i == measures.length - 1)
+				measureObj.SetEndBar("end");
+			else
+				measureObj.SetEndBar("simple");
 
 			scoreObj.InsertMeasure(measureObj);
 		}
