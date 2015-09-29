@@ -80,6 +80,7 @@ var ScoreBuilder = new function() {
             LINE_OFFSET = 7.5,   //const offset of each note at the visual object
 
             currWidth = 0,  //variable to keep the current true width of the chord (discouting aux lines gaps)
+            currMiddleCoord = 0,    //variable to keep the current middle coordinate value (main note head middle coord)
 
             lastClef = "",  //variable to hold the last clef used to detect clef change to avoid unnecessary organize chords
 
@@ -123,11 +124,12 @@ var ScoreBuilder = new function() {
         //ensures the currwidth variable is initiated with the rest symbol
         currWidth = rest.getBBox().width;
 
-        var noteRect = $G.create("rect");
-        noteRect.setAttribute("width", 5);
-        noteRect.setAttribute("height", 5);
-        noteRect.setAttribute("fill", "yellow");
-        noteGroup.appendChild(noteRect);
+        //NoteGroup debug rect
+        //var noteRect = $G.create("rect");
+        //noteRect.setAttribute("width", 5);
+        //noteRect.setAttribute("height", 5);
+        //noteRect.setAttribute("fill", "yellow");
+        //noteGroup.appendChild(noteRect);
 
 
         //--------------------------------------------------------------------------------
@@ -270,7 +272,23 @@ var ScoreBuilder = new function() {
                 matchValue = 1;
 
             return -((note.n.charCodeAt(0) - POS0_NOTE) + (note.o + matchValue - POS0_OCTAVE) * 7);
-        }        
+        } 
+
+        this.GetBackLength = function() {
+            return currMiddleCoord;
+        }
+
+        this.GetFrontLength = function() {
+            return currWidth - currMiddleCoord;
+        }
+
+        this.MoveChordHead = function(x, y) {
+            //CHANGE CHORD SYSTEM FOR THE MIDDLE OF THE MAIN ELEMENT BE ALWAYS THE REFERENCE
+            //MUST CREATE AN ARRAY FOR THE TIMES OF THE MEASURES AND COMPUTE THE HIGHEST BEFORE CENTER AND HIGHER AFTER CENTER
+            //TO ORGANIZE THE MEASURE THRU THESE VALUES
+
+            chordGroup.translate(x - currMiddleCoord, y);
+        }       
 
         //Function to be called when you want to update the chord object positions 
         this.Organize = function(clef) {
@@ -372,21 +390,35 @@ var ScoreBuilder = new function() {
             //set chord elements (accident group and notes group) correct places
             setChordPositions(); 
 
+            //update the middle coordinate for positioning purposes
+            updateMiddleCoord();
+
             chordModified = false;  //clear the chord modified flag
-
-
-            CHANGE CHORD SYSTEM FOR THE MIDDLE OF THE MAIN ELEMENT BE ALWAYS THE REFERENCE
-
-            //DEBUG NOTE RECT RESIZE
-            if(chordDenominator == 1)
-                noteRect.setAttribute("width", 14.7);   //MIDDLE OF WHOLE NOTE
-            else
-                noteRect.setAttribute("width", 10); //MIDDLE OF HALF NOTE AND LESSER
         }
 
         //--------------------------------------------------------------------------------
         //----------------------- PRIVATE METHODS ----------------------------------------
         //--------------------------------------------------------------------------------
+
+        function updateMiddleCoord() {
+            var headMiddleOffset; //variable to keep the middle of the note element (notes or rest)
+            if(notes.getValidLength() == 0) //if there is no note, only rest, is enough to get the half of the note group
+                headMiddleOffset = noteGroup.getBBox().width / 2;
+            else if(chordDenominator < 2)   //if the denominator is less than 2, get its constant value
+                headMiddleOffset = 12;
+            else //if any other denominator, get its constant value
+                headMiddleOffset = 9;
+
+            //if the noteGroup has been translated, get its value
+            var noteGroupXOffset = noteGroup.getTransform("translate");
+            if(noteGroupXOffset == undefined)
+                noteGroupXOffset = 0;
+            else
+                noteGroupXOffset = noteGroupXOffset[0];
+
+            //get the updated value
+            currMiddleCoord = noteGroupXOffset + headMiddleOffset;
+        }
 
         function setChordPositions() {
             //gets chord elements bboxes

@@ -172,6 +172,24 @@ SVGGraphicsElement.prototype.scale = function(x, y) {
     this.setAttribute("transform", oldValues);
 }
 
+//Function to get the transform attribute for a given element
+SVGGraphicsElement.prototype.getTransform = function (property) {
+    var tString = this.getAttribute("transform");
+    if (!tString) return null;  //if no transform has been applied
+
+    var pIndex = tString.indexOf(property);
+    if (pIndex == -1) return null;  //if the prop is not found, return null
+
+    var sIndex = tString.indexOf("(", pIndex),
+        eIndex = tString.indexOf(")", pIndex);
+
+    vArray = tString.substring(sIndex + 1, eIndex).split(" ");
+    for (var i = 0; i < vArray.length; i++)
+        vArray[i] = parseFloat(vArray[i], 10);
+
+    return vArray;
+}
+
 
 
 //MAYBE THESE ARRAY FUNCTIONS SHOULDN'T BE HERE SINCE THIS IS ONLY FOR GRAPHICS

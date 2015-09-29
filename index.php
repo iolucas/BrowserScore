@@ -99,7 +99,7 @@
                 console.log(measureObj2.GetChordsInfo());*/
 
 
-                var timeObj = {}
+                /*var timeObj = {}
                 timeObj["beats"] = 4;
                 timeObj["beat-type"] = 4;
 
@@ -120,6 +120,175 @@
 
                 OpenScore(deltaFile);
 
+                console.log(scoreObj);*/
+
+                var mObj1 = new ScoreBuilder.Measure(), //getMeasureR(),
+                    mObj2 = new ScoreBuilder.Measure(), //getMeasureR();
+                    cObj1 = new ScoreBuilder.Chord(1),
+                    cObj2 = new ScoreBuilder.Chord(2),
+                    cObj3 = new ScoreBuilder.Chord(2),
+                    cObj4 = new ScoreBuilder.Chord(4),
+                    cObj5 = new ScoreBuilder.Chord(4),
+                    cObj6 = new ScoreBuilder.Chord(4),
+                    cObj7 = new ScoreBuilder.Chord(4),
+                    cObj8 = new ScoreBuilder.Chord(1);
+
+
+                mObj1.InsertElem(cObj2);
+                mObj1.InsertElem(cObj3);
+                mObj2.InsertElem(cObj4);                
+                mObj2.InsertElem(cObj5);
+                mObj2.InsertElem(cObj6);
+                mObj2.InsertElem(cObj7); 
+
+                //cObj1.AddNote({n: 'G', o: 4, a: "flat-flat"});
+                cObj2.AddNote({n: 'G', o: 4 });
+                cObj3.AddNote({n: 'G', o: 4, a: "natural"});
+                cObj6.AddNote({n: 'G', o: 4 });
+                cObj6.AddNote({n: 'A', o: 4 });
+                cObj6.AddNote({n: 'A', o: 6 });
+
+                svgContainer.appendChild(mObj1.Draw()); 
+                svgContainer.appendChild(mObj2.Draw()); 
+
+                //mObj1.UpdateGaps(200);
+                //mObj2.UpdateGaps(200);
+
+                syncMeasures([mObj1, mObj2]);
+
+                var obj1Box = mObj1.Draw().getBBox();
+                mObj1.MoveTo(200, 10 - obj1Box.y);
+                
+                mObj2.MoveTo(200, obj1Box.height - obj1Box.y + 100);
+
+                var debRect1 = $G.create("rect");
+                debRect1.setAttribute("fill", "yellow");
+                debRect1.setAttribute("height", 10);
+                debRect1.setAttribute("width", 1000);
+                debRect1.translate(200);
+                svgContainer.appendChild(debRect1);
+
+                /*var halfLine = $G.create("line");
+                halfLine.setAttribute("y2", 1000);
+                halfLine.setAttribute("stroke", "#000");
+                halfLine.translate(200.5, 0);
+                svgContainer.appendChild(halfLine); 
+
+                var chordObj = getChordR();
+                svgContainer.appendChild(chordObj.Draw());                
+                chordObj.Organize();
+                chordObj.MoveChordHead(200.5, 200);
+                console.log(chordObj.GetBackLength());
+                console.log(chordObj.GetFrontLength());*/
+            }
+
+            function syncMeasures(mArray) {
+                var timeArr = [],
+                    arrFactor = 256;    //factor to multiply denominators to get times on order
+
+                //populate time array
+                for(var i = 0; i < mArray.length; i++) {
+                    var currInd = 0;
+                    
+                    mArray[i].ForEachElem(function(chord) {
+                        if(chord.objName == "chord") {
+                            chord.Organize();
+
+                            if(timeArr[currInd] == undefined)  //if the array hasn't been initated
+                                timeArr[currInd] = [];  //inits it
+                            
+                            timeArr[currInd].push(chord);   //push the chord to it
+
+                            //get the highest back length value
+                            if(timeArr[currInd].backLength == undefined || chord.GetBackLength() > timeArr[currInd].backLength)
+                                timeArr[currInd].backLength = chord.GetBackLength(); 
+                                
+                            //get the highest front length value
+                            if(timeArr[currInd].frontLength == undefined || chord.GetFrontLength() > timeArr[currInd].frontLength)
+                                timeArr[currInd].frontLength = chord.GetFrontLength();
+
+                            //get the highest denominator
+                            if(timeArr[currInd].highDen == undefined || chord.GetDenominator() > timeArr[currInd].highDen)
+                                timeArr[currInd].highDen = chord.GetDenominator();             
+
+                            //update next chord ind
+                            currInd += arrFactor / chord.GetDenominator(); 
+                        }      
+                    });
+                }
+
+                //get constant total length
+                var mMargin = 20;
+
+                var fixedLengths = mMargin;
+                for(var j = 0; j < timeArr.length; j++) {
+                    if(timeArr[j] == undefined)
+                        continue;
+
+                    fixedLengths += timeArr[j].backLength + timeArr[j].frontLength;
+                }                
+
+                //get denominators sum
+                var denSum = 0;
+                for(var k = 0; k < timeArr.length; k++) {
+                    if(timeArr[k] == undefined)
+                        continue;
+
+                    denSum += 1 / timeArr[k].highDen;
+                }
+
+                //get the unit factor
+                var mLength = 1000,
+                    unitFactor = (mLength - fixedLengths) / denSum;
+
+                //move chords to their positions
+                var nextPosition = mMargin;
+
+                for(var l = 0; l < timeArr.length; l++) {
+                    if(timeArr[l] == undefined)
+                        continue;
+
+                    for(var m = 0; m < timeArr[l].length; m++)
+                        timeArr[l][m].MoveChordHead(timeArr[l].backLength + nextPosition);
+
+                    nextPosition += unitFactor / timeArr[l].highDen + timeArr[l].backLength + timeArr[l].frontLength; 
+                }
+                
+            }
+
+            function getMeasureR() {
+                var measureObj = new ScoreBuilder.Measure(),
+                    measureData = getMeasure();
+
+                var chords = measureData.chords ? measureData.chords : [];
+
+                for(var j = 0; j < chords.length; j++) {
+                    var chordObj = new ScoreBuilder.Chord(chords[j].den);
+                    
+                    var notes = chords[j].notes ? chords[j].notes : [];
+
+                    for(var k = 0; k < notes.length; k++)
+                        chordObj.AddNote(notes[k]);
+
+                    measureObj.InsertElem(chordObj);
+                }
+
+                //measureObj.SetEndBar("simple");
+
+                return measureObj;                
+            }
+
+            function getChordR() {
+                var chords = getRandomChord();
+
+                var chordObj = new ScoreBuilder.Chord(chords.den);
+                
+                var notes = chords.notes ? chords.notes : [];
+
+                for(var k = 0; k < notes.length; k++)
+                    chordObj.AddNote(notes[k]);
+
+                return chordObj;
             }
 
             function getInt(from, to) {
@@ -138,7 +307,7 @@
             }
 
             function getRandomChord() {
-                var numberOfNotes = getInt(0,30),
+                var numberOfNotes = getInt(1,1),
                     randDen = Math.pow(2, getInt(0,6));
                     chord = { den: randDen , notes: [] };
 
