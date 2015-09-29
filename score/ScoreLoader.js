@@ -25,7 +25,7 @@ var ScoreLoader = new function() {
 				for(var k = 0; k < notes.length; k++)
 					chordObj.AddNote(notes[k]);
 
-				measureObj.InsertElem(chordObj);
+				measureObj.InsertChord(chordObj);
 			}
 			if(i == measures.length - 1)
 				measureObj.SetEndBar("end");

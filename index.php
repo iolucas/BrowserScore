@@ -134,12 +134,12 @@
                     cObj8 = new ScoreBuilder.Chord(1);
 
 
-                mObj1.InsertElem(cObj2);
-                mObj1.InsertElem(cObj3);
-                mObj2.InsertElem(cObj4);                
-                mObj2.InsertElem(cObj5);
-                mObj2.InsertElem(cObj6);
-                mObj2.InsertElem(cObj7); 
+                mObj1.InsertChord(cObj2);
+                mObj1.InsertChord(cObj3);
+                mObj2.InsertChord(cObj4);                
+                mObj2.InsertChord(cObj5);
+                mObj2.InsertChord(cObj6);
+                mObj2.InsertChord(cObj7); 
 
                 //cObj1.AddNote({n: 'G', o: 4, a: "flat-flat"});
                 cObj2.AddNote({n: 'G', o: 4 });
@@ -151,8 +151,8 @@
                 svgContainer.appendChild(mObj1.Draw()); 
                 svgContainer.appendChild(mObj2.Draw()); 
 
-                //mObj1.UpdateGaps(200);
-                //mObj2.UpdateGaps(200);
+                mObj1.Organize();
+                mObj2.Organize();
 
                 syncMeasures([mObj1, mObj2]);
 
@@ -183,50 +183,51 @@
             }
 
             function syncMeasures(mArray) {
-                var timeArr = [],
-                    arrFactor = 256;    //factor to multiply denominators to get times on order
+                var arrFactor = 128,    //factor to multiply denominators to get times on order (biggest denominator expected)
+                    timeArr = new Array(arrFactor),
+                    fixedLengths = 0;
 
-                //populate time array
+                //populate time array and get the measure fixed length
                 for(var i = 0; i < mArray.length; i++) {
-                    var currInd = 0;
-                    
-                    mArray[i].ForEachElem(function(chord) {
-                        if(chord.objName == "chord") {
-                            chord.Organize();
+                    fixedLengths += mArray[i].GetFixedLength();    
 
-                            if(timeArr[currInd] == undefined)  //if the array hasn't been initated
-                                timeArr[currInd] = [];  //inits it
+                    var currInd = 0;                   
+                    mArray[i].ForEachChord(function(chord) {
+                        //chord.Organize();
+
+                        if(timeArr[currInd] == undefined)  //if the array hasn't been initated
+                            timeArr[currInd] = [];  //inits it
+                        
+                        timeArr[currInd].push(chord);   //push the chord to it
+
+                        //get the highest back length value
+                        if(timeArr[currInd].backLength == undefined || chord.GetBackLength() > timeArr[currInd].backLength)
+                            timeArr[currInd].backLength = chord.GetBackLength(); 
                             
-                            timeArr[currInd].push(chord);   //push the chord to it
+                        //get the highest front length value
+                        if(timeArr[currInd].frontLength == undefined || chord.GetFrontLength() > timeArr[currInd].frontLength)
+                            timeArr[currInd].frontLength = chord.GetFrontLength();
 
-                            //get the highest back length value
-                            if(timeArr[currInd].backLength == undefined || chord.GetBackLength() > timeArr[currInd].backLength)
-                                timeArr[currInd].backLength = chord.GetBackLength(); 
-                                
-                            //get the highest front length value
-                            if(timeArr[currInd].frontLength == undefined || chord.GetFrontLength() > timeArr[currInd].frontLength)
-                                timeArr[currInd].frontLength = chord.GetFrontLength();
+                        //get the highest denominator
+                        if(timeArr[currInd].highDen == undefined || chord.GetDenominator() > timeArr[currInd].highDen)
+                            timeArr[currInd].highDen = chord.GetDenominator();             
 
-                            //get the highest denominator
-                            if(timeArr[currInd].highDen == undefined || chord.GetDenominator() > timeArr[currInd].highDen)
-                                timeArr[currInd].highDen = chord.GetDenominator();             
-
-                            //update next chord ind
-                            currInd += arrFactor / chord.GetDenominator(); 
-                        }      
+                        //update next chord ind
+                        currInd += arrFactor / chord.GetDenominator(); 
+    
                     });
                 }
 
                 //get constant total length
                 var mMargin = 20;
 
-                var fixedLengths = mMargin;
-                for(var j = 0; j < timeArr.length; j++) {
+                for(var j = 0; j < arrFactor; j++) {
                     if(timeArr[j] == undefined)
                         continue;
 
+                    //get the biggest elements fixed lengths to find out how much free space we have 
                     fixedLengths += timeArr[j].backLength + timeArr[j].frontLength;
-                }                
+                }        
 
                 //get denominators sum
                 var denSum = 0;

@@ -45,10 +45,9 @@ var ScoreBuilder = new function() {
         //ADD POINTS AND LINKS TO NOTES
         //--------------------------------------------------------------  
 
-    var MEASURE_LEFT_MARGIN = 20,  //constante value for the left margin of the measure
-        //SCORE_LINE_LENGTH = 1500,
-        SCORE_LINE_LEFT_MARGIN = 10,
+    var SCORE_LINE_LEFT_MARGIN = 10,
         SCORE_LINE_HEADER_MARGIN = 10,
+        //SCORE_LINE_LENGTH = 1500,
         SCORE_TOP_MARGIN = 50, //min value for a top margin for the scores
         DEBUG_RECTANGLES = true;
   
@@ -136,8 +135,8 @@ var ScoreBuilder = new function() {
         //----------------------- PUBLIC METHODS -----------------------------------------
         //--------------------------------------------------------------------------------
 
-        //Prop to hold this object name for measure objects use
-        this.objName = "chord";
+        //Prop to hold this object name for measure objects use (TO BE ADDED IN THE FUTURE WHEN MEASURE ACCEPTS ELEMENTS)
+        //this.objName = "chord";
 
         //Function to return the appendble object of this chord
         this.Draw = function() { 
@@ -157,10 +156,6 @@ var ScoreBuilder = new function() {
         //Function to get the Denominator of this chord
         this.GetDenominator = function() { 
             return chordDenominator; 
-        }
-
-        this.GetChordRef = function() {
-
         }
 
         //Function to set a new denominator. TO BE IMPLEMENTED
@@ -283,10 +278,6 @@ var ScoreBuilder = new function() {
         }
 
         this.MoveChordHead = function(x, y) {
-            //CHANGE CHORD SYSTEM FOR THE MIDDLE OF THE MAIN ELEMENT BE ALWAYS THE REFERENCE
-            //MUST CREATE AN ARRAY FOR THE TIMES OF THE MEASURES AND COMPUTE THE HIGHEST BEFORE CENTER AND HIGHER AFTER CENTER
-            //TO ORGANIZE THE MEASURE THRU THESE VALUES
-
             chordGroup.translate(x - currMiddleCoord, y);
         }       
 
@@ -787,19 +778,24 @@ var ScoreBuilder = new function() {
 
     this.Measure = function() {
 
+        //IN THE FUTURE WILL GENERALIZE METHOD TO ADD CHORDS, TO A METHOD TO ADD MEASURE, TO ENSURE POSITIONING OF 
+        //CLEF, TIME AND KEY SIG CHANGES
+
         var selfRef = this,
 
             measureGroup = document.createElementNS(xmlns, "g"),   //group to fit all the measure members
+            MEASURE_LEFT_MARGIN = 20,  //constante value for the left margin of the measure
             //measureEndBar = $Aria.Parse(DrawMeasureElement(MeasureElement.SimpleBar)),
             //measureEndBar = DrawMeasureElement("SIMPLE_BAR"),
             startBar,
             endBar,
-            currWidth = 0,  //var to store the current width of the measure
-            //chords = new List(),   //ordered list to fit all the chords @ this measure
-            mElements = new List(), //ordered list to place measure elements on this measure
+            //currWidth = 0,  //var to store the current width of the measure
+            chords = new List(),   //ordered list to fit all the chords @ this measure
+            //mElements = new List(), //ordered list to place measure elements on this measure
             //variable to signalize whether a note has been added or removed from this chord and it was not yet organized
-            measureModified = false,
-            lastUnitLengthValue = 0; 
+            //measureModified = false,
+            //lastUnitLengthValue = 0,
+            currFixedLength = 0; 
 
         if(DEBUG_RECTANGLES) {
             //for debug, not really necessary due to group grows, but coodinates origin remains the same
@@ -819,24 +815,56 @@ var ScoreBuilder = new function() {
             measureGroup.translate(x, y);
         }
 
-        this.GetWidth = function() {
+        /*this.GetWidth = function() {
             return currWidth; 
+        }*/
+
+        this.GetFixedLength = function() {
+            return currFixedLength;
+        }
+
+        this.GetLeftMargin = function() {
+            if(startBar)
+                return startBar.barLength + MEASURE_LEFT_MARGIN;
+
+            return MEASURE_LEFT_MARGIN;
         }
 
         this.Count = function() {
-            return mElements.Count();
+            return chords.Count();
         }
 
-        /*this.ForEachChord = function(action) {
+        this.ForEachChord = function(action) {
             chords.ForEach(action);//iterate thru all the chords and apply the specified action to it
+        }
+
+        /*this.ForEachElem = function(action) {
+            mElements.ForEach(action);//iterate thru all the measure elements and apply the specified action to it
         }*/
 
-        this.ForEachElem = function(action) {
-            mElements.ForEach(action);//iterate thru all the measure elements and apply the specified action to it
+        //Function to organize elements position and values within the measure
+        this.Organize = function() {
+            currFixedLength = 0;
+            if(startBar)
+                currFixedLength += startBar.barLength;
+            if(endBar)
+                currFixedLength += endBar.barLength;
+
+            chords.ForEach(function(chord) {
+                chord.Organize();   //ensure chord is organized
+                //currFixedLength += chord.GetWidth();
+                //console.log(chord.GetWidth());
+            });
+        }
+
+        //Function to put the end bar at the end of the measure
+        this.UpdateEndBarPos = function(pos) {
+            if(endBar)
+                endBar.translate(pos);
         }
 
         //Function to update the spaces of the measure and organize chords
-        this.UpdateGaps = function(spaceUnitLength) {
+        /*this.UpdateGaps = function(spaceUnitLength) {
 
             //if the measure hasn't been modified and the space unit is the same of the last time
             if(!measureModified && lastUnitLengthValue == spaceUnitLength)
@@ -847,16 +875,15 @@ var ScoreBuilder = new function() {
             if(startBar)    //if a start bar has been set
                 nextPos += startBar.getBBox().width;
 
-            mElements.ForEach(function(mElem) {
-                if(mElem.objName == "chord") {
+            chords.ForEach(function(chord) {
 
-                    //Execute function to organize chord members
-                    mElem.Organize();   
+                //Execute function to organize chord members
+                chord.Organize();   
 
-                    //round the nextPos down for smooth look
-                    mElem.MoveTo(nextPos, 0);  //move the chord X pos to current nextposition keeping the Y value
-                    nextPos += mElem.GetWidth() + spaceUnitLength / mElem.GetDenominator();    //get the gap value and add it to the next position
-                }
+                //round the nextPos down for smooth look
+                chord.MoveTo(nextPos, 0);  //move the chord X pos to current nextposition keeping the Y value
+                nextPos += chord.GetWidth() + spaceUnitLength / chord.GetDenominator();    //get the gap value and add it to the next position
+
             });
 
             //set the next position vector as the current measure width
@@ -871,7 +898,7 @@ var ScoreBuilder = new function() {
 
             measureModified = false;    //clear the modified flag
             lastUnitLengthValue = spaceUnitLength;
-        }
+        }*/
 
         //Function to set the start bar of the measure
         this.SetStartBar = function(bar) {
@@ -886,8 +913,9 @@ var ScoreBuilder = new function() {
                 }
 
                 startBar = DrawBar(bar);    //get the bar visual obj
-                startBar.barType = bar; //store the bar type at the bar visual objects
                 measureGroup.appendChild(startBar); //append the start bar visual obj to the measure group
+                startBar.barType = bar; //store the bar type at the bar visual objects
+                startBar.barLength = startBar.getBBox().width; //store the bar visual obj width
                 measureModified = true; //set the measure modified flag
 
             } else {    //if no bar variable has been passed
@@ -912,8 +940,9 @@ var ScoreBuilder = new function() {
                 }
 
                 endBar = DrawBar(bar);    //get the bar visual obj
-                endBar.barType = bar; //store the bar type at the bar visual objects
                 measureGroup.appendChild(endBar); //append the end bar visual obj to the measure group
+                endBar.barType = bar; //store the bar type at the bar visual objects
+                endBar.barLength = endBar.getBBox().width; //store the bar visual obj width
                 measureModified = true; //set the measure modified flag
                 
             } else {    //if no bar variable has been passed
@@ -928,7 +957,7 @@ var ScoreBuilder = new function() {
 
         //Function to insert all the sorts of elements at the measure: 
         //chords, starts and ending bars, clef, time or key sig change etc
-        this.InsertElem = function(mElem, position) {
+        /*this.InsertElem = function(mElem, position) {
             //KEEP ADAPTING THE MEASURE SYSTEM TO THE NEW REQUIREMENTS
             //REMOVE THE SCORE LINE SYSTEM, KEEPS ONLY A SCORE WHICH WILL HAVE AN ARRAY FOR LINES TO PUT THE MEASURES
             
@@ -968,9 +997,9 @@ var ScoreBuilder = new function() {
             measureModified = true; //set the flag that the chord has been modified
 
             return "MEASURE_ELEMENT_INSERTED_SUCCESSFULLY";
-        }
+        }*/
 
-        /*this.InsertChord = function(chord, position) {
+        this.InsertChord = function(chord, position) {
             //if the chord object already exists at this measure, return a message
             if(chords.Find(chord) != -1) return "CHORD_ALREADY_ON_MEASURE"; 
             //implement timing verification in the future
@@ -983,12 +1012,12 @@ var ScoreBuilder = new function() {
                 chords.Insert(position, chord); //insert element reference at the position to the list
 
             //append the object to the group
-            group.appendChild(chord.Draw());
+            measureGroup.appendChild(chord.Draw());
 
             measureModified = true; //set the flag that the chord has been modified
 
             return "SUCCESS";
-        }*/
+        }
 
         this.AddChordCollection = function(chordCollection) {
             var result = [];
@@ -1017,15 +1046,116 @@ var ScoreBuilder = new function() {
             else 
                 return selfRef.RemoveAt(position);
         }
-
+/*
         this.GetChordsInfo = function() {
             var infoArray = [];
             mElements.ForEach(function(chord) {
                 infoArray.push({ den: chord.GetDenominator(), width: chord.GetWidth() });
             });
             return infoArray;
+        }*/
+    }
+
+    //-----------------------------------------------------------
+    //-----------------------------------------------------------
+    //-------------------- SCORE PART OBJECT --------------------
+    //-----------------------------------------------------------
+    //-----------------------------------------------------------
+
+    //Object to store score part data
+    this.ScorePart = function(partAttributes) {
+        var selfRef = this,
+            measures = new List(),    //ordered list to fit all the measures @ this score
+            currLineLength = 0;
+
+        this.GetClef = function() {
+            return partAttributes.clef;
+        }
+
+        this.GetTimeSig = function() {
+            return partAttributes.timeSig;
+        }
+
+        this.GetKeySig = function() {
+            return partAttributes.keySig;
+        }
+
+        this.ForEachMeasure = function(action) {
+            measures.ForEach(action);//iterate thru all the measures and apply the specified action to it
+        }
+
+        this.Find = function(measure) {
+            return measures.Find(measure);
+        }
+
+        this.Count = function() {
+            return measures.Count();
+        }
+
+        this.InsertMeasure = function(measure, position) {
+            //if the measure object already exists at this measure, return a message
+            if(measures.Find(measure) != -1) return "MEASURE_ALREADY_INSERTED"; 
+            //implement timing verification in the future
+
+            //Object validation successful
+
+            //if the type of the position variable is different from number or the position is bigger or the size of the list
+            if(typeof position != "number" || position >= measures.Count())    
+                measures.Add(measure);    //insert with add method at the last position
+            else //otherwise
+                measures.Insert(position, measure); //insert element reference at the position to the list
+
+            return "SUCCESS";
+        }
+
+        this.RemoveAt = function(position) {
+            if(position < 0 || position >= measures.Count()) return "ERROR_POSITION_OUT_OF_BOUNDS";
+
+            var removedMeasure = measures.GetItem(position);    //get the measure handler from the list
+
+            if(removedMeasure.Draw().parentElement) //if this measure is appended somewhere
+                removedMeasure.Draw().parentElement.removeChild(removedMeasure.Draw());  //remove it
+            
+            measures.RemoveAt(position);    //remove the measure from the list
+
+            return removedMeasure;
+        }
+
+        this.RemoveMeasure = function(measure) {
+            var position = measures.Find(measure);
+            if(position == -1) 
+                return "ERROR_MEASURE_NOT_FOUND";
+            else 
+                return selfRef.RemoveAt(position);
         }
     }
+
+    //-----------------------------------------------------------
+    //-----------------------------------------------------------
+    //-------------------- SCORE GROUP OBJECT --------------------
+    //-----------------------------------------------------------
+    //-----------------------------------------------------------
+
+    this.ScoreGroup = function() {
+        //Creates a new score line passing the line length and the minimum measure length to be kept in a line, otherwise it will overflow
+
+        var selfRef = this,
+
+            generalGroup = $G.create("g"),   //group to fit all the score part lines
+            scoreParts = new List(),    //list to store the score parts within this score group
+            scoreLines = new List();    //list to store the score lines visual objects
+
+
+        KEEP WRITING THIS SCORE GROUP CLASS 
+        IT WILL ALLOCATE MEASURES TO THE LINES AN ORGANIZE AND SYNC LINES
+
+
+
+    }
+
+
+
+
 
     //-----------------------------------------------------------
     //-----------------------------------------------------------
