@@ -78,7 +78,7 @@ function List(capacity) {
     //Performs the specified action on each element of the Collections. 
     this.ForEach = function (action) { 
         for (var i = 0; i < collection.length; i++) { 
-            var item = collection[i]; action(item); 
+            var item = collection[i]; action(item, i); 
         } 
     }
 

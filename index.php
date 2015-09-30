@@ -47,6 +47,13 @@
             //KEEP DOING METHODS TO INSERT BARS @ THE MEASURES
             window.onload = function() {
 
+                var debRect1 = $G.create("rect");
+                debRect1.setAttribute("fill", "yellow");
+                debRect1.setAttribute("height", 10);
+                debRect1.setAttribute("width", 1000);
+                debRect1.translate(10);
+                svgContainer.appendChild(debRect1);
+
                     
                 /*var measureObj1 = new ScoreBuilder.Measure(),
                     measureObj2 = new ScoreBuilder.Measure(),
@@ -124,31 +131,58 @@
 
                 var mObj1 = new ScoreBuilder.Measure(), //getMeasureR(),
                     mObj2 = new ScoreBuilder.Measure(), //getMeasureR();
+                    mObj3 = new ScoreBuilder.Measure(), //getMeasureR();
+                    mObj4 = new ScoreBuilder.Measure(), //getMeasureR();
+
                     cObj1 = new ScoreBuilder.Chord(1),
+                    
+
+
                     cObj2 = new ScoreBuilder.Chord(2),
                     cObj3 = new ScoreBuilder.Chord(2),
+                    
+
                     cObj4 = new ScoreBuilder.Chord(4),
                     cObj5 = new ScoreBuilder.Chord(4),
                     cObj6 = new ScoreBuilder.Chord(4),
                     cObj7 = new ScoreBuilder.Chord(4),
+                    
+
                     cObj8 = new ScoreBuilder.Chord(1);
 
 
-                mObj1.InsertChord(cObj2);
-                mObj1.InsertChord(cObj3);
-                mObj2.InsertChord(cObj4);                
-                mObj2.InsertChord(cObj5);
-                mObj2.InsertChord(cObj6);
-                mObj2.InsertChord(cObj7); 
+                cObj1.AddNote({n: "A", o: 3});      
+                cObj2.AddNote({n: "B", o: 6});
+                cObj3.AddNote({n: "C", o: 2});      
+                cObj4.AddNote({n: "D", o: 6});
+                cObj5.AddNote({n: "E", o: 8});      
+                cObj6.AddNote({n: "F", o: 7});
+                cObj7.AddNote({n: "G", o: 4});      
+                cObj8.AddNote({n: "H", o: 5});
+
+
+
+
+                mObj1.InsertChord(cObj1);
+
+                mObj2.InsertChord(cObj2);                
+                mObj2.InsertChord(cObj3);
+
+                mObj3.InsertChord(cObj4);
+                mObj3.InsertChord(cObj5);
+                mObj3.InsertChord(cObj6);  
+                mObj3.InsertChord(cObj7);
+
+                mObj4.InsertChord(cObj8);
 
                 //cObj1.AddNote({n: 'G', o: 4, a: "flat-flat"});
-                cObj2.AddNote({n: 'G', o: 4 });
+                /*cObj2.AddNote({n: 'G', o: 4 });
                 cObj3.AddNote({n: 'G', o: 4, a: "natural"});
-                cObj6.AddNote({n: 'G', o: 4 });
+                cObj6.AddNote({n: 'G', o: 4, a:""});
                 cObj6.AddNote({n: 'A', o: 4 });
-                cObj6.AddNote({n: 'A', o: 6 });
+                cObj6.AddNote({n: 'A', o: 6 });*/
 
-                svgContainer.appendChild(mObj1.Draw()); 
+                /*svgContainer.appendChild(mObj1.Draw()); 
                 svgContainer.appendChild(mObj2.Draw()); 
 
                 mObj1.Organize();
@@ -159,14 +193,38 @@
                 var obj1Box = mObj1.Draw().getBBox();
                 mObj1.MoveTo(200, 10 - obj1Box.y);
                 
-                mObj2.MoveTo(200, obj1Box.height - obj1Box.y + 100);
+                mObj2.MoveTo(200, obj1Box.height - obj1Box.y + 100);*/
 
-                var debRect1 = $G.create("rect");
-                debRect1.setAttribute("fill", "yellow");
-                debRect1.setAttribute("height", 10);
-                debRect1.setAttribute("width", 1000);
-                debRect1.translate(200);
-                svgContainer.appendChild(debRect1);
+
+                var measureGroup1 = new ScoreBuilder.MeasureGroup();
+                var measureGroup2 = new ScoreBuilder.MeasureGroup();
+                measureGroup1.AddMeasure(mObj1);
+                measureGroup1.AddMeasure(mObj2);
+                measureGroup2.AddMeasure(mObj3);
+                measureGroup2.AddMeasure(mObj4);
+                //measureGroup1.Organize();
+                //console.log(measureGroup1.GetFixedLength());
+                //console.log(measureGroup1.GetDenominatorSum());
+
+                var lineBeta = GetLinesBeta([measureGroup1, measureGroup2]);
+                svgContainer.appendChild(lineBeta);
+                lineBeta.translate(10, 10);
+
+
+                /*var partObj1 = new ScoreBuilder.ScorePart();
+                partObj1.InsertMeasure(mObj1);
+                
+                var partObj2 = new ScoreBuilder.ScorePart();
+                partObj2.InsertMeasure(mObj2);
+
+                var scoreGroupObj = new ScoreBuilder.ScoreGroup();
+                scoreGroupObj.InsertPart(partObj1);
+                scoreGroupObj.InsertPart(partObj2);
+
+                scoreGroupObj.Organize();
+                scoreGroupObj.MoveTo(10, 10);
+
+                svgContainer.appendChild(scoreGroupObj.Draw());*/
 
                 /*var halfLine = $G.create("line");
                 halfLine.setAttribute("y2", 1000);
@@ -180,6 +238,61 @@
                 chordObj.MoveChordHead(200.5, 200);
                 console.log(chordObj.GetBackLength());
                 console.log(chordObj.GetFrontLength());*/
+            }
+
+            function GetLinesBeta(measureGroups) {
+                var totalFixedLength = 0,
+                    totalDenSum = 0;
+
+                for(var i = 0; i < measureGroups.length; i++) {
+                    measureGroups[i].Organize();
+                    totalFixedLength += measureGroups[i].GetFixedLength();
+                    totalDenSum += measureGroups[i].GetDenominatorSum();
+                }
+
+                //get the unit length to be used for chord positioning
+                var unitLength = (1000 - totalFixedLength)/totalDenSum;
+
+                //set chords positions
+                for(var j = 0; j < measureGroups.length; j++)
+                    measureGroups[j].SetChordsPositions(unitLength);
+
+                //set measures to their lines
+                var betaLines = [],
+                    nextPosition = 0;
+
+                for(var k = 0; k < measureGroups.length; k++) {
+                    var currInd = 0;
+
+                    measureGroups[k].foreach(function(measure) {
+
+                        if(betaLines[currInd] == undefined) {
+                           betaLines[currInd] = $G.create("g");
+                           var lineObj = $G.create("path");
+                           lineObj.setAttribute("d", GetScoreLinesPath(1000));
+                           lineObj.setAttribute("stroke", "#000");
+                           betaLines[currInd].appendChild(lineObj);
+                       }
+                           
+                        betaLines[currInd].appendChild(measure.Draw());
+
+                        measure.Draw().translate(nextPosition);
+                        currInd++;   
+                    });
+
+                    nextPosition += measureGroups[k].GetLength();
+                }
+
+                var betaGroup = $G.create("g"),
+                    nextVerticalPos = 0;
+
+                for(var n = 0; n < betaLines.length; n++) {
+                   betaGroup.appendChild(betaLines[n]); 
+                   betaLines[n].translate(0, nextVerticalPos - betaLines[n].getBBox().y);
+                   nextVerticalPos += betaLines[n].getBBox().height + 50;
+                }
+
+                return betaGroup;
             }
 
             function syncMeasures(mArray) {

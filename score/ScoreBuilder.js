@@ -839,8 +839,8 @@ var ScoreBuilder = new function() {
             return chords.Count();
         }
 
-        this.ForEachChord = function(action) {
-            chords.ForEach(action);//iterate thru all the chords and apply the specified action to it
+        this.ForEachChord = function(action, index) {
+            chords.ForEach(action, index);//iterate thru all the chords and apply the specified action to it
         }
 
         /*this.ForEachElem = function(action) {
@@ -863,7 +863,7 @@ var ScoreBuilder = new function() {
         this.Organize = function() {
 
             if(measureBarModified) {
-                currFixedLength = 0;
+                currFixedLength = MEASURE_LEFT_MARGIN;
                 if(startBar)
                     currFixedLength += startBar.barLength;
                 if(endBar)
@@ -871,6 +871,7 @@ var ScoreBuilder = new function() {
             }
 
             chords.ForEach(function(chord) {
+
                 chord.Organize();   //ensure chord is organized
             });
 
@@ -1079,12 +1080,164 @@ var ScoreBuilder = new function() {
 
     //-----------------------------------------------------------
     //-----------------------------------------------------------
+    //-------------------- MEASURE GROUP OBJECT -----------------
+    //------------------------(PRIVATE)--------------------------
+    //-----------------------------------------------------------
+
+    this.MeasureGroup = function() {
+        var measures = [],
+            measureGroupModified = false,
+            //Array to organize the chords of the measures according to their duration, 
+            //to sync same chords thats occurs at the same time
+            chordsTimeArray,
+            denominatorSum = 0,
+            fixedLength = 0;    //variable to store the fixed length of this measure group according to measure members
+
+        this.AddMeasure = function(measure) {
+            if(measures.indexOf(measure) != -1)
+                return "MEASURE_ALREADY_ADDED_TO_THE_GROUP";
+
+            measures.push(measure);
+
+            measureGroupModified = true;
+
+            return "SUCESS_MEASURE_ADDED";
+        }
+
+        this.DeleteMeasure = function(measure) {
+            var measureIndex = measures.indexOf(measure);
+            if(measureIndex == -1)
+                return "MEASURE_DOES_NOT_EXISTS";
+
+            delete measures[measureIndex];
+
+            measureGroupModified = true;
+
+            return "SUCESS_MEASURE_DELETED";
+        }
+
+        this.GetLength = function() {
+            return measures.getValidLength();
+        }
+
+        this.foreach = function(action) {
+            var measuresLength = measures.length;
+            for(var i = 0; i < measuresLength; i++)
+                if(measures[i])
+                    action(measures[i]);
+        }
+
+        //Function to set the chords positions of the measures within this measure group
+        this.SetChordsPositions = function(denUnitLength) {
+            //move chords to their positions
+            var nextPosition = 0;
+
+            for(var l = 0; l < chordsTimeArray.length; l++) {
+                if(chordsTimeArray[l] == undefined)
+                    continue;
+
+                for(var m = 0; m < chordsTimeArray[l].length; m++)
+                    chordsTimeArray[l][m].MoveChordHead(chordsTimeArray[l].backLength + nextPosition);
+
+                nextPosition += denUnitLength / chordsTimeArray[l].highDen + 
+                    chordsTimeArray[l].backLength + 
+                    chordsTimeArray[l].frontLength; 
+            }
+
+            //update curr length
+            currLength = nextPosition;
+            /*var measuresLength = measures.length;
+            for(var i = 0; i < measuresLength; i++) {
+                if(measures[i] && measures[i].Draw().getBBox().width > currLength)
+                    currLength = measures[i].Draw().getBBox().width;
+            }*/
+        }
+
+        var currLength = 0;
+
+        this.GetLength = function() {
+            return currLength;
+        }
+
+        //Array to organize the chords of the measures according to their duration, to sync same chords thats occurs at the same time
+        var chordsTimeArray;
+
+        //Generate time array for this measureGroup and other stuff
+        this.Organize = function() {
+            var arrFactor = 128;    //factor to multiply denominators to get times on order (biggest denominator expected)
+
+            chordsTimeArray = new Array(arrFactor); //alloc new chord time array
+
+            measureGroupModified = false;
+            //LATER WILL OPTIMIZE EVERYTHING WITH VERIFICATIONS AND FLAGS, FOR NOW, PUT IT TO WORK
+
+            for(var i = 0; i < measures.length; i++) {
+                measures[i].Organize(); //ensure measure is organized
+
+                //fixedLength += measures[i].GetFixedLength(); 
+
+                var currInd = 0;                   
+                measures[i].ForEachChord(function(chord) {
+
+                    if(chordsTimeArray[currInd] == undefined)  //if the array hasn't been initated
+                        chordsTimeArray[currInd] = [];  //inits it
+                    
+                    chordsTimeArray[currInd].push(chord);   //push the chord to it
+
+                    //get the highest back length value
+                    if(chordsTimeArray[currInd].backLength == undefined || chord.GetBackLength() > chordsTimeArray[currInd].backLength)
+                        chordsTimeArray[currInd].backLength = chord.GetBackLength(); 
+                        
+                    //get the highest front length value
+                    if(chordsTimeArray[currInd].frontLength == undefined || chord.GetFrontLength() > chordsTimeArray[currInd].frontLength)
+                        chordsTimeArray[currInd].frontLength = chord.GetFrontLength();
+
+                    //get the highest denominator
+                    if(chordsTimeArray[currInd].highDen == undefined || chord.GetDenominator() > chordsTimeArray[currInd].highDen)
+                        chordsTimeArray[currInd].highDen = chord.GetDenominator();             
+
+                    //update next chord ind
+                    currInd += arrFactor / chord.GetDenominator(); 
+                });
+            }
+
+            //Update fixedLength and denominatorSum variable
+            fixedLength = 0;
+            denominatorSum = 0;
+            for(var j = 0; j < arrFactor; j++) {
+                if(chordsTimeArray[j] == undefined)
+                    continue;
+
+                //get the biggest elements fixed lengths to find out how much free space we have 
+                fixedLength += chordsTimeArray[j].backLength + chordsTimeArray[j].frontLength;
+                //get the high den of the time and accumulate it with the others
+                denominatorSum += 1 / chordsTimeArray[j].highDen;
+            }  
+
+        }
+
+        //Function to get the lower denominatir unit lenght that the measure group size remains above the min width
+        this.GetMinDenUnitLength = function(minWidth) {
+
+        }
+
+        this.GetFixedLength = function() {
+            return fixedLength;
+        }
+
+        this.GetDenominatorSum = function() {
+            return denominatorSum;
+        }
+    }
+
+    //-----------------------------------------------------------
+    //-----------------------------------------------------------
     //-------------------- SCORE PART OBJECT --------------------
     //-----------------------------------------------------------
     //-----------------------------------------------------------
 
     //Object to store score part data
-    this.ScorePart = function(partAttributes) {
+    /*this.ScorePart = function(partAttributes) {
         var selfRef = this,
             measures = new List(),    //ordered list to fit all the measures @ this score
             currLineLength = 0,
@@ -1114,8 +1267,8 @@ var ScoreBuilder = new function() {
             return partAttributes.keySig;
         }
 
-        this.ForEachMeasure = function(action) {
-            measures.ForEach(action);//iterate thru all the measures and apply the specified action to it
+        this.ForEachMeasure = function(action, index) {
+            measures.ForEach(action, index);//iterate thru all the measures and apply the specified action to it
         }
 
         this.Find = function(measure) {
@@ -1183,11 +1336,21 @@ var ScoreBuilder = new function() {
         var selfRef = this,
 
             generalGroup = $G.create("g"),   //group to fit all the score part lines
-            scoreParts = new List(),    //list to store the score parts within this score group
-            scoreLines = new List();    //list to store the score lines visual objects
+            scoreParts = new List();    //list to store the score parts within this score group
+            //scoreLines = new List();    //list to store the score lines visual objects
+
+        var debRect1 = $G.create("rect");
+        debRect1.setAttribute("fill", "green");
+        debRect1.setAttribute("height", 15);
+        debRect1.setAttribute("width", 15);
+        generalGroup.appendChild(debRect1);
 
         this.Draw = function() {
             return generalGroup;
+        }
+
+        this.MoveTo = function(x, y) {
+            generalGroup.translate(x, y);
         }
 
         this.InsertPart = function(scorePart, position) {
@@ -1227,12 +1390,170 @@ var ScoreBuilder = new function() {
                 return selfRef.RemoveAt(position);
         }
 
+        var measureGroups = new List();
+
         this.Organize = function() {
             //MUST GENERATE THE MEASURES GROUPS (PROBABLY ADD TO THEM WHEN THE SCORE PART IS JUST ADDED)
             //BE WARNED TO WHEN A MIDDLE MEASURE IS INSERTED AT THE SCORE PART (PARTMODIFIED FLAG IS NEEDED)
 
+            var measuresQty = 0;
+
+            //Get the max number of measures to find the size of the measure group array
+            scoreParts.ForEach(function(part) {
+                if(part.Count() > measuresQty)
+                    measuresQty = part.Count();
+            });
+
+            //inits the measure group array
+            var partsQty = scoreParts.Count(),     
+                measureGroups = new Array(measuresQty);
+
+            //Get measure groups
+            scoreParts.ForEach(function(part, partInd) {    //iterate thry all parts
+                part.ForEachMeasure(function(measure, measureInd) {  //iterate thru all measures
+                    measure.Organize();
+                    if(measureGroups[measureInd] == undefined)    //if this measure group isn't initiated
+                        measureGroups[measureInd] = new MeasureGroup();  //create new measure group
+                    measureGroups[measureInd].AddMeasure(measure); //put this measure at its measure
+                });
+            });
+
+            //console.log(measureGroupArr);
+
+            var measuresTimeArrays = new Array(measuresQty);
+
+            //Iterate thru the measure groups and populate the measures time arrays
+            for(var i = 0; i < measuresQty; i++)
+                measuresTimeArrays[i] = getTimeArray(measureGroups[i]);
+
+            var line_length = 1000,
+                min_length = 300;
+
+            //Now we got to generate keep putting groups together until a group length become less than the min width
+            var fixedLengths = 0;
+
+
+            //Get fixed lengths
+            console.log(measuresTimeArrays);
+
         }
-    }
+
+        function getTimeArray(mArray) {
+            var arrFactor = 128,    //factor to multiply denominators to get times on order (biggest denominator expected)
+                timeArr = new Array(arrFactor),
+                fixedLengths = 0;
+
+            for(var i = 0; i < mArray.length; i++) {
+                fixedLengths += mArray[i].GetFixedLength(); 
+
+                var currInd = 0;                   
+                mArray[i].ForEachChord(function(chord) {
+                    //chord.Organize();
+
+                    if(timeArr[currInd] == undefined)  //if the array hasn't been initated
+                        timeArr[currInd] = [];  //inits it
+                    
+                    timeArr[currInd].push(chord);   //push the chord to it
+
+                    //get the highest back length value
+                    if(timeArr[currInd].backLength == undefined || chord.GetBackLength() > timeArr[currInd].backLength)
+                        timeArr[currInd].backLength = chord.GetBackLength(); 
+                        
+                    //get the highest front length value
+                    if(timeArr[currInd].frontLength == undefined || chord.GetFrontLength() > timeArr[currInd].frontLength)
+                        timeArr[currInd].frontLength = chord.GetFrontLength();
+
+                    //get the highest denominator
+                    if(timeArr[currInd].highDen == undefined || chord.GetDenominator() > timeArr[currInd].highDen)
+                        timeArr[currInd].highDen = chord.GetDenominator();             
+
+                    //update next chord ind
+                    currInd += arrFactor / chord.GetDenominator(); 
+
+                });
+            }
+
+            timeArr.fixedLength = fixedLengths;
+
+            return timeArr;
+        }
+
+        function syncMeasures(mArray) {
+            var arrFactor = 128,    //factor to multiply denominators to get times on order (biggest denominator expected)
+                timeArr = new Array(arrFactor),
+                fixedLengths = 0;
+
+            //populate time array and get the measure fixed length
+            for(var i = 0; i < mArray.length; i++) {
+                fixedLengths += mArray[i].GetFixedLength();    
+
+                var currInd = 0;                   
+                mArray[i].ForEachChord(function(chord) {
+                    //chord.Organize();
+
+                    if(timeArr[currInd] == undefined)  //if the array hasn't been initated
+                        timeArr[currInd] = [];  //inits it
+                    
+                    timeArr[currInd].push(chord);   //push the chord to it
+
+                    //get the highest back length value
+                    if(timeArr[currInd].backLength == undefined || chord.GetBackLength() > timeArr[currInd].backLength)
+                        timeArr[currInd].backLength = chord.GetBackLength(); 
+                        
+                    //get the highest front length value
+                    if(timeArr[currInd].frontLength == undefined || chord.GetFrontLength() > timeArr[currInd].frontLength)
+                        timeArr[currInd].frontLength = chord.GetFrontLength();
+
+                    //get the highest denominator
+                    if(timeArr[currInd].highDen == undefined || chord.GetDenominator() > timeArr[currInd].highDen)
+                        timeArr[currInd].highDen = chord.GetDenominator();             
+
+                    //update next chord ind
+                    currInd += arrFactor / chord.GetDenominator(); 
+
+                });
+            }
+
+            //get constant total length
+            var mMargin = 20;
+
+            for(var j = 0; j < arrFactor; j++) {
+                if(timeArr[j] == undefined)
+                    continue;
+
+                //get the biggest elements fixed lengths to find out how much free space we have 
+                fixedLengths += timeArr[j].backLength + timeArr[j].frontLength;
+            }        
+
+            //get denominators sum
+            var denSum = 0;
+            for(var k = 0; k < timeArr.length; k++) {
+                if(timeArr[k] == undefined)
+                    continue;
+
+                denSum += 1 / timeArr[k].highDen;
+            }
+
+            //get the unit factor
+            var mLength = 1000,
+                unitFactor = (mLength - fixedLengths) / denSum;
+
+            //move chords to their positions
+            var nextPosition = mMargin;
+
+            for(var l = 0; l < timeArr.length; l++) {
+                if(timeArr[l] == undefined)
+                    continue;
+
+                for(var m = 0; m < timeArr[l].length; m++)
+                    timeArr[l][m].MoveChordHead(timeArr[l].backLength + nextPosition);
+
+                nextPosition += unitFactor / timeArr[l].highDen + timeArr[l].backLength + timeArr[l].frontLength; 
+            }
+            
+        }
+
+    }*/
 
 
 
