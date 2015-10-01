@@ -37,8 +37,14 @@
         <script src="ariajs/List.js"></script>
         <!--<script src="ariajs/Aria.js"></script>-->
         <script src="score/ScoreLoader.js"></script>
-        <script src="score/ScoreElements.js" type="text/javascript"></script>
-        <script src="score/ScoreBuilder.js"></script>
+        <script src="score/ScoreElements.js"></script>
+        <script src="score/ScoreBuilder/Chord.js"></script>
+        <script src="score/ScoreBuilder/Measure.js"></script>
+        <script src="score/ScoreBuilder/MeasureGroup.js"></script>
+        <script src="score/ScoreBuilder/ScorePart.js"></script>
+        <script src="score/ScoreBuilder/ScoreGroup.js"></script>
+        <script src="score/ScoreBuilder/Score.js"></script>
+        <!--<script src="score/ScoreBuilder.js"></script>-->
         <script src="debug.js"></script>
         <script>
 
@@ -149,31 +155,43 @@
                     
 
                     cObj8 = new ScoreBuilder.Chord(1);
+                    cObj9 = new ScoreBuilder.Chord(1);
 
 
-                cObj1.AddNote({n: "A", o: 3});      
-                cObj2.AddNote({n: "B", o: 6});
-                cObj3.AddNote({n: "C", o: 2});      
-                cObj4.AddNote({n: "D", o: 6});
-                cObj5.AddNote({n: "E", o: 8});      
-                cObj6.AddNote({n: "F", o: 7});
-                cObj7.AddNote({n: "G", o: 4});      
-                cObj8.AddNote({n: "H", o: 5});
+                cObj1.AddNote({n: "A", o: 4, a: getRandomAccident() });     
+                cObj2.AddNote({n: "B", o: 4, a: getRandomAccident() });
+                cObj3.AddNote({n: "C", o: 5, a: getRandomAccident() });      
+                cObj4.AddNote({n: "D", o: 5, a: getRandomAccident() });
+                cObj5.AddNote({n: "E", o: 4, a: getRandomAccident() });      
+                cObj6.AddNote({n: "F", o: 5, a: getRandomAccident() });
+                cObj7.AddNote({n: "G", o: 4, a: getRandomAccident() });      
+                cObj8.AddNote({n: "A", o: 4, a: getRandomAccident() });
+
+                cObj9.AddNote({n: "A", o: 5});
 
 
 
+                mObj1.InsertChord(getChordR());
+                //mObj1.InsertChord(cObj9);
 
-                mObj1.InsertChord(cObj1);
+                mObj3.InsertChord(getChordR());                
+                mObj3.InsertChord(getChordR());
 
-                mObj2.InsertChord(cObj2);                
-                mObj2.InsertChord(cObj3);
+                mObj2.InsertChord(getChordR());
+                mObj2.InsertChord(getChordR());
+                mObj2.InsertChord(getChordR());  
+                mObj2.InsertChord(getChordR());
 
-                mObj3.InsertChord(cObj4);
-                mObj3.InsertChord(cObj5);
-                mObj3.InsertChord(cObj6);  
-                mObj3.InsertChord(cObj7);
+                mObj4.InsertChord(getChordR());
 
-                mObj4.InsertChord(cObj8);
+                /*mObj1.SetStartBar("double");
+                mObj2.SetStartBar("repeat_f");
+                mObj3.SetStartBar("repeat_f");
+                mObj4.SetStartBar("repeat_f");*/
+                mObj1.SetEndBar("simple");
+                mObj2.SetEndBar("simple");
+                mObj3.SetEndBar("end");
+                mObj4.SetEndBar("end");
 
                 //cObj1.AddNote({n: 'G', o: 4, a: "flat-flat"});
                 /*cObj2.AddNote({n: 'G', o: 4 });
@@ -198,10 +216,11 @@
 
                 var measureGroup1 = new ScoreBuilder.MeasureGroup();
                 var measureGroup2 = new ScoreBuilder.MeasureGroup();
-                measureGroup1.AddMeasure(mObj1);
-                measureGroup1.AddMeasure(mObj2);
-                measureGroup2.AddMeasure(mObj3);
-                measureGroup2.AddMeasure(mObj4);
+                measureGroup1.AddMeasure(getMeasureR());
+                measureGroup1.AddMeasure(getMeasureR());
+
+                measureGroup2.AddMeasure(getMeasureR());
+                measureGroup2.AddMeasure(getMeasureR());
                 //measureGroup1.Organize();
                 //console.log(measureGroup1.GetFixedLength());
                 //console.log(measureGroup1.GetDenominatorSum());
@@ -241,51 +260,66 @@
             }
 
             function GetLinesBeta(measureGroups) {
-                var totalFixedLength = 0,
-                    totalDenSum = 0;
+                var totalFixedLength = 0,   //variable to keep the total fixed length of all the measure groups
+                    totalDenSum = 0,    //variable to keep the total denominators sum of all the measure groups
+                    LINE_WIDTH = 1000,  //constante value to be used to set the score line size
+                    measureGroupsLength = measureGroups.length; //get the amount of measures passed
 
-                for(var i = 0; i < measureGroups.length; i++) {
-                    measureGroups[i].Organize();
-                    totalFixedLength += measureGroups[i].GetFixedLength();
+                //iterate thru the measure groups passed
+                for(var i = 0; i < measureGroupsLength; i++) {
+                    measureGroups[i].Organize();    //ensure they are organized
+                    //sum the curr measure group fixed length to the total fixed length
+                    totalFixedLength += measureGroups[i].GetFixedLength();  
+                    //sum the curr measure group den sum to the total denominator sum
                     totalDenSum += measureGroups[i].GetDenominatorSum();
                 }
 
                 //get the unit length to be used for chord positioning
-                var unitLength = (1000 - totalFixedLength)/totalDenSum;
+                var unitLength = (LINE_WIDTH - totalFixedLength) / totalDenSum;
 
-                //set chords positions
-                for(var j = 0; j < measureGroups.length; j++)
+                //Iterate thry all measure groups
+                for(var j = 0; j < measureGroupsLength; j++)
+                    //set their chords positions according to the unit length value
                     measureGroups[j].SetChordsPositions(unitLength);
 
                 //set measures to their lines
-                var betaLines = [],
-                    nextPosition = 0;
+                var betaLines = [], //variable to store the visual lines group
+                    nextMeasurePosition = 0;   //pointer to be used for measure positioning
 
-                for(var k = 0; k < measureGroups.length; k++) {
-                    var currInd = 0;
+                //Iterate thru all measures passed
+                for(var k = 0; k < measureGroupsLength; k++) {
+                    
+                    var currInd = 0;    //variable to control the index of the visual lines
 
-                    measureGroups[k].foreach(function(measure) {
+                    //iterate thru the measures of the current measure group
+                    measureGroups[k].ForEachMeasure(function(measure) {
 
+                        //if the current indexed line is note created
                         if(betaLines[currInd] == undefined) {
-                           betaLines[currInd] = $G.create("g");
-                           var lineObj = $G.create("path");
-                           lineObj.setAttribute("d", GetScoreLinesPath(1000));
-                           lineObj.setAttribute("stroke", "#000");
-                           betaLines[currInd].appendChild(lineObj);
-                       }
-                           
+                           betaLines[currInd] = $G.create("g"); //create its group
+                           var lineObj = $G.create("path"); //create the lines object
+                           lineObj.setAttribute("d", GetScoreLinesPath(LINE_WIDTH)); //draw the lines
+                           lineObj.setAttribute("stroke", "#000");  //set lines color
+                           betaLines[currInd].appendChild(lineObj); //append the lines to the lines group
+                        }
+                        
+                        //append the current measure to the just create line
                         betaLines[currInd].appendChild(measure.Draw());
 
-                        measure.Draw().translate(nextPosition);
-                        currInd++;   
+                        //Move the measure to the point specified by the next position pointer
+                        measure.MoveTo(nextMeasurePosition);
+
+                        currInd++;  //increase the line index
                     });
 
-                    nextPosition += measureGroups[k].GetLength();
+                    //update the next measure position pointer
+                    nextMeasurePosition += measureGroups[k].GetWidth();                   
                 }
 
-                var betaGroup = $G.create("g"),
-                    nextVerticalPos = 0;
+                var betaGroup = $G.create("g"), //create general group to put lines
+                    nextVerticalPos = 0;    //variable to point to the vertical position
 
+                //position lines vertically
                 for(var n = 0; n < betaLines.length; n++) {
                    betaGroup.appendChild(betaLines[n]); 
                    betaLines[n].translate(0, nextVerticalPos - betaLines[n].getBBox().y);
@@ -384,9 +418,9 @@
                     for(var k = 0; k < notes.length; k++)
                         chordObj.AddNote(notes[k]);
 
-                    measureObj.InsertElem(chordObj);
+                    measureObj.InsertChord(chordObj);
                 }
-
+                measureObj.SetEndBar("simple");
                 //measureObj.SetEndBar("simple");
 
                 return measureObj;                
