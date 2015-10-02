@@ -9,6 +9,13 @@ if(!ScoreBuilder) var ScoreBuilder = new Object();
 
 //MUST SET SYSTEM TO ONLY USE MEASURE GROUP IN CASE MORE THAN ONE MEASURE IS PRESENT
 //PROBALY THERE IS A WAT MUCH MORE SIMPLER TO ORGANIZE MEASURES TIMING
+//MAYBE CREATE MEASURE PRE DEFINED SPOTS TO PLACE NOTES AND RESTS
+//BARS MUST BE ADDED OUTSIDE THE MEASURE
+//MAYBE ADD SYSTEM TO ADJUSTE MEASURE SIZES TO PERCENTAGE INSTEAD KEEP IT AUTO SIZING ALL THE TIME
+//PRE ALLOCATE SPACE FOR ACCIDENTS AND DESLOCATE NOTES TO SAVE PROCESSING
+//ACCIDENT DONT HAVE TO BE EQUAL SPACED ON THE MEASURE, MAYBE ONLY A MINIMAL SPACE IS ENOUGH
+//AUX LINES DONT HAVE TO BE DESLOCATED
+
 
 ScoreBuilder.MeasureGroup = function() {
     var measures = [],
@@ -186,6 +193,6 @@ ScoreBuilder.MeasureGroup = function() {
 
     //Function to get the lower denominatir unit lenght that the measure group size remains above the min width
     this.GetMinDenUnitLength = function(minWidth) {
-
+        return (minWidth - fixedLength) / denominatorSum;
     }
 }

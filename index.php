@@ -139,23 +139,22 @@
                     mObj2 = new ScoreBuilder.Measure(), //getMeasureR();
                     mObj3 = new ScoreBuilder.Measure(), //getMeasureR();
                     mObj4 = new ScoreBuilder.Measure(), //getMeasureR();
+                    mObj5 = new ScoreBuilder.Measure(), //getMeasureR();
+                    mObj6 = new ScoreBuilder.Measure(), //getMeasureR();
 
                     cObj1 = new ScoreBuilder.Chord(1),
-                    
 
+                    cObj2 = new ScoreBuilder.Chord(1),
+                    cObj3 = new ScoreBuilder.Chord(1),
 
-                    cObj2 = new ScoreBuilder.Chord(2),
-                    cObj3 = new ScoreBuilder.Chord(2),
-                    
-
-                    cObj4 = new ScoreBuilder.Chord(4),
-                    cObj5 = new ScoreBuilder.Chord(4),
-                    cObj6 = new ScoreBuilder.Chord(4),
-                    cObj7 = new ScoreBuilder.Chord(4),
+                    cObj4 = new ScoreBuilder.Chord(1),
+                    cObj5 = new ScoreBuilder.Chord(1),
+                    cObj6 = new ScoreBuilder.Chord(1);
+                    /*cObj7 = new ScoreBuilder.Chord(4),
                     
 
                     cObj8 = new ScoreBuilder.Chord(1);
-                    cObj9 = new ScoreBuilder.Chord(1);
+                    cObj9 = new ScoreBuilder.Chord(1);*/
 
 
                 cObj1.AddNote({n: "A", o: 4, a: getRandomAccident() });     
@@ -164,34 +163,38 @@
                 cObj4.AddNote({n: "D", o: 5, a: getRandomAccident() });
                 cObj5.AddNote({n: "E", o: 4, a: getRandomAccident() });      
                 cObj6.AddNote({n: "F", o: 5, a: getRandomAccident() });
-                cObj7.AddNote({n: "G", o: 4, a: getRandomAccident() });      
-                cObj8.AddNote({n: "A", o: 4, a: getRandomAccident() });
+                /*cObj7.AddNote({n: "G", o: 4, ac: getRandomAccident() });      
+                cObj8.AddNote({n: "A", o: 4, ac: getRandomAccident() });*/
 
-                cObj9.AddNote({n: "A", o: 5});
+                //cObj9.AddNote({n: "A", o: 5});
 
 
 
-                mObj1.InsertChord(getChordR());
+                mObj1.InsertChord(cObj1);
                 //mObj1.InsertChord(cObj9);
 
-                mObj3.InsertChord(getChordR());                
-                mObj3.InsertChord(getChordR());
+                mObj2.InsertChord(cObj2);                
+                mObj3.InsertChord(cObj3);
 
-                mObj2.InsertChord(getChordR());
-                mObj2.InsertChord(getChordR());
-                mObj2.InsertChord(getChordR());  
-                mObj2.InsertChord(getChordR());
+                mObj4.InsertChord(cObj4);
+                mObj5.InsertChord(cObj5);
+                mObj6.InsertChord(cObj6);  
+                /*mObj2.InsertChord(cObj7);
 
-                mObj4.InsertChord(getChordR());
+                mObj4.InsertChord(cObj8);*/
 
                 /*mObj1.SetStartBar("double");
                 mObj2.SetStartBar("repeat_f");
                 mObj3.SetStartBar("repeat_f");
                 mObj4.SetStartBar("repeat_f");*/
                 mObj1.SetEndBar("simple");
-                mObj2.SetEndBar("simple");
-                mObj3.SetEndBar("end");
+                mObj2.SetEndBar("end");
+                mObj3.SetEndBar("simple");
                 mObj4.SetEndBar("end");
+                mObj5.SetEndBar("simple");
+                mObj6.SetEndBar("end");
+
+
 
                 //cObj1.AddNote({n: 'G', o: 4, a: "flat-flat"});
                 /*cObj2.AddNote({n: 'G', o: 4 });
@@ -213,21 +216,81 @@
                 
                 mObj2.MoveTo(200, obj1Box.height - obj1Box.y + 100);*/
 
+                var sPart1 = new ScoreBuilder.ScorePart();
+                sPart1.InsertMeasure(mObj1);
+                sPart1.InsertMeasure(mObj2);
 
-                var measureGroup1 = new ScoreBuilder.MeasureGroup();
+                var sPart2 = new ScoreBuilder.ScorePart();
+                sPart2.InsertMeasure(mObj3);
+                sPart2.InsertMeasure(mObj4);
+
+                var sPart3 = new ScoreBuilder.ScorePart();
+                sPart3.InsertMeasure(mObj5);
+                sPart3.InsertMeasure(mObj6);
+
+                var sGroup1 = new ScoreBuilder.ScoreGroup();
+                sGroup1.InsertPart(sPart1);
+                sGroup1.InsertPart(sPart2);
+                sGroup1.InsertPart(sPart3);
+
+                
+
+                svgContainer.appendChild(sGroup1.Draw());
+                sGroup1.Organize();
+                sGroup1.MoveTo(10, 10);
+
+                mObj1.Draw().addEventListener("click", function(){
+                    mObj1.InsertChord(getChordR());
+                    sGroup1.Organize();
+                });
+
+                mObj2.Draw().addEventListener("click", function(){
+                    mObj2.InsertChord(getChordR());
+                    sGroup1.Organize();
+                });
+
+
+                mObj3.Draw().addEventListener("click", function(){
+                    mObj3.InsertChord(getChordR());
+                    sGroup1.Organize();
+                });
+
+
+                mObj4.Draw().addEventListener("click", function(){
+                    mObj4.InsertChord(getChordR());
+                    sGroup1.Organize();
+                });
+
+                mObj5.Draw().addEventListener("click", function(){
+                    mObj5.InsertChord(getChordR());
+                    sGroup1.Organize();
+                });
+
+
+                mObj6.Draw().addEventListener("click", function(){
+                    mObj6.InsertChord(getChordR());
+                    sGroup1.Organize();
+                });
+
+
+
+
+                /*var measureGroup1 = new ScoreBuilder.MeasureGroup();
                 var measureGroup2 = new ScoreBuilder.MeasureGroup();
-                measureGroup1.AddMeasure(getMeasureR());
-                measureGroup1.AddMeasure(getMeasureR());
 
-                measureGroup2.AddMeasure(getMeasureR());
-                measureGroup2.AddMeasure(getMeasureR());
+                measureGroup1.AddMeasure(mObj1);
+                measureGroup1.AddMeasure(mObj2);
+
+                measureGroup2.AddMeasure(mObj3);
+                measureGroup2.AddMeasure(mObj4);*/
+
                 //measureGroup1.Organize();
                 //console.log(measureGroup1.GetFixedLength());
                 //console.log(measureGroup1.GetDenominatorSum());
 
-                var lineBeta = GetLinesBeta([measureGroup1, measureGroup2]);
+                /*var lineBeta = GetLinesBeta([measureGroup1, measureGroup2]);
                 svgContainer.appendChild(lineBeta);
-                lineBeta.translate(10, 10);
+                lineBeta.translate(10, 10);*/
 
 
                 /*var partObj1 = new ScoreBuilder.ScorePart();
@@ -262,7 +325,7 @@
             function GetLinesBeta(measureGroups) {
                 var totalFixedLength = 0,   //variable to keep the total fixed length of all the measure groups
                     totalDenSum = 0,    //variable to keep the total denominators sum of all the measure groups
-                    LINE_WIDTH = 1000,  //constante value to be used to set the score line size
+                    LINE_WIDTH = 1500,  //constante value to be used to set the score line size
                     measureGroupsLength = measureGroups.length; //get the amount of measures passed
 
                 //iterate thru the measure groups passed
