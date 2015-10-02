@@ -1,10 +1,12 @@
-
-
+//------------------------------------------------------------------
 //------------------------------------------------------------------
 //--------------------- G-QUERY LIBRARY-----------------------------
 //------------------------------------------------------------------
+//------------------------------------------------------------------
 
+//------------------------------------------------------------------
 //-------------------- G-QUERY METHODS -----------------------------
+//------------------------------------------------------------------
 
 var $G = new function() {
 	//set namespaces
@@ -17,7 +19,65 @@ var $G = new function() {
 	}
 }
 
+//------------------------------------------------------------------
 //-------------------- G-QUERY PROTOTYPES --------------------------
+//------------------------------------------------------------------
+
+//Function to get the decimal part of a value
+Number.prototype.getDecimalValue = function() {
+    return this - Math.floor(this);    
+}
+
+//Function to get whether the value is even (if not is odd)
+Number.prototype.isEven = function() {
+    return this % 2 ? false : true;
+}
+
+//--------------------- CIRCLE ELEMENTS PROTOTYPES -----------------
+
+//Function to set the circle radius
+SVGCircleElement.prototype.setRadius = function(r) {
+    this.setAttribute("r", r);     
+}
+
+//Function to get the circle radius
+SVGCircleElement.prototype.getRadius = function() {
+    return this.getAttribute("r");     
+}
+
+//--------------------- GEOMETRY ELEMENTS PROTOTYPES ----------------
+
+//if svg geometry is not defined
+if(!SVGGeometryElement)
+    //Define it as the graphics element
+    var SVGGeometryElement = SVGGraphicsElement;    
+
+SVGGeometryElement.prototype.setFill = function(color) {
+    this.setAttribute("fill", color);
+}
+
+SVGGeometryElement.prototype.getFill = function() {
+    return this.getAttribute("fill");
+}
+
+SVGGeometryElement.prototype.setStrokeColor = function(color) {
+    this.setAttribute("stroke", color);
+}
+
+SVGGeometryElement.prototype.getStrokeColor = function() {
+    return this.getAttribute("stroke-width");
+}
+
+SVGGeometryElement.prototype.setStrokeWidth = function(width) {
+    this.setAttribute("stroke", width);
+}
+
+SVGGeometryElement.prototype.getStrokeWidth = function() {
+    return this.getAttribute("stroke-width");
+}
+
+
+//--------------------- GRAPHIC ELEMENTS PROTOTYPES -----------------
 
 //Set an enhanced "getBBox()" method to ensure bboxes even with the element not appended to the final document
 SVGGraphicsElement.prototype.__oldGetBBox = SVGGraphicsElement.prototype.getBBox;	//store the old getbbox
@@ -42,7 +102,7 @@ SVGGraphicsElement.prototype.getBBox = function () {	//set the new one
 
         //if the last element is one of the root tags, means the element is completely appended and the bbox cleared is the right one
         if(higherNotNullElement.tagName == "HTML" || higherNotNullElement.tagName == "svg")
-            return bBox;    //return the bBox before the catch (cleared)
+            return { width: 0, height: 0, x: 0, y: 0 };    //return a cleared bBox obj
 
         var auxParent;  //aux parent to append the element for get its bbBox
 
@@ -59,6 +119,7 @@ SVGGraphicsElement.prototype.getBBox = function () {	//set the new one
         //append the higher element to the auxiliar parent to be able to get this element bbox
         auxParent.appendChild(higherNotNullElement);  
         bBox = this.__oldGetBBox();   //get this element bBox
+
         //remove higher element from its aux parent
         auxParent.removeChild(higherNotNullElement); 
 

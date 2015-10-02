@@ -30,7 +30,7 @@
                 </svg>
             </div>
         </section>
-        <script src="xml2json.js"></script>
+        <script src="xml2json/xml2json.js"></script>
         <script src="score/g-query.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
         <script src="score/ScoreConverter.js"></script>
@@ -48,9 +48,6 @@
         <script src="debug.js"></script>
         <script>
 
-
-            //TERMINAR ADICIONAR SIMBOLOS PARTITURA E ADICIONAR BUILDERS PARA ELES
-            //KEEP DOING METHODS TO INSERT BARS @ THE MEASURES
             window.onload = function() {
 
                 var debRect1 = $G.create("rect");
@@ -142,27 +139,75 @@
                     mObj5 = new ScoreBuilder.Measure(), //getMeasureR();
                     mObj6 = new ScoreBuilder.Measure(), //getMeasureR();
 
-                    cObj1 = new ScoreBuilder.Chord(1),
-
-                    cObj2 = new ScoreBuilder.Chord(1),
-                    cObj3 = new ScoreBuilder.Chord(1),
-
-                    cObj4 = new ScoreBuilder.Chord(1),
-                    cObj5 = new ScoreBuilder.Chord(1),
-                    cObj6 = new ScoreBuilder.Chord(1);
-                    /*cObj7 = new ScoreBuilder.Chord(4),
-                    
-
-                    cObj8 = new ScoreBuilder.Chord(1);
-                    cObj9 = new ScoreBuilder.Chord(1);*/
+                    cObj1 = new ScoreBuilder.Chord(2),
+                    cObj2 = new ScoreBuilder.Chord(4, 1),
+                    cObj3 = new ScoreBuilder.Chord(8),
 
 
-                cObj1.AddNote({n: "A", o: 4, a: getRandomAccident() });     
+                    c1Coll = [
+                        new ScoreBuilder.Chord(8),
+                        new ScoreBuilder.Chord(8),
+                        new ScoreBuilder.Chord(8),
+                        new ScoreBuilder.Chord(8),
+                        new ScoreBuilder.Chord(8),
+                        new ScoreBuilder.Chord(8),
+                        new ScoreBuilder.Chord(8),
+                        new ScoreBuilder.Chord(8)
+                    ],
+                    c2Coll = [
+                        new ScoreBuilder.Chord(8),
+                        new ScoreBuilder.Chord(8),
+                        new ScoreBuilder.Chord(8),
+                        new ScoreBuilder.Chord(8),
+                        new ScoreBuilder.Chord(8),
+                        new ScoreBuilder.Chord(8),
+                        new ScoreBuilder.Chord(8),
+                        new ScoreBuilder.Chord(8)
+                    ],
+                    c3Coll = [
+                        new ScoreBuilder.Chord(4),
+                        new ScoreBuilder.Chord(4),
+                        new ScoreBuilder.Chord(4),
+                        new ScoreBuilder.Chord(4)
+                    ],
+                    c4Coll = [
+                        new ScoreBuilder.Chord(4),
+                        new ScoreBuilder.Chord(4),
+                        new ScoreBuilder.Chord(4),
+                        new ScoreBuilder.Chord(4)
+                    ],
+                    c5Coll = [
+                        cObj1,
+                        cObj2,
+                        cObj3
+                    ],
+                    c6Coll = [
+                        new ScoreBuilder.Chord(2),
+                        new ScoreBuilder.Chord(2)
+                    ];
+
+
+                    mObj1.AddChordCollection(c1Coll);
+                    mObj2.AddChordCollection(c2Coll);                
+                    mObj3.AddChordCollection(c3Coll);
+                    mObj4.AddChordCollection(c4Coll);
+                    mObj5.AddChordCollection(c5Coll);
+                    mObj6.AddChordCollection(c6Coll);
+
+                cObj1.AddNote({n: "E", o: 5 });
+
+                /*cObj2.AddNote({n: "E", o: 5 });
+                cObj2.AddNote({n: "C", o: 0 });*/
+
+                cObj3.AddNote({n: "C", o: 4 }); 
+
+
+                /*cObj1.AddNote({n: "A", o: 4, a: getRandomAccident() });     
                 cObj2.AddNote({n: "B", o: 4, a: getRandomAccident() });
                 cObj3.AddNote({n: "C", o: 5, a: getRandomAccident() });      
                 cObj4.AddNote({n: "D", o: 5, a: getRandomAccident() });
                 cObj5.AddNote({n: "E", o: 4, a: getRandomAccident() });      
-                cObj6.AddNote({n: "F", o: 5, a: getRandomAccident() });
+                cObj6.AddNote({n: "F", o: 5, a: getRandomAccident() });*/
                 /*cObj7.AddNote({n: "G", o: 4, ac: getRandomAccident() });      
                 cObj8.AddNote({n: "A", o: 4, ac: getRandomAccident() });*/
 
@@ -170,15 +215,7 @@
 
 
 
-                mObj1.InsertChord(cObj1);
-                //mObj1.InsertChord(cObj9);
 
-                mObj2.InsertChord(cObj2);                
-                mObj3.InsertChord(cObj3);
-
-                mObj4.InsertChord(cObj4);
-                mObj5.InsertChord(cObj5);
-                mObj6.InsertChord(cObj6);  
                 /*mObj2.InsertChord(cObj7);
 
                 mObj4.InsertChord(cObj8);*/
@@ -216,10 +253,6 @@
                 
                 mObj2.MoveTo(200, obj1Box.height - obj1Box.y + 100);*/
 
-                //MUST PASS CONTROL OF THE CLEF, KEY AND TIME TO THE MEASURE
-                //SIMPLIFY OBJECTS SUCH KEY.FIFHTS TO JUST KEY (NOT EVENT KEEP AS OBJECTS, BUT VARIABLES)
-
-
 
                 var timeObj = {}
                 timeObj["beats"] = 4;
@@ -248,7 +281,7 @@
 
                 svgContainer.appendChild(sGroup1.Draw());
                 sGroup1.Organize();
-                sGroup1.MoveTo(10, 10);
+                sGroup1.MoveTo(10, 10.5);
 
                 mObj1.Draw().addEventListener("click", function(){
                     mObj1.InsertChord(getChordR());
@@ -332,151 +365,9 @@
                 console.log(chordObj.GetBackLength());
                 console.log(chordObj.GetFrontLength());*/
             }
-/*
-            function GetLinesBeta(measureGroups) {
-                var totalFixedLength = 0,   //variable to keep the total fixed length of all the measure groups
-                    totalDenSum = 0,    //variable to keep the total denominators sum of all the measure groups
-                    LINE_WIDTH = 1500,  //constante value to be used to set the score line size
-                    measureGroupsLength = measureGroups.length; //get the amount of measures passed
 
-                //iterate thru the measure groups passed
-                for(var i = 0; i < measureGroupsLength; i++) {
-                    measureGroups[i].Organize();    //ensure they are organized
-                    //sum the curr measure group fixed length to the total fixed length
-                    totalFixedLength += measureGroups[i].GetFixedLength();  
-                    //sum the curr measure group den sum to the total denominator sum
-                    totalDenSum += measureGroups[i].GetDenominatorSum();
-                }
 
-                //get the unit length to be used for chord positioning
-                var unitLength = (LINE_WIDTH - totalFixedLength) / totalDenSum;
 
-                //Iterate thry all measure groups
-                for(var j = 0; j < measureGroupsLength; j++)
-                    //set their chords positions according to the unit length value
-                    measureGroups[j].SetChordsPositions(unitLength);
-
-                //set measures to their lines
-                var betaLines = [], //variable to store the visual lines group
-                    nextMeasurePosition = 0;   //pointer to be used for measure positioning
-
-                //Iterate thru all measures passed
-                for(var k = 0; k < measureGroupsLength; k++) {
-                    
-                    var currInd = 0;    //variable to control the index of the visual lines
-
-                    //iterate thru the measures of the current measure group
-                    measureGroups[k].ForEachMeasure(function(measure) {
-
-                        //if the current indexed line is note created
-                        if(betaLines[currInd] == undefined) {
-                           betaLines[currInd] = $G.create("g"); //create its group
-                           var lineObj = $G.create("path"); //create the lines object
-                           lineObj.setAttribute("d", GetScoreLinesPath(LINE_WIDTH)); //draw the lines
-                           lineObj.setAttribute("stroke", "#000");  //set lines color
-                           betaLines[currInd].appendChild(lineObj); //append the lines to the lines group
-                        }
-                        
-                        //append the current measure to the just create line
-                        betaLines[currInd].appendChild(measure.Draw());
-
-                        //Move the measure to the point specified by the next position pointer
-                        measure.MoveTo(nextMeasurePosition);
-
-                        currInd++;  //increase the line index
-                    });
-
-                    //update the next measure position pointer
-                    nextMeasurePosition += measureGroups[k].GetWidth();                   
-                }
-
-                var betaGroup = $G.create("g"), //create general group to put lines
-                    nextVerticalPos = 0;    //variable to point to the vertical position
-
-                //position lines vertically
-                for(var n = 0; n < betaLines.length; n++) {
-                   betaGroup.appendChild(betaLines[n]); 
-                   betaLines[n].translate(0, nextVerticalPos - betaLines[n].getBBox().y);
-                   nextVerticalPos += betaLines[n].getBBox().height + 50;
-                }
-
-                return betaGroup;
-            }
-
-            function syncMeasures(mArray) {
-                var arrFactor = 128,    //factor to multiply denominators to get times on order (biggest denominator expected)
-                    timeArr = new Array(arrFactor),
-                    fixedLengths = 0;
-
-                //populate time array and get the measure fixed length
-                for(var i = 0; i < mArray.length; i++) {
-                    fixedLengths += mArray[i].GetFixedLength();    
-
-                    var currInd = 0;                   
-                    mArray[i].ForEachChord(function(chord) {
-                        //chord.Organize();
-
-                        if(timeArr[currInd] == undefined)  //if the array hasn't been initated
-                            timeArr[currInd] = [];  //inits it
-                        
-                        timeArr[currInd].push(chord);   //push the chord to it
-
-                        //get the highest back length value
-                        if(timeArr[currInd].backLength == undefined || chord.GetBackLength() > timeArr[currInd].backLength)
-                            timeArr[currInd].backLength = chord.GetBackLength(); 
-                            
-                        //get the highest front length value
-                        if(timeArr[currInd].frontLength == undefined || chord.GetFrontLength() > timeArr[currInd].frontLength)
-                            timeArr[currInd].frontLength = chord.GetFrontLength();
-
-                        //get the highest denominator
-                        if(timeArr[currInd].highDen == undefined || chord.GetDenominator() > timeArr[currInd].highDen)
-                            timeArr[currInd].highDen = chord.GetDenominator();             
-
-                        //update next chord ind
-                        currInd += arrFactor / chord.GetDenominator(); 
-    
-                    });
-                }
-
-                //get constant total length
-                var mMargin = 20;
-
-                for(var j = 0; j < arrFactor; j++) {
-                    if(timeArr[j] == undefined)
-                        continue;
-
-                    //get the biggest elements fixed lengths to find out how much free space we have 
-                    fixedLengths += timeArr[j].backLength + timeArr[j].frontLength;
-                }        
-
-                //get denominators sum
-                var denSum = 0;
-                for(var k = 0; k < timeArr.length; k++) {
-                    if(timeArr[k] == undefined)
-                        continue;
-
-                    denSum += 1 / timeArr[k].highDen;
-                }
-
-                //get the unit factor
-                var mLength = 1000,
-                    unitFactor = (mLength - fixedLengths) / denSum;
-
-                //move chords to their positions
-                var nextPosition = mMargin;
-
-                for(var l = 0; l < timeArr.length; l++) {
-                    if(timeArr[l] == undefined)
-                        continue;
-
-                    for(var m = 0; m < timeArr[l].length; m++)
-                        timeArr[l][m].MoveChordHead(timeArr[l].backLength + nextPosition);
-
-                    nextPosition += unitFactor / timeArr[l].highDen + timeArr[l].backLength + timeArr[l].frontLength; 
-                }
-                
-            }*/
 
             function getMeasureR() {
                 var measureObj = new ScoreBuilder.Measure(),

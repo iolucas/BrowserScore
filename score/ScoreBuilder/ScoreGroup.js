@@ -133,7 +133,7 @@ ScoreBuilder.ScoreGroup = function() {
         var currTotalFixedLength = linesHeaderMargin;   //current iteration fixed length
         var currDenSum = 0; //curretn iteration denominator sum
 
-        MUST REWRITE THIS ITERATION FOR A BETTER READBILITY AND OPTIMIZATION
+        //MUST REWRITE THIS ITERATION FOR A BETTER READBILITY AND OPTIMIZATION
         
 
         for(var a = 0; a < measureGroups.length; a++) {
@@ -268,7 +268,8 @@ ScoreBuilder.ScoreGroup = function() {
             //position lines vertically
             for(var n = 0; n < betaLines.length; n++) {
                 generalGroup.appendChild(betaLines[n]);
-                betaLines[n].translate(0, nextVerticalPos - betaLines[n].getBBox().y);
+                var nextPosCeil = Math.ceil(nextVerticalPos - betaLines[n].getBBox().y);    //round up every coordinate
+                betaLines[n].translate(0, nextPosCeil);
                 nextVerticalPos += betaLines[n].getBBox().height + 10;
             }
 

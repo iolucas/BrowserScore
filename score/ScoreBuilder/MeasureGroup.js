@@ -76,6 +76,7 @@ ScoreBuilder.MeasureGroup = function() {
 
     //Function to set the chords positions of the measures within this measure group
     this.SetChordsPositions = function(denUnitLength) {
+
         //Start the next position variable with the left margin value
         //(Must ensure left margin is update by the Organize call)
         var nextPosition = leftMargin;
@@ -169,7 +170,11 @@ ScoreBuilder.MeasureGroup = function() {
                     chordsTimeArray[currInd].highDen = chord.GetDenominator();             
 
                 //update next chord ind
-                currInd += arrFactor / chord.GetDenominator(); 
+                currInd += arrFactor / chord.GetDenominator();
+
+                //if invalid denominator is set, throw error
+                if(currInd.getDecimalValue() != 0)
+                    throw "INVALID_DENOMINATOR: " + chord.GetDenominator();
             });
         }
 

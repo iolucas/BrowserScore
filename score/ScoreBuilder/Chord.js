@@ -7,17 +7,29 @@ if(!ScoreBuilder) var ScoreBuilder = new Object();
 //-----------------------------------------------------------
 //-----------------------------------------------------------
 
-ScoreBuilder.Chord = function(chordDen) {
+ScoreBuilder.Chord = function(chordDen, dots) {
 
     var selfRef = this,
+        chordDots = dots ? dots : 0,    //chord number of dots to rise the chord tempo
+        chordDenominator;   //chord general denominator
 
-        notes = [], //Array to set the notes at this chord
+    //Get the final chord denominator
+    if(chordDots == 0)
+        chordDenominator = chordDen;
+    else if(chordDots == 1)
+        chordDenominator = 1/(1/chordDen + 1/(chordDen*2));
+    else if(chordDots == 2)
+        chordDenominator = 1/(1/chordDen + 1/(chordDen*2) + 1/(chordDen*4));
+    else
+        throw "INVALID_DOTS_VALUE";
 
-        chordDenominator = chordDen,    //chord general denominator
+    var notes = [], //Array to set the notes at this chord
+
         chordGroup = document.createElementNS(xmlns, "g"),  //general chord group to put its elements
         noteGroup = document.createElementNS(xmlns, "g"),   //group to add note related elements
         accidentGroup = document.createElementNS(xmlns, "g"),   //accident group to place accident related elements
         auxLinesGroup = document.createElementNS(xmlns, "g"),   //aux lines group to place the necessary aux lines up and down
+        dotsGroup = $G.create("g"), //dots group to be used to set the notes dot that increase their times
         rest = DrawRest(chordDenominator),  //get the rest element draw
         flag = DrawNoteFlag(chordDenominator),   //get the note flag 
         auxLines = document.createElementNS(xmlns, "path"), //path to receive the aux lines to be draw
@@ -37,7 +49,7 @@ ScoreBuilder.Chord = function(chordDen) {
         lastClef = "",  //variable to hold the last clef used to detect clef change to avoid unnecessary organize chords
 
         //variable to signalize whether a note has been added or removed from this chord and it was not yet organized
-        chordModified = false;   //must start as true to ensure init the curr width variable  
+        chordModified = true;   //must start as true to ensure init the curr width variable  
 
     //for debug, not really necessary due to group grows, but coodinates origin remains the same
     var refRect = document.createElementNS(xmlns, "rect");  //reference rectangle to be used as a fixed reference point
@@ -64,6 +76,7 @@ ScoreBuilder.Chord = function(chordDen) {
     chordGroup.appendChild(auxLinesGroup);     
     chordGroup.appendChild(accidentGroup);
     chordGroup.appendChild(noteGroup);
+    chordGroup.appendChild(dotsGroup);
 
     //append aux lines to the aux lines group
     auxLinesGroup.appendChild(auxLines);
@@ -72,8 +85,11 @@ ScoreBuilder.Chord = function(chordDen) {
     noteGroup.appendChild(stem);
     noteGroup.appendChild(rest);
 
+
     //ensures the currwidth variable is initiated with the rest symbol
-    currWidth = rest.getBBox().width;
+    //currWidth = rest.getBBox().width;
+    setDots(); //set the dots of the rest if needed
+    setChordPositions();    //ensure the dot is in the right place
 
     //NoteGroup debug rect
     //var noteRect = $G.create("rect");
@@ -260,6 +276,7 @@ ScoreBuilder.Chord = function(chordDen) {
             setStemLine();  //clear chord stem line
             setChordFlag();
             setAuxLines(); //remove all the aux lines
+            setDots();
             setChordPositions();    //organize chord elements positions
             return; //do nothing else and return
         }
@@ -335,6 +352,9 @@ ScoreBuilder.Chord = function(chordDen) {
         //set the accident symbols places (need the low value to generate the ordered list)
         setAccidentPositions(lowValue);
 
+        //set the dots symbols position
+        setDots();
+
         //set chord elements (accident group and notes group) correct places
         setChordPositions(); 
 
@@ -352,7 +372,7 @@ ScoreBuilder.Chord = function(chordDen) {
         var headMiddleOffset; //variable to keep the middle of the note element (notes or rest)
         if(notes.getValidLength() == 0) //if there is no note, only rest, is enough to get the half of the note group
             headMiddleOffset = noteGroup.getBBox().width / 2;
-        else if(chordDenominator < 2)   //if the denominator is less than 2, get its constant value
+        else if(chordDenominator <= 1)   //if the denominator is less or equal than 1, get its constant value
             headMiddleOffset = 12;
         else //if any other denominator, get its constant value
             headMiddleOffset = 9;
@@ -372,25 +392,33 @@ ScoreBuilder.Chord = function(chordDen) {
         //gets chord elements bboxes
         var accidentBox = accidentGroup.getBBox(),
             noteBox = noteGroup.getBBox(),
-            ACC_NOTES_GAP = 5;  //GAP BETWEEN NOTES AND ACCIDENT SYMBOLS
+            dotBox = dotsGroup.getBBox(),
+            ACC_NOTES_GAP = 5,  //GAP BETWEEN NOTES AND ACCIDENT SYMBOLS
+            DOT_NOTES_GAP = 5;  //GAP BETWEEN NOTES AND DOT SYMBOLS
 
         //place accident group at 0,0 abs pos
         accidentGroup.translate(-accidentBox.x, 0);
 
         //place note and aux lines imediatelly after the accident group
-        var noteGroupXCoord;
+        var noteGroupXCoord,
+            dotsGroupXCoord = 0;
+
         if(accidentBox.width > 0) { //if there is accidents
-            noteGroupXCoord = accidentBox.width - noteBox.x + ACC_NOTES_GAP;
-            currWidth = accidentBox.width + noteBox.width + ACC_NOTES_GAP;
+            noteGroupXCoord = accidentBox.width + ACC_NOTES_GAP - noteBox.x;
+            currWidth = accidentBox.width + ACC_NOTES_GAP + noteBox.width ;
         } else {
             noteGroupXCoord = - noteBox.x; 
             currWidth = noteBox.width;  
         }
 
-        //SetTransform(noteGroup, { translate: [noteGroupXCoord, 0] });
-        noteGroup.translate(noteGroupXCoord, 0);
-        //SetTransform(auxLinesGroup, { translate: [noteGroupXCoord, 0] });
-        auxLinesGroup.translate(noteGroupXCoord, 0);
+        if(dotBox.width > 0) {
+            currWidth += dotBox.width + DOT_NOTES_GAP;  //update the currwidth variable
+            dotsGroupXCoord = noteGroupXCoord + noteBox.width + DOT_NOTES_GAP;  //set the dots group x coordinate
+        }
+
+        noteGroup.translate(noteGroupXCoord, 0);    //translate the notes to their positions
+        auxLinesGroup.translate(noteGroupXCoord, 0);    //translate the aux lines to their positions
+        dotsGroup.translate(dotsGroupXCoord, 0);    //translate the dots to their positions
     }
 
     function setAccidentPositions(lowValue) {
@@ -551,7 +579,7 @@ ScoreBuilder.Chord = function(chordDen) {
 
                 //xCoord must be offseted
                 //hard code note x offset for adjacent
-                finalXCoord = chordDenominator == 1 ? 21 : 17;
+                finalXCoord = chordDenominator <= 1 ? 21 : 17;
                 //We must do this little hack since stem order chooses whether offset will be right or left
                 finalXCoord *= -posListIncValue;    //and the iteration inc has the inverted logic for this
                 //reset the prev valid note cause it is not necessary for the next one to move since this one moved
@@ -568,7 +596,7 @@ ScoreBuilder.Chord = function(chordDen) {
     }
 
     function setStemLine(downStemFlag, lowValue, highValue) {
-        if(downStemFlag == undefined || chordDenominator < 2 || notes.getValidLength() == 0) {  //if the chord den is less than 2,
+        if(downStemFlag == undefined || chordDenominator <= 1 || notes.getValidLength() == 0) {  //if the chord den is less than 2,
             setStemLineObj();   //void call to clear any stem line
             return; //do not and proceed the next chord (return)
         }
@@ -578,8 +606,8 @@ ScoreBuilder.Chord = function(chordDen) {
             finalStemCoord, //value of the final coord of the stem line
             additionalStemLength = 0;    //variable to add the additional length to the stem when more than two flags is needed
         
-        //if we got more than 2 flags at the note/chord (denominator >= 32)    
-        if(chordDenominator >= 32) {
+        //if we got more than 2 flags at the note/chord (denominator > 16)    
+        if(chordDenominator > 16) {
             additionalStemLength = 2;    //aditional length receives 2
             for(var i = 64 ;; i *= 2) { //increase aux var to verify how much additional space to add
                 if(chordDenominator < i || i > 1000) //safety condition
@@ -636,8 +664,8 @@ ScoreBuilder.Chord = function(chordDen) {
     }
 
     function setChordFlag(downStemFlag, finalStemCoord) {
-        //if no arguments are supplied, or denominator greater than 8, clear the flag and return
-        if(downStemFlag == undefined || chordDenominator < 8) { 
+        //if no arguments are supplied, or denominator greater than 4, clear the flag and return
+        if(downStemFlag == undefined || chordDenominator <= 4) { 
             if(flag.parentElement)  //if the flag element is appended
                 flag.parentElement.removeChild(flag);   //remove it
                 return; //do nothing else and return
@@ -652,6 +680,47 @@ ScoreBuilder.Chord = function(chordDen) {
         } else {
             flag.translate(17, finalStemCoord - 1);
             //SetTransform(flag, { translate: [17, finalStemCoord - 1] });
+        }
+    }
+
+    //function to set the dots of the chord
+    function setDots() {
+        //Remove dot elements currently appended to the dots group
+        var dotsGroupChildren = dotsGroup.children; //get array of members
+        while(dotsGroupChildren.length > 0)
+            dotsGroup.removeChild(dotsGroupChildren[0]);
+
+        //Check the chord denominator to detect whether it got dots or not
+        if(chordDots == 0)
+            return;
+
+        //If no start line has been passed, set the dot for the rest element
+        if(notes.getValidLength() == 0) {
+            var restDot = DrawDot(chordDots);
+            restDot.translate(0, 3 * LINE_OFFSET);
+            dotsGroup.appendChild(restDot);
+            return;
+        }
+
+        var dotsTable = [];
+        //iterate thru notes array to populate the dots table
+        for(var i = 0; i < notes.length; i++) {
+            if(!notes[i]) continue; //if the current note is note valid, proceed next iteration
+
+            var currYCoord = notes[i].yCoord;   //get the y coordinate value of the note
+            if(currYCoord.isEven())    //if the value is even 
+                currYCoord++;   //subtract one unit
+            
+            //if the current coordinate is not @ the dots table
+            if(dotsTable.indexOf(currYCoord) == -1)
+                dotsTable.push(currYCoord); //add it 
+        }
+
+        //iterate thru the dots table
+        for(var j = 0; j < dotsTable.length; j++) {
+            var noteDot = DrawDot(chordDots);   //get the dot draw
+            dotsGroup.appendChild(noteDot); //append it to the dots group
+            noteDot.translate(0, dotsTable[j] * LINE_OFFSET);   //translate to its position
         }
     }
 
@@ -677,11 +746,11 @@ ScoreBuilder.Chord = function(chordDen) {
             if(lowValue < LINE_LOW_POS) {  //if the score over flow thru the upper part                                     
                 for(var lineYCoord = LINE_LOW_POS; lineYCoord > lowValue; lineYCoord -= 2) {
                     if(lowAdjValue < lineYCoord) {
-                        lineStartCoord = chordDenominator == 1 ? -25 : -21;
-                        lineEndCoord = chordDenominator == 1 ? 53 : 43;
+                        lineStartCoord = chordDenominator <= 1 ? -25 : -21;
+                        lineEndCoord = chordDenominator <= 1 ? 53 : 43;
                     } else {
-                        lineStartCoord = chordDenominator == 1 ? -4 : -4;
-                        lineEndCoord = chordDenominator == 1 ? 32 : 26;
+                        lineStartCoord = chordDenominator <= 1 ? -4 : -4;
+                        lineEndCoord = chordDenominator <= 1 ? 32 : 26;
                     }
                     dAtt += "M" + lineStartCoord + ", " + lineYCoord * LINE_OFFSET + "l0,0," + lineEndCoord + ",0";
                 }
@@ -689,11 +758,11 @@ ScoreBuilder.Chord = function(chordDen) {
             if(highValue > LINE_HIGH_POS) {  //if the score over flow thru the lower part
                 for(var lineYCoord = LINE_HIGH_POS + 2; lineYCoord <= highValue + 1; lineYCoord += 2) {
                     if(highAdjValue + 1 >= lineYCoord) {
-                        lineStartCoord = chordDenominator == 1 ? -25 : -21;
-                        lineEndCoord = chordDenominator == 1 ? 53 : 43;
+                        lineStartCoord = chordDenominator <= 1 ? -25 : -21;
+                        lineEndCoord = chordDenominator <= 1 ? 53 : 43;
                     } else {
-                        lineStartCoord = chordDenominator == 1 ? -4 : -4;
-                        lineEndCoord = chordDenominator == 1 ? 32 : 26;
+                        lineStartCoord = chordDenominator <= 1 ? -4 : -4;
+                        lineEndCoord = chordDenominator <= 1 ? 32 : 26;
                     }
                     dAtt += "M" + lineStartCoord + ", " + lineYCoord * LINE_OFFSET + "l0,0," + lineEndCoord + ",0";
                 }
@@ -704,18 +773,18 @@ ScoreBuilder.Chord = function(chordDen) {
             if(lowValue < LINE_LOW_POS) {  //if the score over flow thru the upper part                                     
                 for(var lineYCoord = LINE_LOW_POS; lineYCoord > lowValue; lineYCoord -= 2) {
                     if(lowAdjValue < lineYCoord)
-                        lineEndCoord = chordDenominator == 1 ? 53 : 43;
+                        lineEndCoord = chordDenominator <= 1 ? 53 : 43;
                     else
-                        lineEndCoord = chordDenominator == 1 ? 32 : 26;
+                        lineEndCoord = chordDenominator <= 1 ? 32 : 26;
                     dAtt += "M" + lineStartCoord + ", " + lineYCoord * LINE_OFFSET + "l0,0," + lineEndCoord + ",0";
                 }
             } 
             if(highValue > LINE_HIGH_POS) {  //if the score over flow thru the lower part                     
                 for(var lineYCoord = LINE_HIGH_POS + 2; lineYCoord <= highValue + 1; lineYCoord += 2) {
                     if(highAdjValue + 1 >= lineYCoord)
-                        lineEndCoord = chordDenominator == 1 ? 54 : 43;
+                        lineEndCoord = chordDenominator <= 1 ? 54 : 43;
                     else
-                        lineEndCoord = chordDenominator == 1 ? 33 : 26;
+                        lineEndCoord = chordDenominator <= 1 ? 33 : 26;
                     dAtt += "M" + lineStartCoord + ", " + lineYCoord * LINE_OFFSET + "l0,0," + lineEndCoord + ",0";
                 }
             }  
