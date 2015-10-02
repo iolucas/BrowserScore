@@ -27,15 +27,15 @@ ScoreBuilder.ScorePart = function(partAttributes) {
     }
 
     this.GetClef = function() {
-        return partAttributes.clef;
+        return partAttributes["clef"];
     }
 
     this.GetTimeSig = function() {
-        return partAttributes.timeSig;
+        return partAttributes["time"];
     }
 
     this.GetKeySig = function() {
-        return partAttributes.keySig;
+        return partAttributes["key"];
     }
 
     this.ForEachMeasure = function(action, index) {

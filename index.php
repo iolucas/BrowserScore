@@ -216,15 +216,26 @@
                 
                 mObj2.MoveTo(200, obj1Box.height - obj1Box.y + 100);*/
 
-                var sPart1 = new ScoreBuilder.ScorePart();
+                //MUST PASS CONTROL OF THE CLEF, KEY AND TIME TO THE MEASURE
+                //SIMPLIFY OBJECTS SUCH KEY.FIFHTS TO JUST KEY (NOT EVENT KEEP AS OBJECTS, BUT VARIABLES)
+
+
+
+                var timeObj = {}
+                timeObj["beats"] = 4;
+                timeObj["beat-type"] = 4;
+
+                var keyObj = { fifths: 5 }
+
+                var sPart1 = new ScoreBuilder.ScorePart({clef:{sign: "G"}, time: timeObj, key: keyObj });
                 sPart1.InsertMeasure(mObj1);
                 sPart1.InsertMeasure(mObj2);
 
-                var sPart2 = new ScoreBuilder.ScorePart();
+                var sPart2 = new ScoreBuilder.ScorePart({clef:{sign: "F"}, time: timeObj, key: keyObj });
                 sPart2.InsertMeasure(mObj3);
                 sPart2.InsertMeasure(mObj4);
 
-                var sPart3 = new ScoreBuilder.ScorePart();
+                var sPart3 = new ScoreBuilder.ScorePart({clef:{sign: "C"}, time: timeObj, key: keyObj });
                 sPart3.InsertMeasure(mObj5);
                 sPart3.InsertMeasure(mObj6);
 
@@ -321,7 +332,7 @@
                 console.log(chordObj.GetBackLength());
                 console.log(chordObj.GetFrontLength());*/
             }
-
+/*
             function GetLinesBeta(measureGroups) {
                 var totalFixedLength = 0,   //variable to keep the total fixed length of all the measure groups
                     totalDenSum = 0,    //variable to keep the total denominators sum of all the measure groups
@@ -465,7 +476,7 @@
                     nextPosition += unitFactor / timeArr[l].highDen + timeArr[l].backLength + timeArr[l].frontLength; 
                 }
                 
-            }
+            }*/
 
             function getMeasureR() {
                 var measureObj = new ScoreBuilder.Measure(),
