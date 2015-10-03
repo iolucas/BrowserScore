@@ -8,14 +8,6 @@ if(!ScoreBuilder) var ScoreBuilder = new Object();
 //-----------------------------------------------------------
 
 ScoreBuilder.ScoreGroup = function() {
-    //Creates a new score line passing the line length and the minimum measure length to be kept in a line, otherwise it will overflow
-
-    //KEEP WRITING THIS SCORE GROUP CLASS 
-    //IT WILL ALLOCATE MEASURES TO THE LINES AN ORGANIZE AND SYNC LINES
-
-    //TIME SIGS WILL BE CHOOSED BASED ON THE FIRST SCORE PART
-    //BARS WILL BE BASED ON THE FIRST SCORE PART, ONLY IN CASE OF REPEAT THAT HAS CIRCLES WILL BE USED THE MEASURE GROUP TO CREATE, 
-    //THE OTHER BARS WILL BE PUTTED AT THE MEASURE GROUP
 
     var selfRef = this,
 
@@ -26,7 +18,8 @@ ScoreBuilder.ScoreGroup = function() {
     var SCORE_LINE_LEFT_MARGIN = 10,
         SCORE_LINE_HEADER_MARGIN = 10,
         //SCORE_LINE_LENGTH = 1500,
-        SCORE_TOP_MARGIN = 50; //min value for a top margin for the scores
+        SCORE_TOP_MARGIN = 50, //min value for a top margin for the scores
+        MEASURE_LEFT_MARGIN = 20;  //constante value for the left margin of the measure
 
     /*var debRect1 = $G.create("rect");
     debRect1.setAttribute("fill", "green");
@@ -89,36 +82,35 @@ ScoreBuilder.ScoreGroup = function() {
     }
 
     this.Organize = function() {
-        //MUST GENERATE THE MEASURES GROUPS (PROBABLY ADD TO THEM WHEN THE SCORE PART IS JUST ADDED)
-        //BE WARNED TO WHEN A MIDDLE MEASURE IS INSERTED AT THE SCORE PART (PARTMODIFIED FLAG IS NEEDED)
-
-        //SCORE PART MUST ORGANIZE THE MEASURES POSITIONS
 
         //Measure group array
         var measureGroups = [];
-        //var biggestHeaderLength = 0;
         var linesHeaderMargin = 0;
 
-        //iterate thru all score parts and populate the measure groups
+        //iterate thru all score parts and populate the measure groups array
         scoreParts.ForEach(function(part) {
             var partHeaderObj = drawScoreLineHeader({clef: part.GetClef(), key: part.GetKeySig(), time: part.GetTimeSig() }),
                 partObjBox = partHeaderObj.getBBox(),
-                partObjWidth = partObjBox.width + partObjBox.x;
+                partObjWidth = partObjBox.width + partObjBox.x; //get current part header total width
 
+            //if the current part header width is higher than the current header width
             if(partObjWidth > linesHeaderMargin)
-                linesHeaderMargin = partObjWidth;
+                linesHeaderMargin = partObjWidth;   //set the current part header width as the new one
 
             var mGroupInd = 0;  //var to store the measure groups index
             //iterate thru the measures of the current part
             part.ForEachMeasure(function(measure) {
+                //if the measure index is not created at the measure group index,
                 if(!measureGroups[mGroupInd])
-                    measureGroups[mGroupInd] = new ScoreBuilder.MeasureGroup();
-                        
+                    measureGroups[mGroupInd] = new ScoreBuilder.MeasureGroup(); //create it 
+
+                //add the current measure to its correspondent index @ the measure group
                 measureGroups[mGroupInd].AddMeasure(measure);
-                mGroupInd++;
+                mGroupInd++;    //increase the measure group indexer
             });
         });
 
+        //Add to the current header width the constant margin of the line header
         linesHeaderMargin += SCORE_LINE_HEADER_MARGIN;
        
         //Determine which line each measure group is will be place on
@@ -138,9 +130,24 @@ ScoreBuilder.ScoreGroup = function() {
 
         for(var a = 0; a < measureGroups.length; a++) {
 
-            measureGroups[a].Organize();    //ensure they are organized
+            measureGroups[a].Organize();    //ensure the current measure is organized
+
+            //check whether this measure group have bars and accumulate their sizes
+            var startBarWidth = 0,
+                endBarWidth = 0;
+
+            if(measureGroups[a].GetStartBar())
+                startBarWidth = DrawBar(measureGroups[a].GetStartBar()).getBBox().width;
+            if(measureGroups[a].GetEndBar())
+                endBarWidth = DrawBar(measureGroups[a].GetEndBar()).getBBox().width;
+
+            measureGroups[a].startBarWidth = startBarWidth; //get bars margin value to posterior use
+            measureGroups[a].endBarWidth = endBarWidth; //get bars margin value to posterior use
+
             //update the total fixed length with current measure group fixed length
-            currTotalFixedLength += measureGroups[a].GetFixedLength();  
+            var measureGroupTotalFixedWidth = MEASURE_LEFT_MARGIN + startBarWidth + measureGroups[a].GetFixedLength() + endBarWidth; 
+            
+            currTotalFixedLength += measureGroupTotalFixedWidth;  
             //update the current denominator sum with current measure group denominator sum
             currDenSum += measureGroups[a].GetDenominatorSum();
 
@@ -180,7 +187,7 @@ ScoreBuilder.ScoreGroup = function() {
                 currLinesInd++; //increase the current line index
                 measureGroupLines[currLinesInd] = [];   //inits the new line 
                 //set curr total fixed length 
-                currTotalFixedLength = linesHeaderMargin + measureGroups[a].GetFixedLength();
+                currTotalFixedLength = linesHeaderMargin + measureGroupTotalFixedWidth;
                 //set curr den sum 
                 currDenSum = measureGroups[a].GetDenominatorSum(); 
                 //update curr unit value
@@ -212,6 +219,9 @@ ScoreBuilder.ScoreGroup = function() {
                 currMGroup.SetChordsPositions(measureGroupLines[c].denUnitValue);
 
                 var currInd = 0;    //variable to control the index of the visual lines
+
+                //Add the start bar position value to the next position
+                nextMeasurePosition += MEASURE_LEFT_MARGIN + currMGroup.startBarWidth;
 
                 //iterate thru the measures of the current measure group
                 currMGroup.ForEachMeasure(function(measure) {
@@ -248,7 +258,7 @@ ScoreBuilder.ScoreGroup = function() {
                 });
 
                 //update the next measure position pointer
-                nextMeasurePosition += currMGroup.GetWidth();    
+                nextMeasurePosition += currMGroup.GetWidth() + currMGroup.endBarWidth;    
             }
 
             generalBetaLines.push(betaLines);   //put this array of visual lines in the general beta lines array

@@ -88,8 +88,8 @@ ScoreBuilder.Chord = function(chordDen, dots) {
 
     //ensures the currwidth variable is initiated with the rest symbol
     //currWidth = rest.getBBox().width;
-    setDots(); //set the dots of the rest if needed
-    setChordPositions();    //ensure the dot is in the right place
+    //setDots(); //set the dots of the rest if needed
+    //setChordPositions();    //ensure the dot is in the right place
 
     //NoteGroup debug rect
     //var noteRect = $G.create("rect");
@@ -172,9 +172,9 @@ ScoreBuilder.Chord = function(chordDen, dots) {
             accidentGroup.appendChild(note.accidentDraw);   //append the accident drawing to the group if some
         }
 
-        note.noteDraw.addEventListener("click", function(){
+        /*note.noteDraw.addEventListener("click", function(){
             console.log(note);
-        });
+        });*/
 
         notes.push(note);   //add the new note object to the notes array
 
@@ -278,6 +278,7 @@ ScoreBuilder.Chord = function(chordDen, dots) {
             setAuxLines(); //remove all the aux lines
             setDots();
             setChordPositions();    //organize chord elements positions
+            updateMiddleCoord();
             return; //do nothing else and return
         }
 
@@ -369,6 +370,7 @@ ScoreBuilder.Chord = function(chordDen, dots) {
     //--------------------------------------------------------------------------------
 
     function updateMiddleCoord() {
+
         var headMiddleOffset; //variable to keep the middle of the note element (notes or rest)
         if(notes.getValidLength() == 0) //if there is no note, only rest, is enough to get the half of the note group
             headMiddleOffset = noteGroup.getBBox().width / 2;

@@ -140,8 +140,10 @@
                     mObj6 = new ScoreBuilder.Measure(), //getMeasureR();
 
                     cObj1 = new ScoreBuilder.Chord(2),
-                    cObj2 = new ScoreBuilder.Chord(4, 1),
-                    cObj3 = new ScoreBuilder.Chord(8),
+                    cObj2 = new ScoreBuilder.Chord(4, 2),
+                    cObj3 = new ScoreBuilder.Chord(16),
+
+                    cObj4 = new ScoreBuilder.Chord(4),
 
 
                     c1Coll = [
@@ -155,17 +157,17 @@
                         new ScoreBuilder.Chord(8)
                     ],
                     c2Coll = [
+                        new ScoreBuilder.Chord(4),
+                        new ScoreBuilder.Chord(4),
+                        new ScoreBuilder.Chord(4),
+                        /*new ScoreBuilder.Chord(8),
                         new ScoreBuilder.Chord(8),
                         new ScoreBuilder.Chord(8),
-                        new ScoreBuilder.Chord(8),
-                        new ScoreBuilder.Chord(8),
-                        new ScoreBuilder.Chord(8),
-                        new ScoreBuilder.Chord(8),
-                        new ScoreBuilder.Chord(8),
-                        new ScoreBuilder.Chord(8)
+                        new ScoreBuilder.Chord(8),*/
+                        new ScoreBuilder.Chord(4)
                     ],
                     c3Coll = [
-                        new ScoreBuilder.Chord(4),
+                        cObj4,
                         new ScoreBuilder.Chord(4),
                         new ScoreBuilder.Chord(4),
                         new ScoreBuilder.Chord(4)
@@ -194,13 +196,15 @@
                     mObj5.AddChordCollection(c5Coll);
                     mObj6.AddChordCollection(c6Coll);
 
-                cObj1.AddNote({n: "E", o: 5 });
+                cObj1.AddNote({n: "E", o: 5 , a: "flat-flat"});
 
-                /*cObj2.AddNote({n: "E", o: 5 });
-                cObj2.AddNote({n: "C", o: 0 });*/
+                cObj2.AddNote({n: "E", o: 5 });
+                cObj2.AddNote({n: "C", o: 5 });
 
                 cObj3.AddNote({n: "C", o: 4 }); 
 
+
+                cObj4.AddNote({n: "G", o: 4 }); 
 
                 /*cObj1.AddNote({n: "A", o: 4, a: getRandomAccident() });     
                 cObj2.AddNote({n: "B", o: 4, a: getRandomAccident() });
@@ -216,6 +220,11 @@
 
 
 
+
+                //DrawBar(bartype)
+
+
+
                 /*mObj2.InsertChord(cObj7);
 
                 mObj4.InsertChord(cObj8);*/
@@ -224,12 +233,17 @@
                 mObj2.SetStartBar("repeat_f");
                 mObj3.SetStartBar("repeat_f");
                 mObj4.SetStartBar("repeat_f");*/
-                mObj1.SetEndBar("simple");
-                mObj2.SetEndBar("end");
-                mObj3.SetEndBar("simple");
-                mObj4.SetEndBar("end");
-                mObj5.SetEndBar("simple");
-                mObj6.SetEndBar("end");
+                
+                //mObj1.SetEndBar("simple");
+
+                mObj1.betaEndBar = "simple";
+                mObj2.betaEndBar = "simple";
+
+                //mObj2.SetEndBar("end");
+                //mObj3.SetEndBar("simple");
+                //mObj4.SetEndBar("end");
+                //mObj5.SetEndBar("simple");
+                //mObj6.SetEndBar("end");
 
 
 
@@ -274,8 +288,8 @@
 
                 var sGroup1 = new ScoreBuilder.ScoreGroup();
                 sGroup1.InsertPart(sPart1);
-                sGroup1.InsertPart(sPart2);
-                sGroup1.InsertPart(sPart3);
+                //sGroup1.InsertPart(sPart2);
+                //sGroup1.InsertPart(sPart3);
 
                 
 
