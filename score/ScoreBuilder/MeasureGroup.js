@@ -16,8 +16,10 @@ ScoreBuilder.MeasureGroup = function() {
         leftMargin = 0, //left margin to be used for start positioning chord at the measures
         currWidth = 0,  //variable to store the measure group current width
         fixedLength = 0,   //variable to store the fixed length of this measure group, including chords size, bars and margins
+        endBarWidth = 0,
         //factor to multiply denominators to get times as integers (biggest denominator expected)
-        CHORD_ARRAY_FACTOR = 128;
+        CHORD_ARRAY_FACTOR = 128,
+        MEASURE_LEFT_MARGIN = 20;  //constante value for the left margin of the measure
 
     this.GetWidth = function() {
         return currWidth;
@@ -66,7 +68,7 @@ ScoreBuilder.MeasureGroup = function() {
     var currStartBar,
         currEndBar;
 
-    MUST DRAW BARS @ THE SCORE GROUP, BUT MARGINS AND BARS WIDTH MUST BE ADDED HERE TO THE CURR WIDTH OF THE MEASURE GROUP
+    //MUST DRAW BARS @ THE SCORE GROUP, BUT MARGINS AND BARS WIDTH MUST BE ADDED HERE TO THE CURR WIDTH OF THE MEASURE GROUP
 
     this.GetStartBar = function() {
         return currStartBar;
@@ -98,7 +100,7 @@ ScoreBuilder.MeasureGroup = function() {
                 chordsTimeArray[chordTime].backLength + chordsTimeArray[chordTime].frontLength; 
         }
 
-        var endBarWidth = 0;    //variable to get the end bar size
+        //var endBarWidth = 0;    //variable to get the end bar size
         //iterate thru the measures and update its bar position
         /*for(var i = 0; i < measures.length; i++) {
             if(!measures[i]) //if the measure is not valid
@@ -109,15 +111,16 @@ ScoreBuilder.MeasureGroup = function() {
                 endBarWidth = currBarWidth;
         }*/
 
-        //update curr length variable of this measure group with the bar length
+        //update curr length variable of this measure group with the end bar length
         currWidth = nextPosition + endBarWidth;
     }
 
     //Generate time array for this measureGroup and other stuff
     this.Organize = function() {
 
-        leftMargin = 0; //clear the left margin
-        fixedLength = 0;    //clear the fixed length
+        leftMargin = MEASURE_LEFT_MARGIN; //reset the left margin
+        fixedLength = MEASURE_LEFT_MARGIN;    //reset the fixed length
+        endBarWidth = 0;    //reset the end bar width variable
         denominatorSum = 0; //clear the denominator sum
 
         currStartBar = null;    //clear curr start bar
@@ -137,20 +140,29 @@ ScoreBuilder.MeasureGroup = function() {
             measures[i].Organize(); //ensure current measure is organized
 
             //if the currStartBar hasn't been set and the current measure got a valid start bar value
-            if(!currStartBar && measures[i].betaStartBar)
-                currStartBar = measures[i].betaStartBar;
+            if(!currStartBar && measures[i].betaStartBar) {
+                currStartBar = measures[i].betaStartBar;    //set the current start bar variable
+                //get the bar width and add to the fixed length and left margin
+                var currStartBarWidth = DrawBar(currStartBar, [0, 1]).getBBox().width;
+                leftMargin += currStartBarWidth;
+                fixedLength += currStartBarWidth;
+            }
 
             //if the currEndBar hasn't been set and the current measure got a valid end bar value
-            if(!currEndBar && measures[i].betaEndBar)
+            if(!currEndBar && measures[i].betaEndBar) {
                 currEndBar = measures[i].betaEndBar;
+                //get the bar width and add
+                endBarWidth = DrawBar(currEndBar, [0, 1]).getBBox().width;
+                fixedLength += endBarWidth;   
+            }
 
             //set the highest left margin has the left margin
             /*var currLeftMargin = measures[i].GetLeftMargin();   
             if(currLeftMargin > leftMargin)
-                leftMargin = currLeftMargin; 
+                leftMargin = currLeftMargin;*/ 
 
             //set the highest fixed length as the fixed length
-            var currFixedLength = measures[i].GetFixedLength();
+            /*var currFixedLength = measures[i].GetFixedLength();
             if(currFixedLength > fixedLength)    
                 fixedLength = currFixedLength;*/
 

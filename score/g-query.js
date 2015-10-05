@@ -65,11 +65,11 @@ SVGGeometryElement.prototype.setStrokeColor = function(color) {
 }
 
 SVGGeometryElement.prototype.getStrokeColor = function() {
-    return this.getAttribute("stroke-width");
+    return this.getAttribute("stroke");
 }
 
 SVGGeometryElement.prototype.setStrokeWidth = function(width) {
-    this.setAttribute("stroke", width);
+    this.setAttribute("stroke-width", width);
 }
 
 SVGGeometryElement.prototype.getStrokeWidth = function() {

@@ -56,7 +56,7 @@ ScoreBuilder.Chord = function(chordDen, dots) {
     refRect.setAttribute("fill", "rgba(0,0,255,.5)");
     refRect.setAttribute("height", 12); 
     refRect.setAttribute("width", 12);
-    chordGroup.appendChild(refRect);
+    //chordGroup.appendChild(refRect);
 
     /*
     var accRect = document.createElementNS(xmlns, "rect");

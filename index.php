@@ -53,7 +53,7 @@
                 var debRect1 = $G.create("rect");
                 debRect1.setAttribute("fill", "yellow");
                 debRect1.setAttribute("height", 10);
-                debRect1.setAttribute("width", 1000);
+                debRect1.setAttribute("width", 1500);
                 debRect1.translate(10);
                 svgContainer.appendChild(debRect1);
 
@@ -140,8 +140,8 @@
                     mObj6 = new ScoreBuilder.Measure(), //getMeasureR();
 
                     cObj1 = new ScoreBuilder.Chord(2),
-                    cObj2 = new ScoreBuilder.Chord(4, 2),
-                    cObj3 = new ScoreBuilder.Chord(16),
+                    cObj2 = new ScoreBuilder.Chord(4, 1),
+                    cObj3 = new ScoreBuilder.Chord(8),
 
                     cObj4 = new ScoreBuilder.Chord(4),
 
@@ -237,7 +237,13 @@
                 //mObj1.SetEndBar("simple");
 
                 mObj1.betaEndBar = "simple";
-                mObj2.betaEndBar = "simple";
+                mObj2.betaEndBar = "end";
+                //mObj1.betaStartBar = "repeat_f";
+                //mObj2.betaStartBar = "repeat_f";
+
+                //console.log(describeArc(100, 100, 30, 0, 270));
+
+                //MUST CREATE ROUTINE TO DRAW THE MEASURE BARS @ THE SCORE GROUP
 
                 //mObj2.SetEndBar("end");
                 //mObj3.SetEndBar("simple");
@@ -288,14 +294,16 @@
 
                 var sGroup1 = new ScoreBuilder.ScoreGroup();
                 sGroup1.InsertPart(sPart1);
-                //sGroup1.InsertPart(sPart2);
-                //sGroup1.InsertPart(sPart3);
+                sGroup1.InsertPart(sPart2);
+                sGroup1.InsertPart(sPart3);
 
                 
 
                 svgContainer.appendChild(sGroup1.Draw());
                 sGroup1.Organize();
                 sGroup1.MoveTo(10, 10.5);
+
+                //svgContainer.appendChild(DrawBar("simple", 100));
 
                 mObj1.Draw().addEventListener("click", function(){
                     mObj1.InsertChord(getChordR());

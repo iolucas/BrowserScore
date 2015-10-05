@@ -450,100 +450,81 @@ function DrawNoteAtt(element) {
 }
 
 
-function DrawBar(bar) {
-    var barGroup = $G.create("g");
+function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+  var angleInRadians = (angleInDegrees-90) * Math.PI / 180.0;
+
+  return {
+    x: centerX + (radius * Math.cos(angleInRadians)),
+    y: centerY + (radius * Math.sin(angleInRadians))
+  };
+}
+
+function describeArc(x, y, radius, startAngle, endAngle){
+
+    var start = polarToCartesian(x, y, radius, endAngle);
+    var end = polarToCartesian(x, y, radius, startAngle);
+
+    var arcSweep = endAngle - startAngle <= 180 ? "0" : "1";
+
+    var d = [
+        "M", start.x, start.y, 
+        "A", radius, radius, 0, arcSweep, 0, end.x, end.y
+    ].join(" ");
+
+    return d;       
+}
+
+
+function DrawBar(bar, barCoords) {
+
+    var barObj = $G.create("path"),
+        barPath = "",
+        topCoord = barCoords[0],
+        height = barCoords[barCoords.length - 1] + 60 - topCoord;
 
     switch(bar) {
         case "simple":
-            var simpleBar = getBarElem("light");
-            barGroup.appendChild(simpleBar);
-            break;
-
-        case "end":
-            var lightBar = getBarElem("light"),
-                heavyBar = getBarElem("heavy");
-            heavyBar.translate(7);
-            barGroup.appendChild(lightBar);
-            barGroup.appendChild(heavyBar); 
-            break;
-
-        case "repeat_b":
-            var lightBar = getBarElem("light"),
-                heavyBar = getBarElem("heavy"),
-                dots = getBarElem("dots");
-            lightBar.translate(10);
-            heavyBar.translate(17);
-            barGroup.appendChild(dots);
-            barGroup.appendChild(lightBar);
-            barGroup.appendChild(heavyBar);
-            break;
-
-        case "repeat_f":
-            var lightBar = getBarElem("light"),
-                heavyBar = getBarElem("heavy"),
-                dots = getBarElem("dots");
-            lightBar.translate(12);
-            dots.translate(17);
-            barGroup.appendChild(heavyBar);
-            barGroup.appendChild(lightBar);
-            barGroup.appendChild(dots);
+            barPath += "M0,0v" + height;
             break;
 
         case "double":
-            var light1 = getBarElem("light"),
-                light2 = getBarElem("light");
-            light2.translate(7, 0);
-            barGroup.appendChild(light1);
-            barGroup.appendChild(light2);
+            barPath += "M0,0v" + height + "M6,0v" + height;
             break;
 
         case "dashed":
-            var dashed = getBarElem("dashed");
-            barGroup.appendChild(dashed);
+            barObj.setAttribute("stroke-dasharray", "7, 4");
+            barPath += "M0,0v" + height;
             break;
+
+        case "end":
+            barPath += "M0,0v" + height + "M6,0v" + height + "h6v-" + height + "z";
+            break;
+
+        case "repeat_f":
+            barPath += "M0,0v" + height + "h6v-" + height + "zM12,0v" + height;
+            for(var coord = 0; coord < barCoords.length; coord++) {
+                barPath += describeArc(18, barCoords[coord] - topCoord + 22.5, 2, 0, 359);
+                barPath += describeArc(18,barCoords[coord] - topCoord + 37.5,2, 0, 359);
+            }
+            break;
+
+        case "repeat_b":
+            for(var coord = 0; coord < barCoords.length; coord++) {
+                barPath += describeArc(1, barCoords[coord] - topCoord + 22.5, 2, 0, 359);
+                barPath += describeArc(1,barCoords[coord] - topCoord + 37.5,2, 0, 359);
+            }
+            barPath += "M7,0v" + height + "M13,0v" + height + "h6v-" + height + "z";
+            break;
+
 
         default:
             throw "INVALID_BAR_TO_DRAW";
     }
 
-    return barGroup;
+    barObj.setStrokeColor("#000");
+    barObj.setAttribute("d", barPath);
+    return barObj;
 
-    function getBarElem(elem) {
-        var barElem;
-        switch(elem) {
-            case "light":
-                barElem = $G.create("rect");
-                barElem.setAttribute("height", 60);
-                barElem.setAttribute("width", 1);
-            break;
-
-            case "heavy":
-                barElem = $G.create("rect");
-                barElem.setAttribute("height", 60);
-                barElem.setAttribute("width", 6);
-            break;
-
-            case "dots":
-                var dot1 = $G.create("circle"),
-                    dot2 = $G.create("circle");
-                dot1.setAttribute("r", 3);
-                dot2.setAttribute("r", 3);
-                dot1.translate(3, 22.5);
-                dot2.translate(3, 37.5);
-                barElem = $G.create("g");
-                barElem.appendChild(dot1);
-                barElem.appendChild(dot2);
-                break;
-
-            case "dashed":
-                barElem = $G.create("line");
-                barElem.setAttribute("y2", 60);
-                barElem.setAttribute("stroke", "#000");
-                barElem.setAttribute("stroke-dasharray", "7, 4");
-                break;
-        }
-        return barElem;
-    }
 }
 
 
