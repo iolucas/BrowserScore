@@ -21,11 +21,11 @@ ScoreBuilder.ScoreGroup = function() {
         SCORE_TOP_MARGIN = 50; //min value for a top margin for the scores
 
 
-    /*var debRect1 = $G.create("rect");
+    var debRect1 = $G.create("rect");
     debRect1.setAttribute("fill", "green");
     debRect1.setAttribute("height", 15);
     debRect1.setAttribute("width", 15);
-    generalGroup.appendChild(debRect1);*/
+    generalGroup.appendChild(debRect1);
 
     this.Draw = function() {
         return generalGroup;
@@ -72,13 +72,12 @@ ScoreBuilder.ScoreGroup = function() {
             return selfRef.RemoveAt(position);
     }
 
-    //function createLine(attributes) {}
-
     this.Organize = function() {
 
         //Measure group array
-        var measureGroups = [];
-        var linesHeaderMargin = 0;
+        var measureGroups = [],
+            linesHeaderMargin = 0,
+            moreThanOnePartFlag = scoreParts.Count() > 1;   //flag signalizing whehter we got more than one part on this score group
 
         //iterate thru all score parts and populate the measure groups array
         scoreParts.ForEach(function(part) {
@@ -108,7 +107,7 @@ ScoreBuilder.ScoreGroup = function() {
        
         //Determine which line each measure group is will be place on
 
-        var LINE_WIDTH = 1500,  //constant value to be used to set the score line size
+        var LINE_WIDTH = 1480,  //constant value to be used to set the score line size
             MIN_MEASURE_WIDTH = 300;//constante value to be used to set measure min width
 
         var measureGroupLines = [];
@@ -196,14 +195,11 @@ ScoreBuilder.ScoreGroup = function() {
                 nextMeasurePosition = linesHeaderMargin,   //pointer to be used for measure positioning
                 measureGroupLine = measureGroupLines[c],    //current line of measure group
                 barsQueue = []; //queue to add the bars of this measure group that must be added
-
-                //lineGroup.barsQueue = [];   //array to store the bars to be draw at this line group
             
             //Iterate thru the current measure group line
             for(var d = 0; d < measureGroupLine.length; d++) {
                 var measureGroup = measureGroupLine[d],   //get the current measure group
                     currInd = 0;    //variable to control the index of the visual lines
-                    //firstMeasure = true;
 
                 //Set the measure group chord positions
                 measureGroup.SetChordsPositions(measureGroupLines[c].denUnitValue);
@@ -230,30 +226,14 @@ ScoreBuilder.ScoreGroup = function() {
                             headerObj = drawScoreLineHeader({
                                 clef: currPart.GetClef(), 
                                 key: currPart.GetKeySig(), 
-                                time: currPart.GetTimeSig()
+                                time: c == 0 ? currPart.GetTimeSig() : null //if its not the first line, hide the time sig obj
                             });
 
                         betaLines[currInd].appendChild(headerObj); //append header obj
 
                         var lineObj = DrawScoreLines(LINE_WIDTH); //create the score lines obj
                         betaLines[currInd].appendChild(lineObj); //append the lines to the lines group
-                    }
-
-                    //if this is the first measure of a measure group, 
-                    /*if(firstMeasure) {
-                        //Create a barObj array to store the bars data that will be appended to this line later 
-                        //and append this barObj array to the current bar line
-                        if(betaLines[currInd].barObjs == undefined)    
-                            betaLines[currInd].barObjs = [];    
-
-                        //push the measure group bars data to the current line
-                        betaLines[currInd].barObjs.push({ 
-                            start: measureGroup.GetStartBar(), 
-                            startCoord: nextMeasurePosition,
-                            end: measureGroup.GetEndBar(), 
-                            endCoord: nextMeasurePosition + measureGroup.GetWidth()
-                        });
-                    }*/       
+                    }    
                 
                     //append the current measure to the just create line
                     betaLines[currInd].appendChild(measure.Draw());
@@ -263,11 +243,9 @@ ScoreBuilder.ScoreGroup = function() {
 
                     currInd++;  //increase the line index
 
-                    //firstMeasure = false;
                 });
 
                 //update the next measure position pointer
-                //nextMeasurePosition += currMGroup.GetWidth() + currMGroup.endBarWidth;
                 nextMeasurePosition += measureGroup.GetWidth();  
             }
 
@@ -290,11 +268,23 @@ ScoreBuilder.ScoreGroup = function() {
                 nextVPos += betaLine.getBBox().height + 10;
             }
 
+            //Draw lines junction bar and bracket if more than one part
+            if(moreThanOnePartFlag) {
+                var linesJunctionBar = DrawBar("simple", linesCoords);
+                linesJunctionBar.translate(0, linesCoords[0]);
+                lineGroup.appendChild(linesJunctionBar);
+
+                var bracketObj = DrawBracket(linesCoords[linesCoords.length - 1] - linesCoords[0]);
+                bracketObj.fill("#222");
+                bracketObj.translate(-12, linesCoords[0]);
+                lineGroup.appendChild(bracketObj);
+            }
+
             //Now that everything is on positions, we add the features that are vertical position dependent, such score bars
             for(var i = 0; i < barsQueue.length; i++) {
                 var currBar = barsQueue[i],
                     barObj = DrawBar(currBar.bar, linesCoords);
-
+                    
                 //if the bar is a start bar
                 if(currBar.start)    
                     //translate to its position (the first line coord is the top)
@@ -307,7 +297,6 @@ ScoreBuilder.ScoreGroup = function() {
                 lineGroup.appendChild(barObj);
             }
 
-            //generalBetaLines.push(betaLines);   //put this array of visual lines in the general beta lines array
             generalBetaLines.push(lineGroup);
         }
 
@@ -316,179 +305,20 @@ ScoreBuilder.ScoreGroup = function() {
         while(groupChildren.length > 0)
             generalGroup.removeChild(groupChildren[0]);
 
+        //append debug rect again
+        generalGroup.appendChild(debRect1);
+
         //Organize lines groups vertically
         for(var i = 0, nextVPos = 0; i < generalBetaLines.length; i++) {
             var currLineGroup = generalBetaLines[i];    //get the line group reference
             generalGroup.appendChild(currLineGroup);    //append the line group to the general group
             var nextPosCeil = Math.ceil(nextVPos - currLineGroup.getBBox().y);    //round up every coordinate value
-            currLineGroup.translate(0, nextPosCeil);    //translate the line group to its positions
-            nextVPos += currLineGroup.getBBox().height + 90;    //increase the next v pos variable
+            currLineGroup.translate(12, nextPosCeil);    //translate the line group to its positions
+            nextVPos += currLineGroup.getBBox().height + 20;    //increase the next v pos variable
         }
 
-
-
-        return;
-
-        var nextVerticalPos = 0;    //variable to point to the vertical position
-
-        var betaBarDrawQueue = [];
-
-        for(var e = 0; e < generalBetaLines.length; e++) {
-        
-            var betaLines = generalBetaLines[e],
-                currBarObjRef = null;
-
-            //position lines vertically
-            for(var n = 0; n < betaLines.length; n++) {
-                generalGroup.appendChild(betaLines[n]);
-                var nextPosCeil = Math.ceil(nextVerticalPos - betaLines[n].getBBox().y);    //round up every coordinate
-                betaLines[n].translate(0, nextPosCeil);
-                nextVerticalPos += betaLines[n].getBBox().height + 10;
-
-                //if the current bar line got the bar objects, get the top coord
-                if(betaLines[n].barObjs) {
-                    currBarObjRef = betaLines[n].barObjs;
-                    currBarObjRef.lineCoords = [];
-                    betaBarDrawQueue.push(currBarObjRef);
-                }
-
-                //Push the current coordinate of the line to lineCoords array
-                //currBarObjRef.lineCoords.push(nextPosCeil);
-                /*betaLines[n].barObjs.topCoord = nextPosCeil;
-
-                //if its the last line, get the line coordinate, plus the standard high of the score line
-                if(n == betaLines.length - 1)
-                    betaBarDrawQueue[betaBarDrawQueue.length - 1].bottomCoord = nextPosCeil + 60; */   
-
-            }
-
-            nextVerticalPos += 90;
-        }
-
-
-
-        //MAYBE CREATE GROUPS FOR EACH BETALINES GROUP AND ADD BARS TO THEM
-
-        //Draw bar lines
-        /*for(var m = 0; m < betaBarDrawQueue.length; m++) {
-            //get the current bar obj array
-            var barObjArray = betaBarDrawQueue[m],
-                //get the current bar top coordinate
-                barTopCoord = barObjArray.lineCoords[0],
-                //get the current bar height (botom coord - top coord)
-                barSize = barObjArray.lineCoords[barObjArray.lineCoords.length - 1] + 60 - barTopCoord;
-            
-            for(var o = 0; o < barObjArray.length; o++) {
-                var barObj = barObjArray[o];
-                
-                if(barObj.start) {
-                    //var startBar = DrawBar(barObj.start, barSize);
-                    var startBar = DrawBar(barObj.start, barObjArray.lineCoords);
-                    generalGroup.appendChild(startBar); 
-                    startBar.translate(barObj.startCoord, barTopCoord);    
-                }
-
-                if(barObj.end) {
-                    //var endBar = DrawBar(barObj.end, barSize);
-                    var endBar = DrawBar(barObj.end, barObjArray.lineCoords);
-                    generalGroup.appendChild(endBar);
-                    endBar.translate(barObj.endCoord - endBar.getBBox().width, barTopCoord);    
-                } 
-            }
-        }*/
-
-
-        
-
-        /*var totalFixedLength = linesHeaderMargin,   
-        //variable to keep the total fixed length of all the measure groups
-            totalDenSum = 0;    //variable to keep the total denominators sum of all the measure groups
-            
-
-        //iterate thru the measure groups passed
-        for(var i = 0; i < measureGroupsLength; i++) {
-            measureGroups[i].Organize();    //ensure they are organized
-            //sum the curr measure group fixed length to the total fixed length
-            totalFixedLength += measureGroups[i].GetFixedLength();  
-            //sum the curr measure group den sum to the total denominator sum
-            totalDenSum += measureGroups[i].GetDenominatorSum();
-        }
-
-        //get the unit length to be used for chord positioning
-        var unitLength = (LINE_WIDTH - totalFixedLength) / totalDenSum;
-
-        //Iterate thry all measure groups
-        for(var j = 0; j < measureGroupsLength; j++) 
-            //set their chords positions according to the unit length value
-            measureGroups[j].SetChordsPositions(unitLength);*/
-
-
-
-
-        //set measures to their lines
-        /*var betaLines = [], //variable to store the visual lines group
-            nextMeasurePosition = linesHeaderMargin;   //pointer to be used for measure positioning
-
-        //Iterate thru all measures passed
-        for(var k = 0; k < measureGroupsLength; k++) {
-            
-            var currInd = 0;    //variable to control the index of the visual lines
-
-            //iterate thru the measures of the current measure group
-            measureGroups[k].ForEachMeasure(function(measure) {
-
-                //if the current indexed line is note created
-                if(betaLines[currInd] == undefined) {
-                   betaLines[currInd] = $G.create("g"); //create its group
-
-                    //get measure header and draw it
-                    var currPart = scoreParts.GetItem(currInd),
-                        headerObj = drawScoreLineHeader({
-                            clef: currPart.GetClef(), 
-                            key: currPart.GetKeySig(), 
-                            time: currPart.GetTimeSig()
-                        });
-
-                    betaLines[currInd].appendChild(headerObj); //append header obj
-
-                    var lineObj = $G.create("path"); //create the lines object
-                    lineObj.setAttribute("d", GetScoreLinesPath(LINE_WIDTH)); //draw the lines
-                    lineObj.setAttribute("stroke", "#000");  //set lines color
-                    betaLines[currInd].appendChild(lineObj); //append the lines to the lines group
-                }
-                
-                //append the current measure to the just create line
-                betaLines[currInd].appendChild(measure.Draw());
-
-                //Move the measure to the point specified by the next position pointer
-                measure.MoveTo(nextMeasurePosition);
-
-                currInd++;  //increase the line index
-
-                //console.log(measureGroups[k].GetMinDenUnitLength(300));
-            });
-
-            //update the next measure position pointer
-            nextMeasurePosition += measureGroups[k].GetWidth();                   
-        }*/
-
-
-
-        //var betaGroup = $G.create("g"); //create general group to put lines
-        /*var nextVerticalPos = 0;    //variable to point to the vertical position
-
-        var groupChildren = generalGroup.children;
-
-        //Remove all elements currently appended to the general group
-        while(groupChildren.length > 0)
-            generalGroup.removeChild(groupChildren[0]);
-
-        //position lines vertically
-        for(var n = 0; n < betaLines.length; n++) {
-           generalGroup.appendChild(betaLines[n]);
-           betaLines[n].translate(0, nextVerticalPos - betaLines[n].getBBox().y);
-           nextVerticalPos += betaLines[n].getBBox().height + 50;
-        }*/
+        //translate the general group to a fit position (CHECK WHY NOT WORKING)
+        //generalGroup.translate(-generalGroup.getBBox().x);
 
     }
 

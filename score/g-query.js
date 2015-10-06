@@ -52,11 +52,12 @@ if(!SVGGeometryElement)
     //Define it as the graphics element
     var SVGGeometryElement = SVGGraphicsElement;    
 
-SVGGeometryElement.prototype.setFill = function(color) {
+SVGGeometryElement.prototype.fill = function(color) {
     this.setAttribute("fill", color);
 }
+SVGGeometryElement.prototype.setFillColor = SVGGeometryElement.prototype.fill;
 
-SVGGeometryElement.prototype.getFill = function() {
+SVGGeometryElement.prototype.getFillColor = function() {
     return this.getAttribute("fill");
 }
 

@@ -238,8 +238,8 @@
 
                 mObj1.betaEndBar = "simple";
                 mObj2.betaEndBar = "end";
-                mObj1.betaStartBar = "repeat_f";
-                mObj2.betaStartBar = "repeat_f";
+                //mObj1.betaStartBar = "repeat_f";
+                //mObj2.betaStartBar = "repeat_f";
 
                 //console.log(describeArc(100, 100, 30, 0, 270));
 
@@ -278,7 +278,7 @@
                 timeObj["beats"] = 4;
                 timeObj["beat-type"] = 4;
 
-                var keyObj = { fifths: 5 }
+                var keyObj = { fifths: 1 }
 
                 var sPart1 = new ScoreBuilder.ScorePart({clef:{sign: "G"}, time: timeObj, key: keyObj });
                 sPart1.InsertMeasure(mObj1);

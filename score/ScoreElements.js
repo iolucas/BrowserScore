@@ -537,34 +537,17 @@ function DrawBar(bar, barCoords) {
 
 }
 
+function DrawBracket(height) {
+    var bracketObj = $G.create("path");
+    var absHeight = height + 60;
+    bracketObj.setStrokeColor("#000");
 
-function DrawMeasureElement(element) {
-    var mElem;  //var to store the measure element draw
+    var dPath = "M5,-5c3.479,0,15-9.762,15-12.709 C20,-15.921 4.639,-10, 0,-10 v" + 
+    (20 + absHeight).toString() + "c4.639,0,20,5.921,20,7.709 C 20," + 
+    (14.762 + absHeight).toString() + " 8.479," + 
+    (5 + absHeight).toString() + " 5," + 
+    (5 + absHeight).toString() + "z";
 
-    switch(element) {
-        case "SIMPLE_BAR":
-            mElem = document.createElementNS(xmlns, "line");  //create new line
-            mElem.setAttribute("y2", 60);
-            mElem.setAttribute("stroke", "#000");
-            break;
-
-        /*case "AUX_LINE1":
-            mElem = document.createElementNS(xmlns, "line");  //create new line
-            mElem.setAttribute("x2", 35);
-            mElem.setAttribute("stroke", "#000");
-            //mElem.setAttribute("stroke-width", "3");
-            break;
-
-        case "AUX_LINE2":
-            mElem = document.createElementNS(xmlns, "line");  //create new line
-            mElem.setAttribute("x2", 28);
-            mElem.setAttribute("stroke", "#000");
-            //mElem.setAttribute("stroke-width", "3");
-            break;*/
-
-        default:
-            throw "INVALID_MEASURE_ELEMENT_TO_DRAW";
-    }     
-
-    return mElem;
+    bracketObj.setAttribute("d", dPath);
+    return bracketObj;
 }
