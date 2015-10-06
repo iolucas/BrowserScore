@@ -1,15 +1,25 @@
 xmlns="http://www.w3.org/2000/svg";
 xlink="http://www.w3.org/1999/xlink"; 
 
-//Function to get the score lines path
-function GetScoreLinesPath(length) {
-    return "M 0, 0 " + length + 
-    ", 0 M 0, 15 " + length + 
-    ", 15 M 0, 30 " + length + 
-    ", 30 M 0, 45 " + length + 
-    ", 45 M 0, 60 " + length + 
-    ", 60";
+
+function DrawScoreLines(length) {
+    var scoreLineObj = $G.create("path"); //create the lines object
+    scoreLineObj.setAttribute("d", getScoreLinesPath(length)); //draw the lines
+     scoreLineObj.setAttribute("stroke", "#000");  //set lines color
+
+    return scoreLineObj;
+
+    //Function to get the score lines path
+    function getScoreLinesPath(length) {
+        return "M 0, 0 " + length + 
+            ", 0 M 0, 15 " + length + 
+            ", 15 M 0, 30 " + length + 
+            ", 30 M 0, 45 " + length + 
+            ", 45 M 0, 60 " + length + 
+            ", 60";
+    }
 }
+
 
 //Function to Draw score clefs
 function DrawScoreClef(clef) {

@@ -238,8 +238,8 @@
 
                 mObj1.betaEndBar = "simple";
                 mObj2.betaEndBar = "end";
-                //mObj1.betaStartBar = "repeat_f";
-                //mObj2.betaStartBar = "repeat_f";
+                mObj1.betaStartBar = "repeat_f";
+                mObj2.betaStartBar = "repeat_f";
 
                 //console.log(describeArc(100, 100, 30, 0, 270));
 

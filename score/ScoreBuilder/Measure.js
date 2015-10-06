@@ -33,7 +33,7 @@ ScoreBuilder.Measure = function() {
     refRect.setAttribute("fill", "red");
     refRect.setAttribute("height", 18); 
     refRect.setAttribute("width", 18);    
-    //measureGroup.appendChild(refRect); //append debug square
+    measureGroup.appendChild(refRect); //append debug square
 
 
     //-------------------------------------------------------
