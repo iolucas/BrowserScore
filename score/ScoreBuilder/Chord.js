@@ -112,14 +112,14 @@ ScoreBuilder.Chord = function(chordDen, dots) {
     }
 
     //Function to move this chord object with absolute positions
-    this.MoveTo = function(x, y) {
+    /*this.MoveTo = function(x, y) {
         chordGroup.translate(x, y);
-    }
+    }*/
 
     //Function to get the current number of notes on this chord
-    this.CountNotes = function() {
+    /*this.CountNotes = function() {
         return ArrayLength(notes);
-    }
+    }*/
 
     //Function to get the Denominator of this chord
     this.GetDenominator = function() { 
@@ -139,11 +139,11 @@ ScoreBuilder.Chord = function(chordDen, dots) {
     }
 
     //Function to iterate thru all notes obj on this chord
-    this.ForEachNote = function(action) {
+    /*this.ForEachNote = function(action) {
         for(var i = 0; i < notes.length; i++) //iterate thru all the notes
             if(notes[i])    //if the note is valid
                 action(notes[i]);   //apply the specified action to it
-    }
+    }*/
 
     this.AddNote = function(note) {
         //if the note object already exists at this chord, return message

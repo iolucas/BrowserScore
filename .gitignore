@@ -16,6 +16,8 @@ $RECYCLE.BIN/
 *.PNG
 *.bmp
 
+/imgs
+
 # Excel sheet
 *.xlsx
 

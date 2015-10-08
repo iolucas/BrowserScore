@@ -2,22 +2,19 @@ xmlns="http://www.w3.org/2000/svg";
 xlink="http://www.w3.org/1999/xlink"; 
 
 
-function DrawScoreLines(length) {
-    var scoreLineObj = $G.create("path"); //create the lines object
-    scoreLineObj.setAttribute("d", getScoreLinesPath(length)); //draw the lines
-     scoreLineObj.setAttribute("stroke", "#000");  //set lines color
+function DrawParalelLines(amount, length, gap) {
+    var scoreLineObj = $G.create("path"), //create the lines object
+        dPath = "";
+
+    for(var i = 0; i < amount; i++) {
+        var yCoord = (i*gap).toString();
+        dPath += "M0," + yCoord + " " + length + "," + yCoord;
+    }
+
+    scoreLineObj.setAttribute("d", dPath); //draw the lines
+    scoreLineObj.setAttribute("stroke", "#000");  //set lines color
 
     return scoreLineObj;
-
-    //Function to get the score lines path
-    function getScoreLinesPath(length) {
-        return "M 0, 0 " + length + 
-            ", 0 M 0, 15 " + length + 
-            ", 15 M 0, 30 " + length + 
-            ", 30 M 0, 45 " + length + 
-            ", 45 M 0, 60 " + length + 
-            ", 60";
-    }
 }
 
 

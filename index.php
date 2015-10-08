@@ -145,6 +145,9 @@
 
                     cObj4 = new ScoreBuilder.Chord(4),
 
+                    //ADD TAB SYSTEM AND WAY TO CHANGE CLEFS, TIME SIGS AND KEY SIGS
+                    //CHECK DIFERENCE FROM PIANOS HAND AND MULTIPLE INSTRUMENTS
+
 
                     c1Coll = [
                         new ScoreBuilder.Chord(8),

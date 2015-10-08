@@ -3,9 +3,6 @@ xlink = "http://www.w3.org/1999/xlink";
 
 //Pseudo Namespace to fit score objects classes
 var ScoreBuilder = new function() {
-    ///create notes, chords, measures and score class to manage all the score features
-    ///lets begin with the note element placing at a chord
-
 
     var SCORE_LINE_LEFT_MARGIN = 10,
         SCORE_LINE_HEADER_MARGIN = 10,

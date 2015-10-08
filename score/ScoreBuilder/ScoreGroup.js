@@ -231,7 +231,7 @@ ScoreBuilder.ScoreGroup = function() {
 
                         betaLines[currInd].appendChild(headerObj); //append header obj
 
-                        var lineObj = DrawScoreLines(LINE_WIDTH); //create the score lines obj
+                        var lineObj = DrawParalelLines(5, LINE_WIDTH, 15); //create the score lines obj
                         betaLines[currInd].appendChild(lineObj); //append the lines to the lines group
                     }    
                 
@@ -275,7 +275,6 @@ ScoreBuilder.ScoreGroup = function() {
                 lineGroup.appendChild(linesJunctionBar);
 
                 var bracketObj = DrawBracket(linesCoords[linesCoords.length - 1] - linesCoords[0]);
-                bracketObj.fill("#222");
                 bracketObj.translate(-12, linesCoords[0]);
                 lineGroup.appendChild(bracketObj);
             }
