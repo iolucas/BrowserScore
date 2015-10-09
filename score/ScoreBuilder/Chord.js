@@ -43,8 +43,9 @@ ScoreBuilder.Chord = function(chordDen, dots) {
 
         LINE_OFFSET = 7.5,   //const offset of each note at the visual object
 
-        currWidth = 0,  //variable to keep the current true width of the chord (discouting aux lines gaps)
-        currMiddleCoord = 0,    //variable to keep the current middle coordinate value (main note head middle coord)
+        chordWidth = 0,  //variable to keep the current true width of the chord (discouting aux lines gaps)
+        chordBackWidth = 0, //variable to keep the width before the reference (point 0,0)
+        chordFrontWidth = 0,//variable to keep the width after the reference (point 0,0)
 
         lastClef = "",  //variable to hold the last clef used to detect clef change to avoid unnecessary organize chords
 
@@ -86,11 +87,6 @@ ScoreBuilder.Chord = function(chordDen, dots) {
     noteGroup.appendChild(rest);
 
 
-    //ensures the currwidth variable is initiated with the rest symbol
-    //currWidth = rest.getBBox().width;
-    //setDots(); //set the dots of the rest if needed
-    //setChordPositions();    //ensure the dot is in the right place
-
     //NoteGroup debug rect
     //var noteRect = $G.create("rect");
     //noteRect.setAttribute("width", 5);
@@ -111,15 +107,27 @@ ScoreBuilder.Chord = function(chordDen, dots) {
         return chordGroup; 
     }
 
-    //Function to move this chord object with absolute positions
-    /*this.MoveTo = function(x, y) {
-        chordGroup.translate(x, y);
-    }*/
-
     //Function to get the current number of notes on this chord
     /*this.CountNotes = function() {
         return ArrayLength(notes);
     }*/
+
+    //Function to get the current width of this chord
+    this.GetWidth = function() {
+        return chordWidth;
+    }
+
+    this.GetBackWidth = function() {
+        return chordBackWidth;
+    }
+
+    this.GetFrontWidth = function() {
+        return chordFrontWidth;
+    }
+
+    this.MoveX = function(x) {
+        chordGroup.translate(x);
+    }
 
     //Function to get the Denominator of this chord
     this.GetDenominator = function() { 
@@ -129,13 +137,6 @@ ScoreBuilder.Chord = function(chordDen, dots) {
     //Function to set a new denominator. TO BE IMPLEMENTED
     this.SetDenominator = function(newChordDen) {
         throw "SetDenominator function still to be implemented.";
-    }
-
-    //Function to get the current width of this chord
-    this.GetWidth = function() {
-        return currWidth;
-        //return GetBBox(chordGroup).width;
-        //return GetBBox(accidentGroup).width + GetBBox(noteGroup).width + ;    
     }
 
     //Function to iterate thru all notes obj on this chord
@@ -227,33 +228,6 @@ ScoreBuilder.Chord = function(chordDen, dots) {
         return "REMOVE_SUCCESSFUL";
     }
 
-    function getNoteCoord(note) {
-        var matchValue = 0;
-
-        //If the note is A or B, must add 1 to the octave to match the piano standard of notes and octaves
-        if(note.n == 'A' || note.n == 'B')
-            matchValue = 1;
-
-        return -((note.n.charCodeAt(0) - POS0_NOTE) + (note.o + matchValue - POS0_OCTAVE) * 7);
-    } 
-
-    this.GetBackLength = function() {
-        return currMiddleCoord;
-    }
-
-    this.GetFrontLength = function() {
-        return currWidth - currMiddleCoord;
-    }
-
-    this.MoveChordHead = function(x, y) {
-        chordGroup.translate(x - currMiddleCoord, y);
-    }
-
-    //Function to detect whether this chord has been modified or not
-    /*this.CheckModified = function() {
-        return chordModified;
-    }*/ 
-
     //Function to be called when you want to update the chord object positions 
     this.Organize = function(clef) {
         if(!chordModified) //&& clef == lastClef)  //if the chord hasn't be modified and the clef is the same last time
@@ -274,11 +248,10 @@ ScoreBuilder.Chord = function(chordDen, dots) {
         if(notes.getValidLength() == 0) {
             rest.setAttribute("opacity", 1);    //show the rest element
             setStemLine();  //clear chord stem line
-            setChordFlag();
+            setChordFlag(); //clear chord flag
             setAuxLines(); //remove all the aux lines
-            setDots();
+            setDots();  //set necessary dots
             setChordPositions();    //organize chord elements positions
-            updateMiddleCoord();
             return; //do nothing else and return
         }
 
@@ -319,7 +292,15 @@ ScoreBuilder.Chord = function(chordDen, dots) {
             if(notes[i]) {   //if the note is valid
 
                 //get the element y coordinate based on its values for note and octave
-                var yCoord = getNoteCoord(notes[i]);
+                var yCoord,
+                    matchValue = 0;
+
+                //If the note is A or B, must add 1 to the octave to match the piano standard of notes and octaves
+                if(notes[i].n == "A" || notes[i].n == "B")
+                    matchValue = 1;
+
+                yCoord = -((notes[i].n.charCodeAt(0) - POS0_NOTE) + (notes[i].o + matchValue - POS0_OCTAVE) * 7);
+
                 //var yCoord = -((notes[i].n.charCodeAt(0) - POS0_NOTE) + (notes[i].o - POS0_OCTAVE) * 7); 
                 notes[i].yCoord = yCoord;   //register the y coord at the note element for note placement later
 
@@ -359,36 +340,12 @@ ScoreBuilder.Chord = function(chordDen, dots) {
         //set chord elements (accident group and notes group) correct places
         setChordPositions(); 
 
-        //update the middle coordinate for positioning purposes
-        updateMiddleCoord();
-
         chordModified = false;  //clear the chord modified flag
     }
 
     //--------------------------------------------------------------------------------
     //----------------------- PRIVATE METHODS ----------------------------------------
     //--------------------------------------------------------------------------------
-
-    function updateMiddleCoord() {
-
-        var headMiddleOffset; //variable to keep the middle of the note element (notes or rest)
-        if(notes.getValidLength() == 0) //if there is no note, only rest, is enough to get the half of the note group
-            headMiddleOffset = noteGroup.getBBox().width / 2;
-        else if(chordDenominator <= 1)   //if the denominator is less or equal than 1, get its constant value
-            headMiddleOffset = 12;
-        else //if any other denominator, get its constant value
-            headMiddleOffset = 9;
-
-        //if the noteGroup has been translated, get its value
-        var noteGroupXOffset = noteGroup.getTransform("translate");
-        if(noteGroupXOffset == undefined)
-            noteGroupXOffset = 0;
-        else
-            noteGroupXOffset = noteGroupXOffset[0];
-
-        //get the updated value
-        currMiddleCoord = noteGroupXOffset + headMiddleOffset;
-    }
 
     function setChordPositions() {
         //gets chord elements bboxes
@@ -398,29 +355,42 @@ ScoreBuilder.Chord = function(chordDen, dots) {
             ACC_NOTES_GAP = 5,  //GAP BETWEEN NOTES AND ACCIDENT SYMBOLS
             DOT_NOTES_GAP = 5;  //GAP BETWEEN NOTES AND DOT SYMBOLS
 
-        //place accident group at 0,0 abs pos
-        accidentGroup.translate(-accidentBox.x, 0);
+        //Reset width variables
+        chordWidth = 0;
+        chordBackWidth = 0;
+        //chordFrontWidth = 0; //update at the end
 
-        //place note and aux lines imediatelly after the accident group
-        var noteGroupXCoord,
-            dotsGroupXCoord = 0;
+        var headMiddleOffset; //variable to keep the middle of the note element (notes or rest)
+        if(notes.getValidLength() == 0) //if there is no note, only rest, is enough to get the half of the note group
+            headMiddleOffset = noteGroup.getBBox().width / 2;
+        else if(chordDenominator <= 1)   //if the denominator is less or equal than 1, get its constant value
+            headMiddleOffset = 12;
+        else //if any other denominator, get its constant value
+            headMiddleOffset = 9;
+
+        //place noteGroup Coord
+        noteGroup.translate(-headMiddleOffset);
+        chordWidth += noteBox.width;    //update the chord width
+        chordBackWidth += headMiddleOffset; //update the back width 
+
+        //place the aux lines group coord
+        auxLinesGroup.translate(-headMiddleOffset);
 
         if(accidentBox.width > 0) { //if there is accidents
-            noteGroupXCoord = accidentBox.width + ACC_NOTES_GAP - noteBox.x;
-            currWidth = accidentBox.width + ACC_NOTES_GAP + noteBox.width ;
-        } else {
-            noteGroupXCoord = - noteBox.x; 
-            currWidth = noteBox.width;  
+            //place accident group right before the note group, plus the accident-note gap
+            accidentGroup.translate(-headMiddleOffset - ACC_NOTES_GAP);
+            chordWidth += accidentBox.width + ACC_NOTES_GAP;
+            chordBackWidth += accidentBox.width + ACC_NOTES_GAP;
         }
 
-        if(dotBox.width > 0) {
-            currWidth += dotBox.width + DOT_NOTES_GAP;  //update the currwidth variable
-            dotsGroupXCoord = noteGroupXCoord + noteBox.width + DOT_NOTES_GAP;  //set the dots group x coordinate
+        if(dotBox.width > 0) {  //if there is dots
+            //place the dots group position right after the note group, plus the dot-note gap
+            dotsGroup.translate(noteBox.width - headMiddleOffset + DOT_NOTES_GAP);  
+            chordWidth += dotBox.width + DOT_NOTES_GAP;
         }
 
-        noteGroup.translate(noteGroupXCoord, 0);    //translate the notes to their positions
-        auxLinesGroup.translate(noteGroupXCoord, 0);    //translate the aux lines to their positions
-        dotsGroup.translate(dotsGroupXCoord, 0);    //translate the dots to their positions
+        //Update the front width
+        chordFrontWidth = chordWidth - chordBackWidth;        
     }
 
     function setAccidentPositions(lowValue) {

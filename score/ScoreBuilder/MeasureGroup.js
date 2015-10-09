@@ -93,7 +93,7 @@ ScoreBuilder.MeasureGroup = function() {
             //iterate thru the chords @ this current time
             for(var chordInd = 0; chordInd < chordsTimeArray[chordTime].length; chordInd++)
                 //Move the chord to the chord time specified position + the next position
-                chordsTimeArray[chordTime][chordInd].MoveChordHead(chordsTimeArray[chordTime].backLength + nextPosition);
+                chordsTimeArray[chordTime][chordInd].MoveX(chordsTimeArray[chordTime].backLength + nextPosition);
 
             //update the next position pointer
             nextPosition += denUnitLength / chordsTimeArray[chordTime].highDen + 
@@ -178,12 +178,12 @@ ScoreBuilder.MeasureGroup = function() {
                 chordsTimeArray[currInd].push(chord);   //push the chord to it
 
                 //get the highest back length value
-                if(chordsTimeArray[currInd].backLength == undefined || chord.GetBackLength() > chordsTimeArray[currInd].backLength)
-                    chordsTimeArray[currInd].backLength = chord.GetBackLength(); 
+                if(chordsTimeArray[currInd].backLength == undefined || chord.GetBackWidth() > chordsTimeArray[currInd].backLength)
+                    chordsTimeArray[currInd].backLength = chord.GetBackWidth(); 
                     
                 //get the highest front length value
-                if(chordsTimeArray[currInd].frontLength == undefined || chord.GetFrontLength() > chordsTimeArray[currInd].frontLength)
-                    chordsTimeArray[currInd].frontLength = chord.GetFrontLength();
+                if(chordsTimeArray[currInd].frontLength == undefined || chord.GetFrontWidth() > chordsTimeArray[currInd].frontLength)
+                    chordsTimeArray[currInd].frontLength = chord.GetFrontWidth();
 
                 //get the highest denominator
                 if(chordsTimeArray[currInd].highDen == undefined || chord.GetDenominator() > chordsTimeArray[currInd].highDen)
