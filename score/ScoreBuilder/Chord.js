@@ -59,12 +59,12 @@ ScoreBuilder.Chord = function(chordDen, dots) {
     refRect.setAttribute("width", 12);
     chordGroup.appendChild(refRect);
 
-    /*
-    var accRect = document.createElementNS(xmlns, "rect");
+    
+    /*var accRect = document.createElementNS(xmlns, "rect");
     accRect.setAttribute("fill", "orange");
     accRect.setAttribute("height", 10); 
     accRect.setAttribute("width", 10);
-    SetTransform(accRect, { translate: [-10, 0] });
+    accRect.translate(-10);
     accidentGroup.appendChild(accRect);*/
 
 
@@ -88,11 +88,11 @@ ScoreBuilder.Chord = function(chordDen, dots) {
 
 
     //NoteGroup debug rect
-    //var noteRect = $G.create("rect");
-    //noteRect.setAttribute("width", 5);
-    //noteRect.setAttribute("height", 5);
-    //noteRect.setAttribute("fill", "yellow");
-    //noteGroup.appendChild(noteRect);
+    /*var noteRect = $G.create("rect");
+    noteRect.setAttribute("width", 5);
+    noteRect.setAttribute("height", 5);
+    noteRect.setAttribute("fill", "yellow");
+    noteGroup.appendChild(noteRect);*/
 
 
     //--------------------------------------------------------------------------------
@@ -230,19 +230,8 @@ ScoreBuilder.Chord = function(chordDen, dots) {
 
     //Function to be called when you want to update the chord object positions 
     this.Organize = function(clef) {
-        if(!chordModified) //&& clef == lastClef)  //if the chord hasn't be modified and the clef is the same last time
+        if(!chordModified && clef == lastClef)  //if the chord hasn't be modified and the clef is the same last time
             return; //do nothing and return
-
-        //DEBUG PURPOSES
-        if(!clef)
-            clef = "G2";
-
-        if(clef)    //if a clef has been specified 
-            lastClef = clef;    //updates the last clef variable
-        else if(lastClef)//if not, if we already got a last clef
-            clef = lastClef;    //set the last as the current
-        else //if none of them
-            throw "NO_CLEF_OR_LAST_CLEF_HAS_BEEN_SET";  //crash with an error            
 
         //If there is no more notes on this chord
         if(notes.getValidLength() == 0) {
@@ -254,6 +243,17 @@ ScoreBuilder.Chord = function(chordDen, dots) {
             setChordPositions();    //organize chord elements positions
             return; //do nothing else and return
         }
+
+        //DEBUG PURPOSES
+        /*if(!clef)
+            clef = "G2";*/
+
+        if(clef)    //if a clef has been specified 
+            lastClef = clef;    //updates the last clef variable
+        else if(lastClef)//if not, if we already got a last clef
+            clef = lastClef;    //set the last as the current
+        else //if none of them
+            throw "NO_CLEF_HAS_BEEN_SET";  //crash with an error            
 
         rest.setAttribute("opacity", 0);    //hide the rest element
 
@@ -271,7 +271,8 @@ ScoreBuilder.Chord = function(chordDen, dots) {
                 break;
 
             case "C3":
-                throw "CLEF_TO_BE_IMPLEMENTED";
+                POS0_NOTE = 'F'.charCodeAt(0);
+                POS0_OCTAVE = 3; 
                 break;
 
             case "C4":
@@ -349,9 +350,12 @@ ScoreBuilder.Chord = function(chordDen, dots) {
 
     function setChordPositions() {
         //gets chord elements bboxes
-        var accidentBox = accidentGroup.getBBox(),
-            noteBox = noteGroup.getBBox(),
-            dotBox = dotsGroup.getBBox(),
+        var noteWidth = 0,  //single note width valu
+            noteHalfWidth = 0,  //single note half width value
+            noteGroupWidth = 0, //complete note group width value
+            accidentWidth = accidentGroup.getBBox().width,  //accident box width
+            dotWidth = dotsGroup.getBBox().width,   //dot box width
+
             ACC_NOTES_GAP = 5,  //GAP BETWEEN NOTES AND ACCIDENT SYMBOLS
             DOT_NOTES_GAP = 5;  //GAP BETWEEN NOTES AND DOT SYMBOLS
 
@@ -360,33 +364,42 @@ ScoreBuilder.Chord = function(chordDen, dots) {
         chordBackWidth = 0;
         //chordFrontWidth = 0; //update at the end
 
-        var headMiddleOffset; //variable to keep the middle of the note element (notes or rest)
-        if(notes.getValidLength() == 0) //if there is no note, only rest, is enough to get the half of the note group
-            headMiddleOffset = noteGroup.getBBox().width / 2;
-        else if(chordDenominator <= 1)   //if the denominator is less or equal than 1, get its constant value
-            headMiddleOffset = 12;
-        else //if any other denominator, get its constant value
-            headMiddleOffset = 9;
+        //Get note group width
+        noteGroupWidth = noteGroup.getBBox().width;
 
-        //place noteGroup Coord
-        noteGroup.translate(-headMiddleOffset);
-        chordWidth += noteBox.width;    //update the chord width
-        chordBackWidth += headMiddleOffset; //update the back width 
-
-        //place the aux lines group coord
-        auxLinesGroup.translate(-headMiddleOffset);
-
-        if(accidentBox.width > 0) { //if there is accidents
-            //place accident group right before the note group, plus the accident-note gap
-            accidentGroup.translate(-headMiddleOffset - ACC_NOTES_GAP);
-            chordWidth += accidentBox.width + ACC_NOTES_GAP;
-            chordBackWidth += accidentBox.width + ACC_NOTES_GAP;
+        //Get the note width (this is necessary due to in case double adjacent notes does not result the single note width
+        if(notes.getValidLength() == 0) //if there is no note, only rest, we can take the bbox width
+            noteWidth = noteGroupWidth;
+        else if(chordDenominator <= 1) {   //if the denominator is less or equal than 1, get its constant value
+            noteWidth = 24;
+            noteGroupWidth -= 5; //correct note group width due to fake white spaces @ svg  
+        } else { //if any other denominator, get its constant value
+            noteWidth = 18;
+            noteGroupWidth -= 2; //correct note group width due to fake white spaces @ svg
         }
 
-        if(dotBox.width > 0) {  //if there is dots
+        //get note half width
+        noteHalfWidth = noteWidth / 2;
+
+        //place noteGroup Coord at the reference middle, since its from the middle that everything is referenced
+        noteGroup.translate(-noteHalfWidth);
+        chordWidth += noteGroupWidth;    //update the chord width
+        chordBackWidth += noteGroupWidth - noteHalfWidth; //update the back width
+
+        //place the aux lines group coord
+        auxLinesGroup.translate(-noteHalfWidth);
+
+        if(accidentWidth > 0) { //if there is accidents
+            //place accident group right before the note group, plus the accident-note gap
+            accidentGroup.translate(noteGroup.getBBox().x - noteHalfWidth - ACC_NOTES_GAP);
+            chordWidth += accidentWidth + ACC_NOTES_GAP;
+            chordBackWidth += accidentWidth + ACC_NOTES_GAP;
+        }
+
+        if(dotWidth > 0) {  //if there is dots
             //place the dots group position right after the note group, plus the dot-note gap
-            dotsGroup.translate(noteBox.width - headMiddleOffset + DOT_NOTES_GAP);  
-            chordWidth += dotBox.width + DOT_NOTES_GAP;
+            dotsGroup.translate(noteGroup.getBBox().x - noteHalfWidth + noteGroupWidth + DOT_NOTES_GAP); 
+            chordWidth += dotWidth + DOT_NOTES_GAP;
         }
 
         //Update the front width
@@ -485,7 +498,7 @@ ScoreBuilder.Chord = function(chordDen, dots) {
         }
     }
 
-    function debRect(bbox) {
+    /*function debRect(bbox) {
         var debRect = document.createElementNS(xmlns, "rect");
         debRect.setAttribute("stroke", "blue");
         debRect.setAttribute("stroke-width", 1); 
@@ -497,7 +510,7 @@ ScoreBuilder.Chord = function(chordDen, dots) {
         accidentGroup.appendChild(debRect);
 
         return debRect;
-    }
+    }*/
 
     //Function to place the notes positions, detecting adjacent notes colision
     function setNotesPositions(downStemFlag, lowValue) {
@@ -692,7 +705,7 @@ ScoreBuilder.Chord = function(chordDen, dots) {
         for(var j = 0; j < dotsTable.length; j++) {
             var noteDot = DrawDot(chordDots);   //get the dot draw
             dotsGroup.appendChild(noteDot); //append it to the dots group
-            noteDot.translate(0, dotsTable[j] * LINE_OFFSET);   //translate to its position
+            noteDot.translate(3, dotsTable[j] * LINE_OFFSET);   //translate to its position (xcoord 3 to put it @ 0,0)
         }
     }
 

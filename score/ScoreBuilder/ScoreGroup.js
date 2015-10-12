@@ -81,7 +81,9 @@ ScoreBuilder.ScoreGroup = function() {
 
         //iterate thru all score parts and populate the measure groups array
         scoreParts.ForEach(function(part) {
-            var partHeaderObj = drawScoreLineHeader({clef: part.GetClef(), key: part.GetKeySig(), time: part.GetTimeSig() }),
+            part.Organize();
+
+            var partHeaderObj = drawScoreLineHeader({ clef: part.GetClef(), keySig: part.GetKeySig(), timeSig: part.GetTimeSig() }),
                 partObjBox = partHeaderObj.getBBox(),
                 partObjWidth = partObjBox.width + partObjBox.x; //get current part header total width
 
@@ -225,8 +227,8 @@ ScoreBuilder.ScoreGroup = function() {
                         var currPart = scoreParts.GetItem(currInd),
                             headerObj = drawScoreLineHeader({
                                 clef: currPart.GetClef(), 
-                                key: currPart.GetKeySig(), 
-                                time: c == 0 ? currPart.GetTimeSig() : null //if its not the first line, hide the time sig obj
+                                keySig: currPart.GetKeySig(), 
+                                timeSig: c == 0 ? currPart.GetTimeSig() : null //if its not the first line, hide the time sig obj
                             });
 
                         betaLines[currInd].appendChild(headerObj); //append header obj
@@ -326,24 +328,24 @@ ScoreBuilder.ScoreGroup = function() {
             nextPos = SCORE_LINE_LEFT_MARGIN;
 
         //if a clef has been specified
-        if(attr.clef) {
-            var clefObj = DrawScoreClef(attr.clef["sign"]);
+        if(attr["clef"] != undefined) {
+            var clefObj = DrawScoreClef(attr["clef"]);
             attrGroup.appendChild(clefObj);
             clefObj.translate(nextPos, 0);
             //SetTransform(clefObj, { translate: [nextPos, 0] });
             nextPos += clefObj.getBBox().width + SCORE_LINE_HEADER_MARGIN;
 
-            //if the clef key is specified
-            if(attr.key && attr.key.fifths && attr.key.fifths != "0") {
-                var keyObj = DrawKeySignature(parseInt(attr.key.fifths));
+            //if the clef key is specified and is diferent from 0 (value 0 at if statement is equal to false)
+            if(attr["keySig"]) {
+                var keyObj = DrawKeySignature(attr["keySig"]);
                 //translate the key sig according to the clef
 
-                switch(attr.clef["sign"]) {
-                    case "F":
+                switch(attr["clef"]) {
+                    case "F4":
                         keyObj.translate(nextPos, 15);
                         break;
 
-                    case "C":
+                    case "C3":
                         keyObj.translate(nextPos, 7.5);
                         break;  
 
@@ -357,14 +359,24 @@ ScoreBuilder.ScoreGroup = function() {
             }
 
             //if the clef time has been specified
-            if(attr.time) {
+            if(attr["timeSig"] != undefined) {
+                var timeSigMembers = attr["timeSig"].split(","),
+                    timeObj;
 
-                var timeObj;
+
+
+                //If the object hasn't been splited, means time sig symbol 
+                if(timeSigMembers.length < 2)
+                    timeObj = DrawTimeSymbol(timeSigMembers[0]);
+                else //if not, pass thetime sig values
+                    timeObj = DrawTimeSig(timeSigMembers[0], timeSigMembers[1]); 
+
+
                 //if a time symbol has been specified, draw it
-                if(attr.time["@attributes"] && attr.time["@attributes"]["symbol"])
-                    timeObj = DrawTimeSymbol(attr.time["@attributes"]["symbol"]);
-                else //otherwise, draw the time sig instead    
-                    timeObj = DrawTimeSig(attr.time["beats"], attr.time["beat-type"]);     
+                //if(attr.time["@attributes"] && attr.time["@attributes"]["symbol"])
+                    //timeObj = DrawTimeSymbol(attr.time["@attributes"]["symbol"]);
+                //else //otherwise, draw the time sig instead    
+                    //timeObj = DrawTimeSig(attr.time["beats"], attr.time["beat-type"]);     
 
                 attrGroup.appendChild(timeObj);
                 timeObj.translate(nextPos, 0);

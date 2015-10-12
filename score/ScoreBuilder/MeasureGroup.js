@@ -100,17 +100,6 @@ ScoreBuilder.MeasureGroup = function() {
                 chordsTimeArray[chordTime].backLength + chordsTimeArray[chordTime].frontLength; 
         }
 
-        //var endBarWidth = 0;    //variable to get the end bar size
-        //iterate thru the measures and update its bar position
-        /*for(var i = 0; i < measures.length; i++) {
-            if(!measures[i]) //if the measure is not valid
-                continue;   //keep going
-
-            var currBarWidth = measures[i].UpdateEndBarPos(nextPosition);
-            if(currBarWidth > endBarWidth)
-                endBarWidth = currBarWidth;
-        }*/
-
         //update curr length variable of this measure group with the end bar length
         currWidth = nextPosition + endBarWidth;
     }
@@ -137,11 +126,11 @@ ScoreBuilder.MeasureGroup = function() {
             if(!measures[i])    //if the current index is not valid
                 continue;   //keep next iteration
 
-            measures[i].Organize(); //ensure current measure is organized
+            //measures[i].Organize(); //ensure current measure is organized
 
             //if the currStartBar hasn't been set and the current measure got a valid start bar value
-            if(!currStartBar && measures[i].betaStartBar) {
-                currStartBar = measures[i].betaStartBar;    //set the current start bar variable
+            if(!currStartBar && measures[i].attr.startBar) {
+                currStartBar = measures[i].attr.startBar;    //set the current start bar variable
                 //get the bar width and add to the fixed length and left margin
                 var currStartBarWidth = DrawBar(currStartBar, [0, 1]).getBBox().width;
                 leftMargin += currStartBarWidth;
@@ -149,28 +138,20 @@ ScoreBuilder.MeasureGroup = function() {
             }
 
             //if the currEndBar hasn't been set and the current measure got a valid end bar value
-            if(!currEndBar && measures[i].betaEndBar) {
-                currEndBar = measures[i].betaEndBar;
+            if(!currEndBar && measures[i].attr.endBar) {
+                currEndBar = measures[i].attr.endBar;
                 //get the bar width and add
                 endBarWidth = DrawBar(currEndBar, [0, 1]).getBBox().width;
                 fixedLength += endBarWidth;   
             }
-
-            //set the highest left margin has the left margin
-            /*var currLeftMargin = measures[i].GetLeftMargin();   
-            if(currLeftMargin > leftMargin)
-                leftMargin = currLeftMargin;*/ 
-
-            //set the highest fixed length as the fixed length
-            /*var currFixedLength = measures[i].GetFixedLength();
-            if(currFixedLength > fixedLength)    
-                fixedLength = currFixedLength;*/
 
             //Variable to navigate thru the chords of the measure
             var currInd = 0;
 
             //iterate thry the current measure chords and populate the chords time array                   
             measures[i].ForEachChord(function(chord) {
+
+                //chord.Organize();   //Ensure the chord is organized
 
                 if(chordsTimeArray[currInd] == undefined)  //if the chord time array hasn't been initated
                     chordsTimeArray[currInd] = [];  //inits it

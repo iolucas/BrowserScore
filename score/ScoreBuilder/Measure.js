@@ -7,25 +7,37 @@ if(!ScoreBuilder) var ScoreBuilder = new Object();
 //-----------------------------------------------------------
 //-----------------------------------------------------------
 
+/*MUST CHECK WHETHER THIS IS THE BEST WAY TO ORGANIZE MEASURES
+R: PROBABLY IS THIS ONE CAUSE WE HAVE TO HAVE A MEASURE GROUP OBJECT TO STORE MEASURES BEFORE MOVE THEM
+
+
+CREATING A POSITION ARRAY WITH DENOMINATOR VALUES WITH THE VALUE CURRENT POSITION
+CHECK HOW WILL POSITION THE MEASURE
+THEN CREATE SYSTEM THAT WILL LOOK THE NEXT MEASURE TO CHECK CLEFS, TIME SIGS AND KEY CHANGES
+
+-------> DO IT!
+
+WE WILL USE THE MEASURE GROUP LAYOUT TO PLACE A CLEF, TIME AND KEY CHANGE SYSTEM
+
+WILL STORE CLEF, TIME AND KEY INFO @ THE MEASURE <--WILL DO THIS FIRST AND THEM DO THE REST
+
+SYSTEM THAT WILL CHECK THE NEXT MEASURE GROUP TO LOOK FOR CHANGES
+
+HOW WILL STORE CLEF CHANGES @ MEASURE GROUP, SINCE THEY DO NOT CHANGE FOR ALL? SAME FOR KEYS WHEN USING TABS
+FOR TIME ITS OK CAUSE TABS FOLLOW THE SAME TIME SIGNATURES
+
+WILL HAVE TO IMPROVE THE COORDINATES SYSTEM THAT PLACE THE BARS AND DOTS STUFF @ THE SCORE FINISH CAUSE
+THEY ARE USING THE 60 PIXEL HARD CODED SSCORE LINES SIZE
+
+CHECK NOTE BOOK FOR MORE INSTRUCTIIONS HOW SCORE HEADER DATA WILL BE PASSED FROM THE MEASURE TO SCORE*/
+
 ScoreBuilder.Measure = function() {
 
     var selfRef = this,
-        MEASURE_LEFT_MARGIN = 0,    //SOON WILL REMOVE THIS MEASURE LEFT MARGIN, ASLONG AS ANOTHER USELESS VARIABLES
         measureGroup = document.createElementNS(xmlns, "g"),   //group to fit all the measure members
-        //measureEndBar = $Aria.Parse(DrawMeasureElement(MeasureElement.SimpleBar)),
-        //measureEndBar = DrawMeasureElement("SIMPLE_BAR"),
         startBar,
         endBar,
-        //currWidth = 0,  //var to store the current width of the measure
-        chords = new List(),   //ordered list to fit all the chords @ this measure
-        //mElements = new List(), //ordered list to place measure elements on this measure           
-        measureBarModified = false, //variable to signalize whether a start or end bar has been modified
-        //measureChordModified = false,//variable to signalize whether a note has been added or removed from this chord
-        //lastUnitLengthValue = 0,
-        currFixedLength = MEASURE_LEFT_MARGIN,
-        currLeftMargin = MEASURE_LEFT_MARGIN; 
-
-    //measureGroup.appendChild(measureEndBar); //append measure end bar 
+        chords = new List();   //ordered list to fit all the chords @ this measure
 
     //for debug, not really necessary due to group grows, but coodinates origin remains the same
     //reference rectangle to be used as a fixed reference point
@@ -56,29 +68,32 @@ ScoreBuilder.Measure = function() {
         chords.ForEach(action, index);//iterate thru all the chords and apply the specified action to it
     }
 
-    this.GetFixedLength2 = function() {
-        return currFixedLength;
-    }
+    var _attr = {}  //Local attribute object of this measure
+    Object.defineProperty(this, "attr", { value: _attr });  //Attach a public reference for this attribute object
 
-    this.GetLeftMargin2 = function() {
-        return currLeftMargin;
+    /*var _clef = null;
+    this.SetClef = function(clef) { _clef = clef; }
+    this.GetClef = function() { return _clef; }
 
-        /*if(startBar)
-            return startBar.barLength + MEASURE_LEFT_MARGIN;
+    var _timeSig = null;
+    this.SetTimeSig = function(timeSig) { _timeSig = timeSig; }
+    this.GetTimeSig = function() { return _timeSig; }
 
-        return MEASURE_LEFT_MARGIN;*/
-    }
+    var _keySig = null;
+    this.SetKeySig = function(keySig) { _keySig = keySig; }
+    this.GetKeySig = function() { return _keySig; }
 
-    /*var measureAttributes;
-    this.SetAttributes = function(attributes) {
-        measureAttributes = attributes;
-    }
-    this.GetAttributes = function() {
-        return measureAttributes;
-    }*/
+    //mustn't be bar stuff, must be attribute such repeat forward, repeat backward
 
-    this.betaStartBar = null;
-    this.betaEndBar = null;
+    var _startBar = "";
+    this.SetStartBar = function(startBar) { _startBar = startBar; }
+    this.GetStartBar = function() { return _startBar; }  
+
+    var _endBar = "simple";
+    this.SetEndBar = function(endBar) { _endBar = endBar; }
+    this.GetEndBar = function() { return _endBar; }*/ 
+
+         
 
     this.InsertChord = function(chord, position) {
         //if the chord object already exists at this measure, return a message
@@ -94,8 +109,6 @@ ScoreBuilder.Measure = function() {
 
         //append the object to the group
         measureGroup.appendChild(chord.Draw());
-
-        //measureChordModified = true; //set the flag that the chord has been modified 
 
         return "SUCCESS";
     }
@@ -115,8 +128,6 @@ ScoreBuilder.Measure = function() {
         measureGroup.removeChild(removedChord.Draw());  //remove it from the line
         chords.RemoveAt(position);    //remove the chord from the list
 
-        //measureChordModified = true; //set the flag that the chord has been modified
-
         return removedChord;
     }
 
@@ -128,199 +139,46 @@ ScoreBuilder.Measure = function() {
             return selfRef.RemoveAt(position);
     }
 
-    //Function to set the start bar of the measure
-    this.SetStartBar2 = function(bar) {
-        if(bar) {  //if the bar variable has been passed
-            //if a start bar has already been set
-            if(startBar) {
-                if(startBar.barType == bar) //if the bar passed is equal to the current one,
-                    return; //do nothing an return
+    this.Organize123 = function(attrPointer) {
+        //Get values and update attribute pointer
 
-                //if it is not equal
-                measureGroup.removeChild(startBar);    //remove the current start bar
-            }
+        if(_attr.clef != undefined)   //if there is a clef on this measure
+            attrPointer["clef"] = _attr.clef;    //update the one at attribute pointer
+        else //if not, get the clef from the attribute pointer
+            _attr.clef = attrPointer["clef"];
 
-            startBar = DrawBar(bar);    //get the bar visual obj
-            measureGroup.appendChild(startBar); //append the start bar visual obj to the measure group
-            startBar.barType = bar; //store the bar type at the bar visual objects
-            startBar.barLength = startBar.getBBox().width; //store the bar visual obj width
-            measureBarModified = true; //set the measure bar modified flag
+        if(_attr.timeSig != undefined)   //if there is a time sig on this measure
+            attrPointer["timeSig"] = _attr.timeSig;    //update the one at attribute pointer
+        else //if not, get the time sig from the attribute pointer
+            _attr.timeSig = attrPointer["timeSig"];
 
-        } else {    //if no bar variable has been passed
-            if(startBar) {  //if the start bar has been set
-                measureGroup.removeChild(startBar);    //remove it from the measure group
-                delete startBar;    //clear the startBar obj
-                measureBarModified = true; //set the measure bar modified flag
-            }
-        }    
+        if(_attr.keySig != undefined)   //if there is a key sig on this measure
+            attrPointer["keySig"] = _attr.keySig;    //update the one at attribute pointer
+        else //if not, get the key sig from the attribute pointer
+            _attr.keySig = attrPointer["keySig"];
+
+        //If any of the attributes are not valid, throw exception
+        if(_attr.clef == undefined || _attr.keySig == undefined || _attr.timeSig == undefined)
+            throw "INVALID_MEASURE_ATTRIBUTES: " + _attr.clef + " " + _attr.keySig + " " + _attr.timeSig;
+        
+        //Organize all the chords on this measure
+        chords.ForEach(function(chord) {
+            chord.Organize(_attr.clef);
+        });
     }
 
-    //Function to set the end bar of the measure
-    this.SetEndBar2 = function(bar) {
-        if(bar) {  //if the bar variable has been passed
-            //if a end bar has already been set
-            if(endBar) {
-                if(endBar.barType == bar) //if the bar passed is equal to the current one,
-                    return; //do nothing an return
+    /*this.Organize2 = function(positionArray) {
 
-                //if it is not equal
-                measureGroup.removeChild(endBar);    //remove the current end bar
-            }
-
-            endBar = DrawBar(bar);    //get the bar visual obj
-            measureGroup.appendChild(endBar); //append the end bar visual obj to the measure group
-            endBar.barType = bar; //store the bar type at the bar visual objects
-            endBar.barLength = endBar.getBBox().width; //store the bar visual obj width
-            measureBarModified = true; //set the measure bar modified flag
+        var denominatorPointer = 0;
+        chords.ForEach(function(chord) {
+            var chordPos = positionArray[denominatorPointer];   //get the chord position 
             
-        } else {    //if no bar variable has been passed
-            if(endBar) {  //if the end bar has been set
-                measureGroup.removeChild(endBar);    //remove it from the measure group
-                delete endBar;    //clear the endBar obj
-                measureBarModified = true; //set the measure bar modified flag
-            }
-        }   
-    }
+            if(chordPos == undefined)   //check if the chord position is valid
+                throw "SOMETHING_WENT_WRONG_POSITIONING_CHORDS_=(";
 
-    //Function to organize elements position and values within the measure
-    this.Organize = function() {
+            chord.MoveX(chordPos);  //Put the chord on its position
 
-        if(measureBarModified) {
-            currFixedLength = MEASURE_LEFT_MARGIN;
-            currLeftMargin = MEASURE_LEFT_MARGIN;
-
-            if(startBar) {
-                currFixedLength += startBar.barLength;
-                currLeftMargin += startBar.barLength;
-            } 
-
-            if(endBar)
-                currFixedLength += endBar.barLength;
-
-            measureBarModified = false;    //clear the measure bar modified flag
-        }
-
-        chords.ForEach(function(chord) {
-            chord.Organize();   //ensure chord is organized
+            denominatorPointer += chord.GetDenominator();   //increase the denominator pointer
         });
-
-        //measureChordModified = false;    //clear the measure chord modified flag
-    }
-
-    //Function to put the end bar at the end of the measure
-    this.UpdateEndBarPos2 = function(pos) {
-        if(endBar) {
-            endBar.translate(pos);
-            return endBar.barLength;    //return bar length
-        }
-        return 0;   //if no bar, return 0
-    }
-
-    /*this.GetWidth = function() {
-        return currWidth; 
-    }*/
-
-    /*this.ForEachElem = function(action) {
-        mElements.ForEach(action);//iterate thru all the measure elements and apply the specified action to it
-    }*/
-
-    /*this.CheckModified = function() {
-        if(measureBarModified || measureChordModified)
-            return true;
-
-        var chordsLength = chords.Count();
-        for(var i = 0; i < chordsLength; i++)
-            if(chords.GetItem(i).CheckModified())
-                return true;
-
-        return false;
-    }*/
-    //Function to update the spaces of the measure and organize chords
-    /*this.UpdateGaps = function(spaceUnitLength) {
-
-        //if the measure hasn't been modified and the space unit is the same of the last time
-        if(!measureModified && lastUnitLengthValue == spaceUnitLength)
-            return; //do nothing and return
-
-        //the start position for the first chord
-        var nextPos = MEASURE_LEFT_MARGIN;  //the measure left margin 
-        if(startBar)    //if a start bar has been set
-            nextPos += startBar.getBBox().width;
-
-        chords.ForEach(function(chord) {
-
-            //Execute function to organize chord members
-            chord.Organize();   
-
-            //round the nextPos down for smooth look
-            chord.MoveTo(nextPos, 0);  //move the chord X pos to current nextposition keeping the Y value
-            nextPos += chord.GetWidth() + spaceUnitLength / chord.GetDenominator();    //get the gap value and add it to the next position
-
-        });
-
-        //set the next position vector as the current measure width
-        currWidth = nextPos;    
-
-        //put the end bar at the end of the measure
-        //SetTransform(measureEndBar, { translate: [nextPos, 0] });
-        //measureEndBar.translate(nextPos, 0);
-
-        if(endBar)  //if a end bar has been set
-            endBar.translate(nextPos - endBar.getBBox().width + 0); //put the end bar at the end of the measure
-
-        measureModified = false;    //clear the modified flag
-        lastUnitLengthValue = spaceUnitLength;
-    }*/
-
-    //Function to insert all the sorts of elements at the measure: 
-    //chords, starts and ending bars, clef, time or key sig change etc
-    /*this.InsertElem = function(mElem, position) {
-        //KEEP ADAPTING THE MEASURE SYSTEM TO THE NEW REQUIREMENTS
-        //REMOVE THE SCORE LINE SYSTEM, KEEPS ONLY A SCORE WHICH WILL HAVE AN ARRAY FOR LINES TO PUT THE MEASURES
-        
-        //measure will ignore all time sig 
-        //if the clef, time or key change is the same as before, notting will happen
-
-
-        //must have a mElem list that in the time of organizing
-        //will navigate thru it determing furter actions to other elements
-        //must know what happen when a clef, time or key change reaches the end of the line
-        //Clefs can be change any time in the measure
-        //time sigs are change only one per measure and is added to the previous measure to be shown
-
-        //measure organizer will have a variable called first measure of the line, to add the necessary clefs and stuff to it
-
-        //start bars must be @ the beginning and when find an end bar, stop the iteration thru elements
-        //if no end bar is found, add a simple bar
-
-
-//----------------------------------
-
-        //if the measure element object already exists at this measure, return a message
-        if(mElements.Find(mElem) != -1) return "MEASURE_ELEMENT_ALREADY_ON_PLACED"; 
-        //(check the need to implement timing verification in the future to avoid a measure is overflowed with note symbols))
-        
-        //Object validation successful
-
-        //if the type of the position variable is different from number or the position is bigger or the size of the list
-        if(typeof position != "number" || position >= mElements.Count())    
-            mElements.Add(mElem);    //insert with add method at the last position
-        else //otherwise
-            mElements.Insert(position, mElem); //insert element reference at the position to the list
-
-        //append the visual object to the group
-        measureGroup.appendChild(mElem.Draw());
-
-        measureModified = true; //set the flag that the chord has been modified
-
-        return "MEASURE_ELEMENT_INSERTED_SUCCESSFULLY";
-    }*/
-/*
-    this.GetChordsInfo = function() {
-        var infoArray = [];
-        mElements.ForEach(function(chord) {
-            infoArray.push({ den: chord.GetDenominator(), width: chord.GetWidth() });
-        });
-        return infoArray;
     }*/
 }

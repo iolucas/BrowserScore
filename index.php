@@ -25,9 +25,7 @@
             <nav id="score-menu"></nav>
             <div id="score-page">
                 <!--<object id="svgPage" type="image/svg+xml" data="debug.svg" height="3700" width="1520">Error</object>-->
-                <svg id="svgContainer" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1520" height="2000">
-
-                </svg>
+                <svg id="svgContainer" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1520" height="2000"></svg>
             </div>
         </section>
         <script src="xml2json/xml2json.js"></script>
@@ -38,6 +36,7 @@
         <!--<script src="ariajs/Aria.js"></script>-->
         <script src="score/ScoreLoader.js"></script>
         <script src="score/ScoreElements.js"></script>
+        <script src="score/ScoreBuilder/TabChord.js"></script>
         <script src="score/ScoreBuilder/Chord.js"></script>
         <script src="score/ScoreBuilder/Measure.js"></script>
         <script src="score/ScoreBuilder/MeasureGroup.js"></script>
@@ -48,6 +47,11 @@
         <script src="debug.js"></script>
         <script>
 
+
+
+            var numDraw = DrawNumber(1);
+            numDraw.translate(20, 55);
+
             window.onload = function() {
 
                 var debRect1 = $G.create("rect");
@@ -55,8 +59,7 @@
                 debRect1.setAttribute("height", 10);
                 debRect1.setAttribute("width", 1500);
                 debRect1.translate(10);
-                svgContainer.appendChild(debRect1);
-
+                svgContainer.appendChild(debRect1);                
                     
                 /*var measureObj1 = new ScoreBuilder.Measure(),
                     measureObj2 = new ScoreBuilder.Measure(),
@@ -144,7 +147,8 @@
                     cObj3 = new ScoreBuilder.Chord(8),
 
                     cObj4 = new ScoreBuilder.Chord(4),
-
+                    //tabChord = new ScoreBuilder.TabChord(6, 5, 4);
+                    //tabChord.AddNote(1, 2);
                     //ADD TAB SYSTEM AND WAY TO CHANGE CLEFS, TIME SIGS AND KEY SIGS
                     //CHECK DIFERENCE FROM PIANOS HAND AND MULTIPLE INSTRUMENTS
 
@@ -170,9 +174,10 @@
                         new ScoreBuilder.Chord(4)
                     ],
                     c3Coll = [
+                        new ScoreBuilder.Chord(4),
+                        //tabChord,
+                        new ScoreBuilder.Chord(4),
                         cObj4,
-                        new ScoreBuilder.Chord(4),
-                        new ScoreBuilder.Chord(4),
                         new ScoreBuilder.Chord(4)
                     ],
                     c4Coll = [
@@ -199,15 +204,17 @@
                     mObj5.AddChordCollection(c5Coll);
                     mObj6.AddChordCollection(c6Coll);
 
-                cObj1.AddNote({n: "E", o: 5 , a: "flat-flat"});
+                cObj1.AddNote({n: "E", o: 3 , a: "flat-flat"});
 
-                cObj2.AddNote({n: "E", o: 5 });
-                cObj2.AddNote({n: "C", o: 5 });
+                cObj2.AddNote({n: "E", o: 3 , a: "" });
+                cObj2.AddNote({n: "F", o: 3, a: "flat-flat" });
+                cObj2.AddNote({n: "F", o: 4, a: "" });
 
                 cObj3.AddNote({n: "C", o: 4 }); 
 
 
-                cObj4.AddNote({n: "G", o: 4 }); 
+                cObj4.AddNote({n: "E", o: 3, a: "flat-flat"  });
+                cObj4.AddNote({n: "F", o: 3, a: "flat-flat"  });  
 
                 /*cObj1.AddNote({n: "A", o: 4, a: getRandomAccident() });     
                 cObj2.AddNote({n: "B", o: 4, a: getRandomAccident() });
@@ -239,8 +246,21 @@
                 
                 //mObj1.SetEndBar("simple");
 
-                mObj1.betaEndBar = "simple";
-                mObj2.betaEndBar = "end";
+                mObj1.attr.clef = "G2";
+                mObj1.attr.timeSig = "3,4";
+                mObj1.attr.keySig = 4;
+
+                mObj1.attr.endBar = "repeat_b";
+                mObj2.attr.endBar = "end";
+
+                mObj3.attr.clef = "F4";
+                mObj3.attr.timeSig = "4,4";
+                mObj3.attr.keySig = 4;
+
+                mObj5.attr.clef = "C3";
+                mObj5.attr.timeSig = "4,4";
+                mObj5.attr.keySig = 4;
+
                 //mObj1.betaStartBar = "repeat_f";
                 //mObj2.betaStartBar = "repeat_f";
 
@@ -389,6 +409,7 @@
                 chordObj.MoveChordHead(200.5, 200);
                 console.log(chordObj.GetBackLength());
                 console.log(chordObj.GetFrontLength());*/
+                //svgContainer.appendChild(numDraw);
             }
 
 

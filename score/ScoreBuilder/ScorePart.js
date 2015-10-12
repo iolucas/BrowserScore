@@ -8,34 +8,38 @@ if(!ScoreBuilder) var ScoreBuilder = new Object();
 //-----------------------------------------------------------
 
 //Object to store score part data
-ScoreBuilder.ScorePart = function(partAttributes) {
+ScoreBuilder.ScorePart = function() {
     var selfRef = this,
         measures = new List(),    //ordered list to fit all the measures @ this score
         currLineLength = 0,
-        partModified = false;
+        partModified = false,
+        attributePointer = {};    //object to store score attributes that are passed from the measures
 
     //Function to check whether this score part has been modified or not
     //(measures are not verified because it only matter for the measures group organizer)
-    this.CheckModified = function() {
+    /*this.CheckModified = function() {
         return partModified;
-    }
+    }*/
 
     //There is no organizer, since this function has not to organize by its own, it is dependent to other score parts
     //Just use this function to clear the part modified flag
-    this.ClearModified = function() {
+    /*this.ClearModified = function() {
         partModified = false;
-    }
+    }*/
 
     this.GetClef = function() {
-        return partAttributes["clef"];
+        //return partAttributes["clef"];
+        return attributePointer["clef"];
     }
 
     this.GetTimeSig = function() {
-        return partAttributes["time"];
+        //return partAttributes["time"];
+        return attributePointer["timeSig"];
     }
 
     this.GetKeySig = function() {
-        return partAttributes["key"];
+        //return partAttributes["key"];
+        return attributePointer["keySig"];
     }
 
     this.ForEachMeasure = function(action, index) {
@@ -89,5 +93,13 @@ ScoreBuilder.ScorePart = function(partAttributes) {
             return "ERROR_MEASURE_NOT_FOUND";
         else 
             return selfRef.RemoveAt(position);
+    }
+
+    this.Organize = function() {
+
+        //Iterate thru all measures and organize them passing the attribute pointer to update score attributes
+        measures.ForEach(function(measure) {
+            measure.Organize123(attributePointer);
+        });
     }
 }
