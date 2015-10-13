@@ -539,7 +539,7 @@ function DrawBar(bar, barCoords) {
                 barPath += describeArc(1, barCoords[coord] - topCoord + 22.5, 2, 0, 359);
                 barPath += describeArc(1,barCoords[coord] - topCoord + 37.5,2, 0, 359);
             }
-            barPath += "M7,0v" + height + "M13,0v" + height + "h6v-" + height + "z";
+            barPath += "M7,0v" + height + "M13,0v" + height + "h7v-" + height + "z";
             break;
 
 

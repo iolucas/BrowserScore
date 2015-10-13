@@ -36,7 +36,7 @@
         <!--<script src="ariajs/Aria.js"></script>-->
         <script src="score/ScoreLoader.js"></script>
         <script src="score/ScoreElements.js"></script>
-        <script src="score/ScoreBuilder/TabChord.js"></script>
+        <!--<script src="score/ScoreBuilder/TabChord.js"></script>-->
         <script src="score/ScoreBuilder/Chord.js"></script>
         <script src="score/ScoreBuilder/Measure.js"></script>
         <script src="score/ScoreBuilder/MeasureGroup.js"></script>
@@ -208,7 +208,7 @@
 
                 cObj2.AddNote({n: "E", o: 3 , a: "" });
                 cObj2.AddNote({n: "F", o: 3, a: "flat-flat" });
-                cObj2.AddNote({n: "F", o: 4, a: "" });
+                cObj2.AddNote({n: "F", o: 2, a: "" });
 
                 cObj3.AddNote({n: "C", o: 4 }); 
 
@@ -247,10 +247,16 @@
                 //mObj1.SetEndBar("simple");
 
                 mObj1.attr.clef = "G2";
-                mObj1.attr.timeSig = "3,4";
-                mObj1.attr.keySig = 4;
+                mObj1.attr.timeSig = "4,4";
+                mObj1.attr.keySig = 7;
 
-                mObj1.attr.endBar = "repeat_b";
+                mObj2.attr.clef = "G2";
+                mObj2.attr.timeSig = "3,4";
+                mObj2.attr.keySig = 4;
+
+                //mObj1.attr.startBar = "repeat_f";
+                mObj1.attr.endBar = "simple";
+                //mObj2.attr.startBar = "repeat_f";
                 mObj2.attr.endBar = "end";
 
                 mObj3.attr.clef = "F4";
@@ -306,6 +312,7 @@
                 var sPart1 = new ScoreBuilder.ScorePart({clef:{sign: "G"}, time: timeObj, key: keyObj });
                 sPart1.InsertMeasure(mObj1);
                 sPart1.InsertMeasure(mObj2);
+
 
                 var sPart2 = new ScoreBuilder.ScorePart({clef:{sign: "F"}, time: timeObj, key: keyObj });
                 sPart2.InsertMeasure(mObj3);

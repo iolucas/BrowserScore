@@ -13,42 +13,22 @@ ScoreBuilder.ScorePart = function() {
         measures = new List(),    //ordered list to fit all the measures @ this score
         currLineLength = 0,
         partModified = false,
-        attributePointer = {};    //object to store score attributes that are passed from the measures
+        scoreAttr = {};    //object to store score attributes that are passed from the measures
 
-    //Function to check whether this score part has been modified or not
-    //(measures are not verified because it only matter for the measures group organizer)
-    /*this.CheckModified = function() {
-        return partModified;
-    }*/
+    //-------- Attributes public getters ---------//
+    /*this.GetClef = function() { return scoreAttr.clef; }
+    this.GetTimeSig = function() { return scoreAttr.timeSig; }
+    this.GetKeySig = function() { return scoreAttr.keySig; }*/
 
-    //There is no organizer, since this function has not to organize by its own, it is dependent to other score parts
-    //Just use this function to clear the part modified flag
-    /*this.ClearModified = function() {
-        partModified = false;
-    }*/
-
-    this.GetClef = function() {
-        //return partAttributes["clef"];
-        return attributePointer["clef"];
-    }
-
-    this.GetTimeSig = function() {
-        //return partAttributes["time"];
-        return attributePointer["timeSig"];
-    }
-
-    this.GetKeySig = function() {
-        //return partAttributes["key"];
-        return attributePointer["keySig"];
-    }
 
     this.ForEachMeasure = function(action, index) {
-        measures.ForEach(action, index);//iterate thru all the measures and apply the specified action to it
+        //iterate thru all the measures and apply the specified action to it
+        measures.ForEach(action, index);
     }
 
-    this.Find = function(measure) {
+    /*this.Find = function(measure) {
         return measures.Find(measure);
-    }
+    }*/
 
     this.Count = function() {
         return measures.Count();
@@ -67,8 +47,6 @@ ScoreBuilder.ScorePart = function() {
         else //otherwise
             measures.Insert(position, measure); //insert element reference at the position to the list
 
-        partModified = true;
-
         return "SUCCESS";
     }
 
@@ -81,8 +59,6 @@ ScoreBuilder.ScorePart = function() {
             removedMeasure.Draw().parentElement.removeChild(removedMeasure.Draw());  //remove it
         
         measures.RemoveAt(position);    //remove the measure from the list
-
-        partModified = true;
 
         return removedMeasure;
     }
@@ -99,7 +75,7 @@ ScoreBuilder.ScorePart = function() {
 
         //Iterate thru all measures and organize them passing the attribute pointer to update score attributes
         measures.ForEach(function(measure) {
-            measure.Organize123(attributePointer);
+            measure.OrganizeChords(scoreAttr);
         });
     }
 }

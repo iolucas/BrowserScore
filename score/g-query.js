@@ -132,6 +132,11 @@ SVGGraphicsElement.prototype.getBBox = function () {	//set the new one
     }
 }
 
+/*SVGGraphicsElement.prototype.GetAbsWidth = function() {
+    var elemBox = this.getBBox();
+    return elemBox.width - elemBox.x;
+}*/
+
 //Set a translate function for easily set the transform attribute to the element
 SVGGraphicsElement.prototype.translate = function(x, y) {
 	//get the transform string
