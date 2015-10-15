@@ -10,10 +10,7 @@ if(!ScoreBuilder) var ScoreBuilder = new Object();
 //Object to store score part data
 ScoreBuilder.ScorePart = function() {
     var selfRef = this,
-        measures = new List(),    //ordered list to fit all the measures @ this score
-        currLineLength = 0,
-        partModified = false,
-        scoreAttr = {};    //object to store score attributes that are passed from the measures
+        measures = new List();    //ordered list to fit all the measures @ this score
 
     this.ForEachMeasure = function(action, index) {
         //iterate thru all the measures and apply the specified action to it

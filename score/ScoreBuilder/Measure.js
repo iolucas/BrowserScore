@@ -73,8 +73,6 @@ ScoreBuilder.Measure = function() {
     this.InsertChord = function(chord, position) {
         //if the chord object already exists at this measure, return a message
         if(chords.Find(chord) != -1) return "CHORD_ALREADY_ON_MEASURE"; 
-        //implement timing verification in the future
-        //Object validation successful
 
         //if the type of the position variable is different from number or the position is bigger or the size of the list
         if(typeof position != "number" || position >= chords.Count())    
@@ -115,52 +113,46 @@ ScoreBuilder.Measure = function() {
     }
 
     this.OrganizeChords = function(prevMeasure) {
-        //got to create way to not overwrite the current measure attributes when inherit, cause we may insert a middle
-        //measure and would need to inherit new values then
 
-        //create system to insert clef key and time changes in the previous measure
+        //Reset variables
+        selfRef.changes = {}
 
+        runningClef = measureClef;  //set running clef
+        runningKeySig = measureKeySig;  //set running key sig
+        runningTimeSig = measureTimeSig;    //set running time sig
 
-        //Clear variables
-        this.changes = {}
-        runningClef = null;
-        runningKeySig = null;
-        runningTimeSig = null;
-
-        //Update running values with local or prev measure values
-
-        if(measureClef != undefined) {  //If we got the local clef
-            runningClef = measureClef;  //assing it to the running variable
-            if(prevMeasure && measureClef != prevMeasure.GetClef()) {  //check if the clef is different from the previous one
-                //if so, must be done a signal @ the previous measure that it will be changed
-                prevMeasure.changes.clef = measureClef;
+        //If there is a previous measure
+        if(prevMeasure != undefined) {
+            //If some running attribute is not valid, get the previous one
+            
+            if(runningClef == undefined)    //If the running clef is not valid
+                runningClef = prevMeasure.GetClef();    //get the previous one
+            else if(runningClef != prevMeasure.GetClef()) { //if it valid and different from the previous one
+                prevMeasure.changes.clef = measureClef; //Signalize the previous clef the next one is different
+                selfRef.changes.clefChanged = true;  //Flag this clef that it is different from the previous
             }
-        }    
-        else if(prevMeasure)
-            runningClef = prevMeasure.GetClef();  
 
-        
-        if(measureKeySig != undefined) {
-            runningKeySig = measureKeySig;
-            if(prevMeasure && measureKeySig != prevMeasure.GetKeySig()) {  //check if the KeySig is different from the previous one
-                //if so, must be done a signal @ the previous measure that it will be changed
+            //(Analog the same for other attributes)
+
+            if(runningKeySig == undefined)
+                runningKeySig = prevMeasure.GetKeySig();
+            else if(runningKeySig != prevMeasure.GetKeySig()) {
                 prevMeasure.changes.keySig = measureKeySig;
-            } 
-        }   
-        else if(prevMeasure)
-            runningKeySig = prevMeasure.GetKeySig();  
-
-        
-        if(measureTimeSig != undefined) {
-            runningTimeSig = measureTimeSig;
-            if(prevMeasure && measureTimeSig != prevMeasure.GetTimeSig()) {  //check if the time clef is different from the previous one
-                //if so, must be done a signal @ the previous measure that it will be changed
-                prevMeasure.changes.timeSig = measureTimeSig;
+                selfRef.changes.keySigChanged = true;
             }
-        }    
-        else if(prevMeasure)
-            runningTimeSig = prevMeasure.GetTimeSig();
 
+            if(runningTimeSig == undefined)
+                runningTimeSig = prevMeasure.GetTimeSig();
+            else if(runningTimeSig != prevMeasure.GetTimeSig()) {
+                prevMeasure.changes.timeSig = measureTimeSig;
+                selfRef.changes.timeSigChanged = true;
+            }
+
+        }  else {   //If the previous is not valid, 
+            selfRef.changes.clefChanged = true;  //Flag to signalize this measure has different clef as the previous (null)  
+            selfRef.changes.keySigChanged = true;  //Flag to signalize this measure has different key sig as the previous (null)
+            selfRef.changes.timeSigChanged = true;  //Flag to signalize this measure has different time sig as the previous (null) 
+        }   
         
         //If any of the attributes are not valid, throw exception
         if(runningClef == undefined || runningKeySig == undefined || runningTimeSig == undefined)

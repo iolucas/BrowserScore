@@ -20,7 +20,6 @@ ScoreBuilder.ScoreGroup = function() {
 
         generalGroup = $G.create("g"),   //group to fit all the score part lines
         scoreParts = new List(),   //list to store the score parts within this score group
-        //scoreLines = new List();    //list to store the score lines visual objects
 
         measureGroups;  //measure group array to store measure groups
 
@@ -249,7 +248,7 @@ function MeasureGroupLine(firstMeasureGroup) {
             linesGroup.appendChild(currGroup);
 
             currGroup.translate(0, nextVPosCeil);
-            vPosPointer += currGroupBox.height + 10;
+            vPosPointer += currGroupBox.height + 30;
         }
 
         //To be fixed when dealing with tabs, for now hard push the score line height to the line coords
@@ -332,7 +331,6 @@ function MeasureGroupLine(firstMeasureGroup) {
                 hPosPointer += keySigChangeArr._width;
             }  
 
-            console.log(timeSigChangeArr);
             var timeSigChangeArr = currMeasureGroup.GetTimeSigChangeArr(); 
             if(timeSigChangeArr.getValidLength() > 0) {
 
@@ -359,8 +357,13 @@ function MeasureGroupLine(firstMeasureGroup) {
 
     //Draw all the headers to check the highest one
     firstMeasureGroup.ForEachMeasure(function(measure, index) {
+
+        //Verify whether this measure time sig must be shown or not
+        //It should be shown if it has been changed from the last one
+        var measureTimeSig = measure.changes.timeSigChanged ? measure.GetTimeSig() : null;
+
         //Get lines header obj
-        var partHeaderObj = DrawScoreLineHeader(measure.GetClef(), measure.GetKeySig(), measure.GetTimeSig()), 
+        var partHeaderObj = DrawScoreLineHeader(measure.GetClef(), measure.GetKeySig(), measureTimeSig), 
             partObjBox = partHeaderObj.getBBox(),
             partObjWidth = partObjBox.width + partObjBox.x, //get current part header total width
             lineGroup = $G.create("g"),
