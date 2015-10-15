@@ -253,8 +253,8 @@
                 //set a change object in the previous clef
 
                 mObj2.SetClef("F4");
-                mObj2.SetTimeSig("1,2");
-                mObj2.SetKeySig(4);
+                mObj6.SetTimeSig("1,2");
+                mObj2.SetKeySig(1);
 
                 //mObj1.attr.startBar = "repeat_f";
                 mObj1.SetEndBar("double");
@@ -262,12 +262,14 @@
                 mObj2.SetEndBar("end");
 
                 mObj3.SetClef("F4");
-                //mObj4.SetClef("G2");
+                mObj4.SetClef("G2");
                 mObj3.SetTimeSig("4,4");
                 mObj3.SetKeySig(0);
 
+                mObj4.SetKeySig(2);
+
                 mObj5.SetClef("C3");
-                //mObj6.SetClef("G2_OCT");
+                mObj6.SetClef("G2_OCT");
                 mObj5.SetTimeSig("4,4");
                 mObj5.SetKeySig(0);
 

@@ -129,13 +129,13 @@ ScoreBuilder.MeasureGroup = function() {
         _startBar = null;    //clear curr start bar
         _endBar = null;    //clear curr end bar
 
-        _clefChangeArr = [];    //Resets the array to store the clefs that will be put later    
+        _clefChangeArr = new Array(measures.length);    //Resets the array to store the clefs that will be put later    
         _clefChangeArr._width = 0;   //var to get the largest clef draw
 
-        _keySigChangeArr = [];
+        _keySigChangeArr = new Array(measures.length);
         _keySigChangeArr._width = 0;
     
-        _timeSigChangeArr = [];
+        _timeSigChangeArr = new Array(measures.length);
         _timeSigChangeArr._width = 0;
 
 
@@ -163,29 +163,29 @@ ScoreBuilder.MeasureGroup = function() {
                 var clefObj = DrawScoreClef(measures[i].changes.clef),    //Get the clef obj
                     clefWidth = clefObj.getBBox().width;
 
-                _clefChangeArr.push(clefObj);   //push the clef change obj to the clef change array   
+                _clefChangeArr[i] = clefObj;   //push the clef change obj to the clef change array   
 
                 if(clefWidth > _clefChangeArr._width)    //if it is larger than the previous one
                     _clefChangeArr._width = clefWidth;   //update it
             }
 
             //Got to populate keysig change array with the first measure change
-            if(measures[i].changes.keySig && _keySigChangeArr.length == 0) {
+            if(measures[i].changes.keySig) {
                 var keySigObj = DrawKeySignature(measures[i].changes.keySig),
                     keySigWidth = keySigObj.getBBox().width;
 
-                _keySigChangeArr.push(keySigObj);  
+                _keySigChangeArr[i] = keySigObj;  
                 
                 if(keySigWidth > _keySigChangeArr._width)
                     _keySigChangeArr._width = keySigWidth;
             }
 
             //Got to populate timesig change array with the first measure change
-            if(measures[i].changes.timeSig && _timeSigChangeArr.length == 0) {
+            if(measures[i].changes.timeSig) {
                 var timeSigObj = DrawTimeSignature(measures[i].changes.timeSig),
                     timeSigWidth = timeSigObj.getBBox().width;
 
-                _timeSigChangeArr.push(timeSigObj);  
+                _timeSigChangeArr[i] = timeSigObj;  
                 
                 if(timeSigWidth > _timeSigChangeArr._width)
                     _timeSigChangeArr._width = timeSigWidth;  

@@ -269,6 +269,7 @@ function MeasureGroupLine(firstMeasureGroup) {
         //Organize measure groups positions (chords, bars and measures)
         var hPosPointer = headerMargin, //horizontal position pointer
             denUnitValue = (LINE_WIDTH - lineFixedLength) / lineDenominatorSum;
+        
         for(var i = 0; i < measureGroups.length; i++) {
             currMeasureGroup = measureGroups[i];
             currMeasureGroup.SetChordsPositions(denUnitValue);
@@ -289,9 +290,12 @@ function MeasureGroupLine(firstMeasureGroup) {
 
             //If there is any clef change
             var clefChangeArr = currMeasureGroup.GetClefChangeArr();
-            if(clefChangeArr.length > 0) {
+            if(clefChangeArr.getValidLength() > 0) {
 
                 for(var clefInd = 0; clefInd < clefChangeArr.length; clefInd++) {
+                    if(clefChangeArr[clefInd] == undefined)
+                        continue;
+
                     var clefObj = clefChangeArr[clefInd];
                     linesGroup.appendChild(clefObj);
                     clefObj.translate(hPosPointer, linesCoords[clefInd]);
@@ -311,11 +315,14 @@ function MeasureGroupLine(firstMeasureGroup) {
             }
 
             var keySigChangeArr = currMeasureGroup.GetKeySigChangeArr(); 
-            if(keySigChangeArr.length > 0) {
+            if(keySigChangeArr.getValidLength() > 0) {
 
                 hPosPointer += 5;
 
                 for(var keySigInd = 0; keySigInd < keySigChangeArr.length; keySigInd++) {
+                    if(keySigChangeArr[keySigInd] == undefined)
+                        continue;
+
                     var keySigIndObj = keySigChangeArr[keySigInd];
                     linesGroup.appendChild(keySigIndObj);
                     keySigIndObj.translate(hPosPointer, linesCoords[keySigInd]);
@@ -325,12 +332,16 @@ function MeasureGroupLine(firstMeasureGroup) {
                 hPosPointer += keySigChangeArr._width;
             }  
 
+            console.log(timeSigChangeArr);
             var timeSigChangeArr = currMeasureGroup.GetTimeSigChangeArr(); 
-            if(timeSigChangeArr.length > 0) {
+            if(timeSigChangeArr.getValidLength() > 0) {
 
                 hPosPointer += 10;
-
+                
                 for(var timeSigInd = 0; timeSigInd < timeSigChangeArr.length; timeSigInd++) {
+                    if(timeSigChangeArr[timeSigInd] == undefined)
+                        continue;
+
                     var timeSigIndObj = timeSigChangeArr[timeSigInd];
                     linesGroup.appendChild(timeSigIndObj);
                     timeSigIndObj.translate(hPosPointer, linesCoords[timeSigInd]);
