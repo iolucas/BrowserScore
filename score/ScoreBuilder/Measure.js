@@ -26,6 +26,8 @@ ScoreBuilder.Measure = function() {
     //---------------- PUBLIC METHODS -----------------------
     //-------------------------------------------------------
 
+    //Property to be used when dealing with tabs to determine the height limit for bars, brackets etc
+    //Object.defineProperty(this, "linesHeight", { value: 60 });
 
     //---------------- Visual Object Methods ----------------
     this.Draw = function() { return measureGroup; }
@@ -38,9 +40,34 @@ ScoreBuilder.Measure = function() {
         chords.ForEach(action, index);
     }
 
-    //Local attribute object of this measure
-    var _attr = {}  
-    Object.defineProperty(this, "attr", { value: _attr });  //Attach a public reference for this local attribute object
+
+    this.changes;
+
+    //Static measure values, that will be change every time a set is called
+    var measureClef = null,
+        measureKeySig = null,
+        measureTimeSig = null;
+
+    this.SetClef = function(value) { measureClef = value; }
+    this.SetKeySig = function(value) { measureKeySig = value; }
+    this.SetTimeSig = function(value) { measureTimeSig = value; }
+
+    //Dynamic running values, that will be updated everytime organized is called
+    var runningClef = null,
+        runningKeySig = null,
+        runningTimeSig = null;
+
+    this.GetClef = function() { return runningClef; }
+    this.GetKeySig = function() { return runningKeySig; }
+    this.GetTimeSig = function() { return runningTimeSig; }
+
+    var measureEndBar = null;
+    this.GetEndBar = function() { return measureEndBar; }
+    this.SetEndBar = function(value) { measureEndBar = value; }
+
+    var measureStartBar = null;
+    this.GetStartBar = function() { return measureStartBar; }
+    this.SetStartBar = function(value) { measureStartBar = value; }
 
 
     this.InsertChord = function(chord, position) {
@@ -87,31 +114,61 @@ ScoreBuilder.Measure = function() {
             return selfRef.RemoveAt(position);
     }
 
-    this.OrganizeChords = function(scoreAttr) {
-        //Get values and update attribute pointer
+    this.OrganizeChords = function(prevMeasure) {
+        //got to create way to not overwrite the current measure attributes when inherit, cause we may insert a middle
+        //measure and would need to inherit new values then
 
-        if(_attr.clef != undefined)   //if there is a clef on this measure
-            scoreAttr.clef = _attr.clef;    //update the one at attribute pointer
-        else //if not, get the clef from the attribute pointer
-            _attr.clef = scoreAttr.clef;
+        //create system to insert clef key and time changes in the previous measure
 
-        if(_attr.timeSig != undefined)   //if there is a time sig on this measure
-            scoreAttr.timeSig = _attr.timeSig;    //update the one at attribute pointer
-        else //if not, get the time sig from the attribute pointer
-            _attr.timeSig = scoreAttr.timeSig;
 
-        if(_attr.keySig != undefined)   //if there is a key sig on this measure
-            scoreAttr.keySig = _attr.keySig;    //update the one at attribute pointer
-        else //if not, get the key sig from the attribute pointer
-            _attr.keySig = scoreAttr.keySig;
+        //Clear variables
+        this.changes = {}
+        runningClef = null;
+        runningKeySig = null;
+        runningTimeSig = null;
 
-        //If any of the attributes are not valid, throw exception
-        if(_attr.clef == undefined || _attr.keySig == undefined || _attr.timeSig == undefined)
-            throw "INVALID_MEASURE_ATTRIBUTES: " + _attr.clef + " " + _attr.keySig + " " + _attr.timeSig;
+        //Update running values with local or prev measure values
+
+        if(measureClef != undefined) {  //If we got the local clef
+            runningClef = measureClef;  //assing it to the running variable
+            if(prevMeasure && measureClef != prevMeasure.GetClef()) {  //check if the clef is different from the previous one
+                //if so, must be done a signal @ the previous measure that it will be changed
+                prevMeasure.changes.clef = measureClef;
+            }
+        }    
+        else if(prevMeasure)
+            runningClef = prevMeasure.GetClef();  
+
         
+        if(measureKeySig != undefined) {
+            runningKeySig = measureKeySig;
+            if(prevMeasure && measureKeySig != prevMeasure.GetKeySig()) {  //check if the KeySig is different from the previous one
+                //if so, must be done a signal @ the previous measure that it will be changed
+                prevMeasure.changes.keySig = measureKeySig;
+            } 
+        }   
+        else if(prevMeasure)
+            runningKeySig = prevMeasure.GetKeySig();  
+
+        
+        if(measureTimeSig != undefined) {
+            runningTimeSig = measureTimeSig;
+            if(prevMeasure && measureTimeSig != prevMeasure.GetTimeSig()) {  //check if the time clef is different from the previous one
+                //if so, must be done a signal @ the previous measure that it will be changed
+                prevMeasure.changes.timeSig = measureTimeSig;
+            }
+        }    
+        else if(prevMeasure)
+            runningTimeSig = prevMeasure.GetTimeSig();
+
+        
+        //If any of the attributes are not valid, throw exception
+        if(runningClef == undefined || runningKeySig == undefined || runningTimeSig == undefined)
+            throw "INVALID_MEASURE_ATTRIBUTES: " + runningClef + " " + runningKeySig + " " + runningTimeSig;   
+
         //Organize all the chords on this measure
         chords.ForEach(function(chord) {
-            chord.Organize(_attr.clef);
+            chord.Organize(runningClef);
         });
     }
 }

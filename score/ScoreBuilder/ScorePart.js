@@ -15,12 +15,6 @@ ScoreBuilder.ScorePart = function() {
         partModified = false,
         scoreAttr = {};    //object to store score attributes that are passed from the measures
 
-    //-------- Attributes public getters ---------//
-    /*this.GetClef = function() { return scoreAttr.clef; }
-    this.GetTimeSig = function() { return scoreAttr.timeSig; }
-    this.GetKeySig = function() { return scoreAttr.keySig; }*/
-
-
     this.ForEachMeasure = function(action, index) {
         //iterate thru all the measures and apply the specified action to it
         measures.ForEach(action, index);
@@ -74,8 +68,12 @@ ScoreBuilder.ScorePart = function() {
     this.Organize = function() {
 
         //Iterate thru all measures and organize them passing the attribute pointer to update score attributes
+        var prevMeasure = null;
         measures.ForEach(function(measure) {
-            measure.OrganizeChords(scoreAttr);
+            //console.log(measure.attr);
+            //measure.OrganizeChords(scoreAttr);
+            measure.OrganizeChords(prevMeasure);
+            prevMeasure = measure;
         });
     }
 }

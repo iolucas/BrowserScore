@@ -22,8 +22,6 @@ SYSTEM THAT WILL CHECK THE NEXT MEASURE GROUP TO LOOK FOR CHANGES
 HOW WILL STORE CLEF CHANGES @ MEASURE GROUP, SINCE THEY DO NOT CHANGE FOR ALL? SAME FOR KEYS WHEN USING TABS
 FOR TIME ITS OK CAUSE TABS FOLLOW THE SAME TIME SIGNATURES
 
-WILL HAVE TO IMPROVE THE COORDINATES SYSTEM THAT PLACE THE BARS AND DOTS STUFF @ THE SCORE FINISH CAUSE
-THEY ARE USING THE 60 PIXEL HARD CODED SSCORE LINES SIZE
 
 CHECK NOTE BOOK FOR MORE INSTRUCTIONS HOW SCORE HEADER DATA WILL BE PASSED FROM THE MEASURE TO SCORE*/
 
@@ -34,28 +32,38 @@ ScoreBuilder.MeasureGroup = function() {
         chordsTimeArray,
         denominatorSum = 0, //variable to store the total denominators sum of this measure
         
-        leftMargin = 0, //left margin to be used for start positioning chord at the measures
-        
         currWidth = 0,  //variable to store the measure group current width
         fixedLength = 0,   //variable to store the fixed length of this measure group, including chords size, bars and margins
         
-        endBarWidth = 0,
         //factor to multiply denominators to get times as integers (biggest denominator expected)
-        
         CHORD_ARRAY_FACTOR = 128,
         MEASURE_LEFT_MARGIN = 20;  //constante value for the left margin of the measure
 
-    this.GetWidth = function() {
-        return currWidth;
-    }
+    //Valid after SetChord position call
+    this.GetWidth = function() { return currWidth; }
 
-    this.GetFixedLength = function() {
-        return fixedLength;
-    }
+    //Valid after Organize call
+    this.GetFixedLength = function() { return fixedLength; }
 
-    this.GetDenominatorSum = function() {
-        return denominatorSum;
-    }
+    //Valid after organize call
+    this.GetDenominatorSum = function() { return denominatorSum; }
+
+
+    var _startBar;    
+    this.GetStartBar = function() { return _startBar; }
+
+    var _endBar; 
+    this.GetEndBar = function() { return _endBar; }
+
+    var _clefChangeArr;
+    this.GetClefChangeArr = function() { return _clefChangeArr; }
+
+    var _keySigChangeArr;
+    this.GetKeySigChangeArr = function() { return _keySigChangeArr; }
+    
+    var _timeSigChangeArr;
+    this.GetTimeSigChangeArr = function() { return _timeSigChangeArr; }
+
 
     this.AddMeasure = function(measure) {
         if(measures.indexOf(measure) != -1)
@@ -87,27 +95,11 @@ ScoreBuilder.MeasureGroup = function() {
                 action(measures[i], i);
     }
 
-
-    //------------ BETA ----------------
-    var currStartBar,
-        currEndBar;
-
-    //MUST DRAW BARS @ THE SCORE GROUP, BUT MARGINS AND BARS WIDTH MUST BE ADDED HERE TO THE CURR WIDTH OF THE MEASURE GROUP
-
-    this.GetStartBar = function() {
-        return currStartBar;
-    }
-
-    this.GetEndBar = function() {
-        return currEndBar;
-    }
-
     //Function to set the chords positions of the measures within this measure group
     this.SetChordsPositions = function(denUnitLength) {
 
         //Start the next position variable with the left margin value
-        //(Must ensure left margin is update by the Organize call)
-        var nextPosition = leftMargin;
+        var nextPosition = MEASURE_LEFT_MARGIN;
 
         //Iterate thru the chords time array
         for(var chordTime = 0; chordTime < chordsTimeArray.length; chordTime++) {
@@ -125,106 +117,27 @@ ScoreBuilder.MeasureGroup = function() {
         }
 
         //update curr length variable of this measure group with the end bar length
-        //currWidth = nextPosition + endBarWidth;
         currWidth = nextPosition;
-    }
-
-    //Generate time array for this measureGroup and other stuff
-    this.Organize2 = function() {
-
-        leftMargin = MEASURE_LEFT_MARGIN; //reset the left margin
-        fixedLength = MEASURE_LEFT_MARGIN;  //reset the fixed length
-        endBarWidth = 0;    //reset the end bar width variable
-        denominatorSum = 0; //clear the denominator sum
-
-        currStartBar = null;    //clear curr start bar
-        currEndBar = null;    //clear curr end bar
-
-        //alloc new chord time array
-        chordsTimeArray = [];
-        
-        if(measures.getValidLength() <= 0) //if there is no measure, return
-            return;
-
-        //iterate thru the measures of this measure group
-        for(var i = 0; i < measures.length; i++) {
-            if(measures[i] == undefined)    //if the current index is not valid
-                continue;   //keep next iteration
-
-            //measures[i].Organize(); //ensure current measure is organized
-
-            //if the currStartBar hasn't been set and the current measure got a valid start bar value
-            if(!currStartBar && measures[i].attr.startBar) {
-                currStartBar = measures[i].attr.startBar;    //set the current start bar variable
-                //get the bar width and add to the fixed length and left margin
-                var currStartBarWidth = DrawBar(currStartBar, [0, 1]).getBBox().width;
-                leftMargin += currStartBarWidth;
-                fixedLength += currStartBarWidth;
-            }
-
-            //if the currEndBar hasn't been set and the current measure got a valid end bar value
-            if(!currEndBar && measures[i].attr.endBar) {
-                currEndBar = measures[i].attr.endBar;
-                //get the bar width and add
-                endBarWidth = DrawBar(currEndBar, [0, 1]).getBBox().width;
-                fixedLength += endBarWidth;   
-            }
-
-            //Variable to navigate thru the chords of the measure
-            var currInd = 0;
-
-            //iterate thry the current measure chords and populate the chords time array                   
-            measures[i].ForEachChord(function(chord) {
-
-                //chord.Organize();   //Ensure the chord is organized
-
-                if(chordsTimeArray[currInd] == undefined)  //if the chord time array hasn't been initated
-                    chordsTimeArray[currInd] = [];  //inits it
-                
-                chordsTimeArray[currInd].push(chord);   //push the chord to it
-
-                //get the highest back length value
-                if(chordsTimeArray[currInd].backLength == undefined || chord.GetBackWidth() > chordsTimeArray[currInd].backLength)
-                    chordsTimeArray[currInd].backLength = chord.GetBackWidth(); 
-                    
-                //get the highest front length value
-                if(chordsTimeArray[currInd].frontLength == undefined || chord.GetFrontWidth() > chordsTimeArray[currInd].frontLength)
-                    chordsTimeArray[currInd].frontLength = chord.GetFrontWidth();
-
-                //get the highest denominator
-                if(chordsTimeArray[currInd].highDen == undefined || chord.GetDenominator() > chordsTimeArray[currInd].highDen)
-                    chordsTimeArray[currInd].highDen = chord.GetDenominator();             
-
-                //update next chord ind
-                currInd += CHORD_ARRAY_FACTOR / chord.GetDenominator();
-
-                //if invalid denominator is set, throw error
-                if(currInd.getDecimalValue() != 0)
-                    throw "INVALID_DENOMINATOR: " + chord.GetDenominator();
-            });
-        }
-
-        //Update fixedLength and denominatorSum variable
-        for(var j = 0; j < chordsTimeArray.length; j++) {
-            if(chordsTimeArray[j] == undefined)
-                continue;
-
-            //get the biggest elements fixed lengths to find out how much free space we have 
-            fixedLength += chordsTimeArray[j].backLength + chordsTimeArray[j].frontLength;
-            //get the high den of the time and accumulate it with the others
-            denominatorSum += 1 / chordsTimeArray[j].highDen;
-        }
     }
 
     this.Organize = function() {
 
-        leftMargin = MEASURE_LEFT_MARGIN; //reset the left margin
         fixedLength = MEASURE_LEFT_MARGIN;  //reset the fixed length
 
         denominatorSum = 0; //clear the denominator sum
 
-        currStartBar = null;    //clear curr start bar
-        currEndBar = null;    //clear curr end bar
+        _startBar = null;    //clear curr start bar
+        _endBar = null;    //clear curr end bar
+
+        _clefChangeArr = [];    //Resets the array to store the clefs that will be put later    
+        _clefChangeArr._width = 0;   //var to get the largest clef draw
+
+        _keySigChangeArr = [];
+        _keySigChangeArr._width = 0;
+    
+        _timeSigChangeArr = [];
+        _timeSigChangeArr._width = 0;
+
 
         //alloc new chord time array
         chordsTimeArray = [];
@@ -238,12 +151,46 @@ ScoreBuilder.MeasureGroup = function() {
                 continue;   //keep next iteration
 
             //if the currStartBar hasn't been set and the current measure got a valid start bar value
-            if(!currStartBar && measures[i].attr.startBar)
-                currStartBar = measures[i].attr.startBar;    //set the current start bar variable
+            if(!_startBar && measures[i].GetStartBar())
+                _startBar = measures[i].GetStartBar();    //set the current start bar variable
 
             //if the currEndBar hasn't been set and the current measure got a valid end bar value
-            if(!currEndBar && measures[i].attr.endBar)
-                currEndBar = measures[i].attr.endBar;
+            if(!_endBar && measures[i].GetEndBar())
+                _endBar = measures[i].GetEndBar();
+
+            //If the measure got to place the clef change of the next measure
+            if(measures[i].changes.clef) {
+                var clefObj = DrawScoreClef(measures[i].changes.clef),    //Get the clef obj
+                    clefWidth = clefObj.getBBox().width;
+
+                _clefChangeArr.push(clefObj);   //push the clef change obj to the clef change array   
+
+                if(clefWidth > _clefChangeArr._width)    //if it is larger than the previous one
+                    _clefChangeArr._width = clefWidth;   //update it
+            }
+
+            //Got to populate keysig change array with the first measure change
+            if(measures[i].changes.keySig && _keySigChangeArr.length == 0) {
+                var keySigObj = DrawKeySignature(measures[i].changes.keySig),
+                    keySigWidth = keySigObj.getBBox().width;
+
+                _keySigChangeArr.push(keySigObj);  
+                
+                if(keySigWidth > _keySigChangeArr._width)
+                    _keySigChangeArr._width = keySigWidth;
+            }
+
+            //Got to populate timesig change array with the first measure change
+            if(measures[i].changes.timeSig && _timeSigChangeArr.length == 0) {
+                var timeSigObj = DrawTimeSignature(measures[i].changes.timeSig),
+                    timeSigWidth = timeSigObj.getBBox().width;
+
+                _timeSigChangeArr.push(timeSigObj);  
+                
+                if(timeSigWidth > _timeSigChangeArr._width)
+                    _timeSigChangeArr._width = timeSigWidth;  
+            }
+
 
             //Variable to navigate thru the chords of the measure
             var currInd = 0;
@@ -277,6 +224,24 @@ ScoreBuilder.MeasureGroup = function() {
             });
         }
 
+        //Add clef change margin to the fixed length
+        if(_clefChangeArr._width > 0) {    //if it different from 0
+            _clefChangeArr._width += 5;    //Add an additional gap
+            fixedLength += _clefChangeArr._width;   //add it plus a gap 
+        }
+
+        //Add time sig change margin to the fixed length
+        if(_timeSigChangeArr._width > 0) {    //if it different from 0
+            _timeSigChangeArr._width;    //Add an additional gap
+            fixedLength += _timeSigChangeArr._width + 10;   //add it plus a gap 
+        }
+
+        //Add key sig change margin to the fixed length
+        if(_keySigChangeArr._width > 0) {    //if it different from 0
+            _keySigChangeArr._width;    //Add an additional gap
+            fixedLength += _keySigChangeArr._width + 5;   //add it plus a gap 
+        }        
+
         //Update fixedLength and denominatorSum variable
         for(var j = 0; j < chordsTimeArray.length; j++) {
             if(chordsTimeArray[j] == undefined)
@@ -288,59 +253,6 @@ ScoreBuilder.MeasureGroup = function() {
             denominatorSum += 1 / chordsTimeArray[j].highDen;
         }
     }
-
-
-    //Got to set the necessary attributes for this measure group, such bars, 
-
-    /*function fillTimeArray() {
-        //alloc new chord time array
-        chordsTimeArray = [];
-        
-        if(measures.getValidLength() <= 0) //if there is no measure, return
-            return;
-
-        //iterate thru the measures of this measure group
-        for(var i = 0; i < measures.length; i++) {
-            if(measures[i] == undefined)    //if the current index is not valid
-                continue;   //keep next iteration
-
-            //Variable to navigate thru the chords of the measure
-            var currInd = 0;
-
-            //iterate thry the current measure chords and populate the chords time array                   
-            measures[i].ForEachChord(function(chord) {
-
-                if(chordsTimeArray[currInd] == undefined)  //if the current chord time array hasn't been initated
-                    chordsTimeArray[currInd] = [];  //inits it
-                
-                chordsTimeArray[currInd].push(chord);   //push the chord to it
-
-                //get the highest back length value
-                if(chordsTimeArray[currInd].backLength == undefined || chord.GetBackWidth() > chordsTimeArray[currInd].backLength)
-                    chordsTimeArray[currInd].backLength = chord.GetBackWidth(); 
-                    
-                //get the highest front length value
-                if(chordsTimeArray[currInd].frontLength == undefined || chord.GetFrontWidth() > chordsTimeArray[currInd].frontLength)
-                    chordsTimeArray[currInd].frontLength = chord.GetFrontWidth();
-
-                //get the highest denominator
-                if(chordsTimeArray[currInd].highDen == undefined || chord.GetDenominator() > chordsTimeArray[currInd].highDen)
-                    chordsTimeArray[currInd].highDen = chord.GetDenominator();             
-
-                //update next chord ind
-                currInd += CHORD_ARRAY_FACTOR / chord.GetDenominator();
-
-                //if invalid denominator is set, throw error
-                if(currInd.getDecimalValue() != 0)
-                    throw "INVALID_DENOMINATOR: " + chord.GetDenominator();
-            });
-        }
-    }
-
-    //Function to update the values of fixed length
-    function updateValues() {
-
-    }*/
 
     //Function to get the lower denominatir unit lenght that the measure group size remains above the min width
     this.GetMinDenUnitLength = function(minWidth) {

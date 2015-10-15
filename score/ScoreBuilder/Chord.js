@@ -265,6 +265,11 @@ ScoreBuilder.Chord = function(chordDen, dots) {
                 POS0_OCTAVE = 5; 
                 break;
 
+            case "G2_OCT":
+                POS0_NOTE = 'E'.charCodeAt(0);
+                POS0_OCTAVE = 6; 
+                break;
+
             case "F4":
                 POS0_NOTE = 'G'.charCodeAt(0);
                 POS0_OCTAVE = 3; 

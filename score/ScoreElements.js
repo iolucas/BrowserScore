@@ -29,7 +29,7 @@ function DrawScoreClef(clef) {
             break;
 
         case "G2_OCT":
-            clefElem = DrawScoreClef("G");
+            clefElem = DrawScoreClef("G2");
             var currPath = clefElem.getAttribute("d");
             currPath += "M13.684,90.291c-0.512-0.678-0.852-1.361-1.022-1.872c-0.17-0.511-0.341-1.192-0.341-1.876c0-1.188,0.341-2.212,1.192-2.892c0.852-0.682,1.874-1.192,3.236-1.192c1.192,0,2.213,0.341,2.895,1.021c0.68,0.682,1.021,1.533,1.021,2.384c0,0.679-0.17,1.192-0.512,1.703c-0.34,0.511-0.682,1.021-1.191,1.362c-0.342,0.171-0.852,0.511-1.703,0.852c0.851,1.192,1.533,2.043,1.703,2.554s0.34,1.022,0.34,1.703c0,1.362-0.51,2.554-1.533,3.577c-1.021,1.022-2.213,1.531-3.746,1.531c-1.362,0-2.383-0.341-3.234-1.021c-0.852-0.682-1.192-1.702-1.192-2.725c0-0.681,0.169-1.364,0.511-2.046c0.341-0.679,0.851-1.188,1.533-1.703C12.151,90.974,12.833,90.633,13.684,90.291z M14.195,90.801c-0.341,0.342-0.682,0.682-0.852,0.851c-0.171,0.343-0.511,1.024-0.682,1.703c-0.17,0.682-0.341,1.533-0.341,2.555c0,0.682,0.171,1.193,0.341,1.533c0.171,0.341,0.682,0.512,1.192,0.512c0.511,0,1.021-0.343,1.362-0.852c0.511-0.68,0.852-1.531,0.852-2.554c0-0.681-0.17-1.194-0.341-1.874C15.557,91.994,14.875,91.651,14.195,90.801z M16.577,88.93c0.342-0.341,0.683-0.681,0.852-0.852c0.341-0.681,0.513-1.703,0.513-2.896c0-0.679-0.172-1.361-0.341-1.529c-0.172-0.173-0.511-0.683-0.852-0.683s-0.682,0.17-1.022,0.513c-0.34,0.509-0.511,1.19-0.511,2.212c0,0.514,0.171,1.024,0.341,1.533S16.068,88.246,16.577,88.93z";
             clefElem.setAttribute("d", currPath);
@@ -169,7 +169,17 @@ function DrawKeySignature(fifth) {
 }
 
 //Function to draw the time signature object
-function DrawTimeSig(beats, beatType) {
+
+function DrawTimeSignature(timeSig) {
+    var timeSigSplit = timeSig.split(",");
+    if(timeSigSplit.length < 2)
+        return drawTimeSigSymbol(timeSig);
+    else
+        return drawTimeSigValue(timeSigSplit[0], timeSigSplit[1]);
+}
+
+
+function drawTimeSigValue(beats, beatType) {
     var beatsGroup = document.createElementNS(xmlns, "g"),
         beatTypeGroup = document.createElementNS(xmlns, "g"),
         nextPos = 0;
@@ -223,7 +233,7 @@ function DrawTimeSig(beats, beatType) {
 }
 
 //Function to draw the time symbols cut and common
-function DrawTimeSymbol(symbol) {
+function drawTimeSigSymbol(symbol) {
     var timeSymbol = $G.create("path");  //create new path
         timeSymbol.setAttribute("d", "M24.739,24.021c0-3.428-3.25-8.963-11.938-8.964C6.368,15.06,0.002,22.809,0,29.571c0.03,8.635,4.863,16.113,13.147,16.113c9.297-0.003,11.678-7.726,11.674-11.586c-0.331-0.001-0.767,0.003-1.038,0.005c-0.526,3.232-3.648,9.706-8.998,9.706c-5.83-0.001-7.287-5.19-7.285-13.569c0-10.549,3.453-13.306,7.607-13.308c3.29,0.005,5.091,1.752,5.347,2.192c0.154,0.245,0.166,0.571-0.048,0.799C17.905,19.905,15,21.648,15,25.16c0,2.101,1.483,4.485,4.7,4.485C22.139,29.644,24.731,27.764,24.739,24.021L24.739,24.021z");    
 
@@ -506,7 +516,8 @@ function DrawBar(bar, barCoords) {
     var barObj = $G.create("path"),
         barPath = "",
         topCoord = barCoords[0],
-        height = barCoords[barCoords.length - 1] + 60 - topCoord;
+        bottomCoord = barCoords[barCoords.length - 1],
+        height = bottomCoord - topCoord;
 
     switch(bar) {
         case "simple":
@@ -528,14 +539,14 @@ function DrawBar(bar, barCoords) {
 
         case "repeat_f":
             barPath += "M0,0v" + height + "h6v-" + height + "zM12,0v" + height;
-            for(var coord = 0; coord < barCoords.length; coord++) {
+            for(var coord = 0; coord < barCoords.length - 1; coord++) {
                 barPath += describeArc(18, barCoords[coord] - topCoord + 22.5, 2, 0, 359);
                 barPath += describeArc(18,barCoords[coord] - topCoord + 37.5,2, 0, 359);
             }
             break;
 
         case "repeat_b":
-            for(var coord = 0; coord < barCoords.length; coord++) {
+            for(var coord = 0; coord < barCoords.length - 1; coord++) {
                 barPath += describeArc(1, barCoords[coord] - topCoord + 22.5, 2, 0, 359);
                 barPath += describeArc(1,barCoords[coord] - topCoord + 37.5,2, 0, 359);
             }
@@ -553,9 +564,9 @@ function DrawBar(bar, barCoords) {
 
 }
 
-function DrawBracket(height) {
+function DrawBracket(lineCoords) {
     var bracketObj = $G.create("path");
-    var absHeight = height + 60;
+    var absHeight = lineCoords[lineCoords.length - 1] - lineCoords[0];
     bracketObj.setStrokeColor("#000");
 
     var dPath = "M5,-5c3.479,0,15-9.762,15-12.709 C20,-15.921 4.639,-10, 0,-10 v" + 

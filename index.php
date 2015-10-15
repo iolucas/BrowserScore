@@ -246,26 +246,30 @@
                 
                 //mObj1.SetEndBar("simple");
 
-                mObj1.attr.clef = "G2";
-                mObj1.attr.timeSig = "4,4";
-                mObj1.attr.keySig = 7;
+                mObj1.SetClef("G2");
+                mObj1.SetTimeSig("4,4");
+                mObj1.SetKeySig(0);
 
-                mObj2.attr.clef = "G2";
-                mObj2.attr.timeSig = "3,4";
-                mObj2.attr.keySig = 4;
+                //set a change object in the previous clef
+
+                mObj2.SetClef("F4");
+                mObj2.SetTimeSig("1,2");
+                mObj2.SetKeySig(4);
 
                 //mObj1.attr.startBar = "repeat_f";
-                mObj1.attr.endBar = "simple";
-                //mObj2.attr.startBar = "repeat_f";
-                mObj2.attr.endBar = "end";
+                mObj1.SetEndBar("double");
+                //mObj2.SetStartBar("repeat_f");
+                mObj2.SetEndBar("end");
 
-                mObj3.attr.clef = "F4";
-                mObj3.attr.timeSig = "4,4";
-                mObj3.attr.keySig = 4;
+                mObj3.SetClef("F4");
+                //mObj4.SetClef("G2");
+                mObj3.SetTimeSig("4,4");
+                mObj3.SetKeySig(0);
 
-                mObj5.attr.clef = "C3";
-                mObj5.attr.timeSig = "4,4";
-                mObj5.attr.keySig = 4;
+                mObj5.SetClef("C3");
+                //mObj6.SetClef("G2_OCT");
+                mObj5.SetTimeSig("4,4");
+                mObj5.SetKeySig(0);
 
                 //mObj1.betaStartBar = "repeat_f";
                 //mObj2.betaStartBar = "repeat_f";
@@ -303,22 +307,18 @@
                 mObj2.MoveTo(200, obj1Box.height - obj1Box.y + 100);*/
 
 
-                var timeObj = {}
-                timeObj["beats"] = 4;
-                timeObj["beat-type"] = 4;
+ 
 
-                var keyObj = { fifths: 1 }
-
-                var sPart1 = new ScoreBuilder.ScorePart({clef:{sign: "G"}, time: timeObj, key: keyObj });
+                var sPart1 = new ScoreBuilder.ScorePart();
                 sPart1.InsertMeasure(mObj1);
                 sPart1.InsertMeasure(mObj2);
 
 
-                var sPart2 = new ScoreBuilder.ScorePart({clef:{sign: "F"}, time: timeObj, key: keyObj });
+                var sPart2 = new ScoreBuilder.ScorePart();
                 sPart2.InsertMeasure(mObj3);
                 sPart2.InsertMeasure(mObj4);
 
-                var sPart3 = new ScoreBuilder.ScorePart({clef:{sign: "C"}, time: timeObj, key: keyObj });
+                var sPart3 = new ScoreBuilder.ScorePart();
                 sPart3.InsertMeasure(mObj5);
                 sPart3.InsertMeasure(mObj6);
 
