@@ -155,8 +155,11 @@ ScoreBuilder.Measure = function() {
         }   
         
         //If any of the attributes are not valid, throw exception
-        if(runningClef == undefined || runningKeySig == undefined || runningTimeSig == undefined)
-            throw "INVALID_MEASURE_ATTRIBUTES: " + runningClef + " " + runningKeySig + " " + runningTimeSig;   
+        //if(runningClef == undefined || runningKeySig == undefined || runningTimeSig == undefined)
+            //throw "INVALID_MEASURE_ATTRIBUTES: " + runningClef + " " + runningKeySig + " " + runningTimeSig;
+
+        if(runningClef == undefined)
+            throw "NO_CLEF_SET_AT_THE_MEASURE";      
 
         //Organize all the chords on this measure
         chords.ForEach(function(chord) {

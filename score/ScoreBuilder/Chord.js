@@ -389,7 +389,7 @@ ScoreBuilder.Chord = function(chordDen, dots) {
         //place noteGroup Coord at the reference middle, since its from the middle that everything is referenced
         noteGroup.translate(-noteHalfWidth);
         chordWidth += noteGroupWidth;    //update the chord width
-        chordBackWidth += noteGroupWidth - noteHalfWidth; //update the back width
+        chordBackWidth += noteHalfWidth; //update the back width
 
         //place the aux lines group coord
         auxLinesGroup.translate(-noteHalfWidth);

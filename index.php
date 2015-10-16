@@ -49,17 +49,46 @@
 
 
 
+
+
+
+
             var numDraw = DrawNumber(1);
             numDraw.translate(20, 55);
 
             window.onload = function() {
+
+                var dyn = DrawTempo(4, 0, 1800);
+                svgContainer.appendChild(dyn);
+                dyn.translate(100, 130);
 
                 var debRect1 = $G.create("rect");
                 debRect1.setAttribute("fill", "yellow");
                 debRect1.setAttribute("height", 10);
                 debRect1.setAttribute("width", 1500);
                 debRect1.translate(10);
-                svgContainer.appendChild(debRect1);                
+                svgContainer.appendChild(debRect1);
+
+                /*var debRect11 = $G.create("rect");
+                debRect11.setAttribute("fill", "blue");
+                debRect11.setAttribute("height", 100);
+                debRect11.setAttribute("width", 100);
+                debRect11.translate(300, 300);
+                svgContainer.appendChild(debRect11);    
+
+
+
+                var testChord = new ScoreBuilder.Chord(64);
+                
+                testChord.AddNote({n: "G", o: 6, a: ""});
+                testChord.Organize("G2");
+                svgContainer.appendChild(testChord.Draw());
+                testChord.Draw().translate(300, 300);
+                debRect11.translate(300 - testChord.GetBackWidth(), 260);
+                debRect11.setAttribute("width", testChord.GetBackWidth() + testChord.GetFrontWidth());
+                console.log(testChord.GetBackWidth());
+                console.log(testChord.GetFrontWidth());*/
+
                     
                 /*var measureObj1 = new ScoreBuilder.Measure(),
                     measureObj2 = new ScoreBuilder.Measure(),
@@ -135,6 +164,25 @@
 
                 console.log(scoreObj);*/
 
+
+                var t1Chord = new ScoreBuilder.Chord(2);
+                t1Chord.AddNoteCollection([
+                    { n: "B", o: 4 },
+                    { n: "A", o: 4 },
+                    { n: "G", o: 4 },
+                    { n: "F", o: 4 },
+                    { n: "D", o: 4 },
+                ]);
+
+                var t2Chord = new ScoreBuilder.Chord(2);
+                t2Chord.AddNoteCollection([
+                    { n: "C", o: 3 },
+                    { n: "D", o: 3 },
+                    { n: "E", o: 3 },
+                    { n: "F", o: 3 },
+                    { n: "G", o: 4 },
+                ]);
+
                 var mObj1 = new ScoreBuilder.Measure(), //getMeasureR(),
                     mObj2 = new ScoreBuilder.Measure(), //getMeasureR();
                     mObj3 = new ScoreBuilder.Measure(), //getMeasureR();
@@ -154,14 +202,14 @@
 
 
                     c1Coll = [
+                        /*new ScoreBuilder.Chord(8),
                         new ScoreBuilder.Chord(8),
                         new ScoreBuilder.Chord(8),
                         new ScoreBuilder.Chord(8),
                         new ScoreBuilder.Chord(8),
-                        new ScoreBuilder.Chord(8),
-                        new ScoreBuilder.Chord(8),
-                        new ScoreBuilder.Chord(8),
-                        new ScoreBuilder.Chord(8)
+                        new ScoreBuilder.Chord(8),*/
+                        t1Chord,//new ScoreBuilder.Chord(2),
+                        new ScoreBuilder.Chord(2)
                     ],
                     c2Coll = [
                         new ScoreBuilder.Chord(4),
@@ -174,9 +222,9 @@
                         new ScoreBuilder.Chord(4)
                     ],
                     c3Coll = [
-                        new ScoreBuilder.Chord(4),
+                        t2Chord,//new ScoreBuilder.Chord(2),
                         //tabChord,
-                        new ScoreBuilder.Chord(4),
+                        //new ScoreBuilder.Chord(4),
                         cObj4,
                         new ScoreBuilder.Chord(4)
                     ],
@@ -239,8 +287,8 @@
 
                 mObj4.InsertChord(cObj8);*/
 
-                /*mObj1.SetStartBar("double");
-                mObj2.SetStartBar("repeat_f");
+                //mObj1.SetStartBar("repeat_f");
+                /*mObj2.SetStartBar("repeat_f");
                 mObj3.SetStartBar("repeat_f");
                 mObj4.SetStartBar("repeat_f");*/
                 
@@ -248,13 +296,13 @@
 
                 mObj1.SetClef("G2");
                 mObj1.SetTimeSig("4,4");
-                mObj1.SetKeySig(3);
+                mObj1.SetKeySig(2);
 
                 //set a change object in the previous clef
 
-                //mObj2.SetClef("F4");
+                //mObj2.SetClef("C3");
                 //mObj2.SetTimeSig("3,4");
-                mObj2.SetKeySig(1);
+                mObj2.SetKeySig(5);
 
                 //mObj1.attr.startBar = "repeat_f";
                 mObj1.SetEndBar("simple");
@@ -264,14 +312,14 @@
                 mObj3.SetClef("F4");
                 //mObj4.SetClef("G2");
                 mObj3.SetTimeSig("4,4");
-                mObj3.SetKeySig(0);
+                mObj3.SetKeySig(5);
 
                 //mObj4.SetKeySig(2);
 
                 mObj5.SetClef("C3");
                 //mObj6.SetClef("G2_OCT");
                 mObj5.SetTimeSig("4,4");
-                mObj5.SetKeySig(0);
+                mObj5.SetKeySig(5);
 
                 //mObj1.betaStartBar = "repeat_f";
                 //mObj2.betaStartBar = "repeat_f";

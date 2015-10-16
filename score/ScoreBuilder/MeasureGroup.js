@@ -21,6 +21,9 @@ SYSTEM THAT WILL GENERATE BARS ACCORDING TO MEASURE PROPERTIES
 
 */
 
+/*add repeat label bars and other measure stuff
+add measure symbol that means repeat*/
+
 ScoreBuilder.MeasureGroup = function() {
     var measures = [],
         //Array to organize the chords of the measures according to their duration, 
@@ -174,6 +177,28 @@ ScoreBuilder.MeasureGroup = function() {
                 
                 if(keySigWidth > _keySigChangeArr._width)
                     _keySigChangeArr._width = keySigWidth;
+
+                var clefRef;
+
+                //Get the current clef to get the Y pos of the key object
+                if(measures[i].changes.clef != undefined)
+                    clefRef = measures[i].changes.clef;
+                else
+                    clefRef = measures[i].GetClef();
+
+                switch(clefRef) {
+                    case "F4":
+                        keySigObj.yCoord = 15;
+                        break;
+
+                    case "C3":
+                        keySigObj.yCoord = 7.5;
+                        break;  
+
+                    default:
+                        keySigObj.yCoord = 0;
+                        break;   
+                }
             }
 
             //Got to populate timesig change array with the first measure change

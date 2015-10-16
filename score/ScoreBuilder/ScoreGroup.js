@@ -324,7 +324,7 @@ function MeasureGroupLine(firstMeasureGroup) {
 
                     var keySigIndObj = keySigChangeArr[keySigInd];
                     linesGroup.appendChild(keySigIndObj);
-                    keySigIndObj.translate(hPosPointer, linesCoords[keySigInd]);
+                    keySigIndObj.translate(hPosPointer, linesCoords[keySigInd] + keySigIndObj.yCoord);
                 }
 
                 //Increase horizontal pointer with the clef changes biggest width
