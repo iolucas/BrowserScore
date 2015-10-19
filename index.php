@@ -58,9 +58,15 @@
 
             window.onload = function() {
 
-                var dyn = DrawTempo(4, 0, 1800);
+                var dyn = DrawRepeatText("D.S.");
                 svgContainer.appendChild(dyn);
-                dyn.translate(100, 130);
+                dyn.translate(130, 0);
+                dyn.enableDrag();
+
+                dyn.onclick = function() {
+                    svgContainer.removeChild(dyn);
+                    svgContainer.appendChild(dyn);
+                }
 
                 var debRect1 = $G.create("rect");
                 debRect1.setAttribute("fill", "yellow");
@@ -374,8 +380,8 @@
 
                 var sGroup1 = new ScoreBuilder.ScoreGroup();
                 sGroup1.InsertPart(sPart1);
-                sGroup1.InsertPart(sPart2);
-                sGroup1.InsertPart(sPart3);
+                //sGroup1.InsertPart(sPart2);
+                //sGroup1.InsertPart(sPart3);
 
                 
 

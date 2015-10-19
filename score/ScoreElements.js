@@ -486,29 +486,7 @@ function DrawNoteAtt(element) {
 }
 
 
-function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
-  var angleInRadians = (angleInDegrees-90) * Math.PI / 180.0;
 
-  return {
-    x: centerX + (radius * Math.cos(angleInRadians)),
-    y: centerY + (radius * Math.sin(angleInRadians))
-  };
-}
-
-function describeArc(x, y, radius, startAngle, endAngle){
-
-    var start = polarToCartesian(x, y, radius, endAngle);
-    var end = polarToCartesian(x, y, radius, startAngle);
-
-    var arcSweep = endAngle - startAngle <= 180 ? "0" : "1";
-
-    var d = [
-        "M", start.x, start.y, 
-        "A", radius, radius, 0, arcSweep, 0, end.x, end.y
-    ].join(" ");
-
-    return d;       
-}
 
 
 function DrawBar(bar, barCoords) {
@@ -540,15 +518,15 @@ function DrawBar(bar, barCoords) {
         case "repeat_f":
             barPath += "M0,0v" + height + "h6v-" + height + "zM12,0v" + height;
             for(var coord = 0; coord < barCoords.length - 1; coord++) {
-                barPath += describeArc(18, barCoords[coord] - topCoord + 22.5, 2, 0, 359);
-                barPath += describeArc(18,barCoords[coord] - topCoord + 37.5,2, 0, 359);
+                barPath += $G.createCircle(18, barCoords[coord] - topCoord + 22.5, 2);
+                barPath += $G.createCircle(18,barCoords[coord] - topCoord + 37.5,2);
             }
             break;
 
         case "repeat_b":
             for(var coord = 0; coord < barCoords.length - 1; coord++) {
-                barPath += describeArc(1, barCoords[coord] - topCoord + 22.5, 2, 0, 359);
-                barPath += describeArc(1,barCoords[coord] - topCoord + 37.5,2, 0, 359);
+                barPath += $G.createCircle(1, barCoords[coord] - topCoord + 22.5, 2);
+                barPath += $G.createCircle(1,barCoords[coord] - topCoord + 37.5,2);
             }
             barPath += "M7,0v" + height + "M13,0v" + height + "h7v-" + height + "z";
             break;
@@ -606,7 +584,7 @@ function DrawTempo(denominator, dotted, value) {
 
     //Draw not, if specified
     if(dotted) {
-        notePath += describeArc(nextHPos,25,2, 0, 359);
+        notePath += $G.createCircle(nextHPos,25,2);
         nextHPos += 7;
     } else
         nextHPos += 2;
@@ -690,4 +668,283 @@ function DrawDynamic(dynamic) {
 
     dObj.setAttribute("d", dPath);
     return dObj;
+}
+
+function DrawCrescendo(length) {
+    var cObj = $G.create("path");
+    cObj.setAttribute("stroke", "#000");
+    cObj.setAttribute("stroke-width", 1);
+    cObj.setAttribute("d", "M0,8 " + length + ",0M0,8 " + length + ",16");
+    return cObj;
+}
+
+function DrawDiminuendo(length) {
+    var cObj = $G.create("path");
+    cObj.setAttribute("stroke", "#000");
+    cObj.setAttribute("stroke-width", 1);
+    cObj.setAttribute("d", "M0,0 " + length + ",8M0,16 " + length + ",8");
+    return cObj;
+}
+
+function DrawSlur(startX, startY, height, endX, endY) {
+    var slurObj = $G.create("path");
+    slurObj.setAttribute("stroke", "#000");
+    slurObj.setAttribute("fill", "none");
+    slurObj.setAttribute("stroke-width", 2);
+
+    var trueHeight = height*2;
+
+    slurObj.setAttribute("d", "M" + startX + "," + startY + 
+        " Q" + ((endX - startX)/2).toString() + "," + trueHeight.toString() +
+        " " + endX + "," + endY);
+    //console.log(slurObj);
+    
+    
+    /*for(var i = 0; i < 2; i++) {
+        slurObj.setAttribute("d", "M 0 0 Q 100," + 22.5 + " 200,0");
+        console.log(i + "," + slurObj.getBBox().height);    
+    }*/
+    
+    return slurObj;
+}
+
+function DrawVolta(length, value, endFlag) {
+    var voltaObj = $G.create("path"),
+        voltaPath = "M0,0v-30l" + length + ",0";
+
+    if(endFlag)
+        voltaPath += "v30";
+
+    voltaObj.setAttribute("stroke", "#000");
+    voltaObj.setAttribute("fill", "none");
+    voltaObj.setAttribute("stroke-width", 1);
+    voltaObj.setAttribute("d", voltaPath);
+
+    var voltaText = $G.create("text");
+
+    voltaText.setAttribute("font-family", "times");
+    voltaText.setAttribute("font-size", 25);
+    voltaText.setAttribute("y", -7);
+    voltaText.setAttribute("x", 5);
+    voltaText.setAttribute("font-weight", "bold");
+    voltaText.innerHTML = value + ".";
+
+    var voltaGroup = $G.create("g");
+    voltaGroup.appendChild(voltaObj);
+    voltaGroup.appendChild(voltaText);
+
+    return voltaGroup;
+}
+
+function DrawOctLine(length, up) {
+    var octLineObj = $G.create("path"),
+        octLinePath = "M0,0";
+
+    if(up)
+        octLinePath += "v30";
+    else
+        octLinePath += "v-30";
+
+    octLinePath += "h-" + length;
+
+    octLineObj.setAttribute("stroke", "#000");
+    octLineObj.setAttribute("fill", "none");
+    octLineObj.setAttribute("stroke-width", 1);
+    octLineObj.setAttribute("d", octLinePath);
+    octLineObj.setAttribute("stroke-dasharray", "7, 4");
+
+    var octLineText = $G.create("text");
+
+    octLineText.setAttribute("font-family", "times");
+    octLineText.setAttribute("font-size", 25);
+    octLineText.innerHTML = 8;
+    
+    octLineText.setAttribute("x", "-" + (length + 15).toString());
+
+    if(up) octLineText.setAttribute("y", 38);
+    else octLineText.setAttribute("y", -21);
+
+    var octLineGroup = $G.create("g");
+    octLineGroup.appendChild(octLineObj);
+    octLineGroup.appendChild(octLineText);
+
+    return octLineGroup;   
+}
+
+function DrawPedal(length, leftSlant, rightSlant) {
+    var pedalObj = $G.create("path"),
+        pedalPath = "M0,0",
+        pedalLength = length;
+
+    if(leftSlant) {
+        pedalPath += "l5,18";
+        pedalLength -= 5;
+    }
+    else
+        pedalPath += "v18";
+
+    if(rightSlant) {
+        pedalLength -= 5;
+        pedalPath += "h" + pedalLength + "l5,-18";
+    }
+    else 
+        pedalPath += "h" + pedalLength + "v-18";
+
+    pedalObj.setAttribute("stroke", "#000");
+    pedalObj.setAttribute("fill", "none");
+    pedalObj.setAttribute("stroke-width", 1);
+    pedalObj.setAttribute("d", pedalPath);
+
+    return pedalObj;
+}
+
+function DrawArticulation(articulation) {
+    var artObj = $G.create("path"),
+        artPath = "";
+
+    switch(articulation){
+        case "downbow":
+            artPath = "M-8.482,19.998h-1.215L-9.694,0H9.697v20h-1.21V8.485H-8.485L-8.482,19.998z";
+            break;
+
+        case "fermata":
+            artPath = "M-19.904,20.842C-19.881,14.227-14.477,0.013-0.068,0c13.041-0.012,19.911,12.738,19.973,20.842h-2.25c0.12-3.235-4.098-15.26-17.664-15.158C-10.11,5.76-17.902,13.546-17.772,20.842H-19.904zM2.753,17.921C2.753,19.622,1.375,21-0.325,21s-3.079-1.378-3.079-3.079c0-1.7,1.379-3.079,3.079-3.079S2.753,16.221,2.753,17.921z";
+            break;
+
+        case "harmonic":
+            artObj = $G.create("circle");
+            artObj.setAttribute("r", 5.2);
+            artObj.setStrokeColor("#000");
+            artObj.setStrokeWidth("3");
+            artObj.setAttribute("cy", 5.2);
+            artObj.fill("none");
+            return artObj;
+
+        case "pizzicato":
+            artPath = "M0,0 v18 M-9,9 h18";
+            artObj.setStrokeColor("#000");
+            artObj.setStrokeWidth("2");
+            break;
+
+        case "snap_pizzicato":
+            artPath = "M8.5,8.5C8.5,13.194,4.693,17,0,17c-4.694,0-8.5-3.806-8.5-8.5C-8.5,3.806-4.694,0,0,0C4.693,0,8.5,3.805,8.5,8.5M0,8.5v-15";
+            artObj.setStrokeColor("#000");
+            artObj.setStrokeWidth("3");
+            artObj.fill("none");
+            artObj.setAttribute("stroke-linecap", "round");
+            break;
+
+        case "staccatissimo":
+            artPath = "M-3.436,0l3.478,9.5l3.393-9.498L-3.436,0z";
+            break;
+
+        case "staccato":
+            artPath = "M2.5,2.5C2.5,3.88,1.382,5,0,5c-1.381,0-2.5-1.12-2.5-2.5S-1.381,0,0,0C1.382,0,2.5,1.12,2.5,2.5z";
+            break;
+
+        case "tenuto":
+            artPath = "M-9,0h18";
+            artObj.setStrokeColor("#000");
+            artObj.setStrokeWidth("3");
+            break;
+
+        case "marcato":
+            artPath = "M-12.178,0L12.2,7.757l-24.4,7.428l0.002-2.038L5.708,7.774l-17.892-5.766L-12.178,0z";
+            break;
+
+        case "strong_marcato":
+            artPath = "M-7.592,24.378L0.165,0l7.428,24.4l-2.038-0.002L0.182,6.492l-5.766,17.892L-7.592,24.378z";
+            break;
+
+        case "upbow":
+            artPath = "M7.595,0.002L-0.13,24.4L-7.595,0.002h2.04l5.397,17.904L5.585,0L7.595,0.002z";
+            break;
+
+        default:
+            throw "INVALID_ARTICULATION_TO_DRAW;";
+    }
+
+    artObj.setAttribute("d", artPath);
+    return artObj;
+}
+
+function DrawOrnament(ornament) {
+    var ornObj = $G.create("path"),
+        ornPath = "";
+
+    switch(ornament) {
+
+        case "trill":
+            ornPath = "M-13.636,9.041l0.285-1.868h6.25c0.378-1.275,1.243-3.859,1.41-4.339C-5.043,2.318-2.265,0.725-0.538,0l-2.458,7.142l7.235-0.591c0.547,0.002,1.384-0.094,1.662,0.231C6.434,7.403,6.483,8.318,6.42,8.904c0.711-1.133,2.465-2.355,4.405-2.354c1.918,0.001,3.035,0.797,2.772,2.74c-0.172,1.263-0.827,1.961-1.858,1.937c-0.827-0.02-1.601-0.174-1.74-1.221C9.911,9.353,9.87,8.72,10.219,8.078C7.796,8.387,6.67,10.373,6.31,10.831c-0.431,0.547-2.423,7.529-3.635,11.293l-3.818,0.003l0.418-1.754c-1.464,0.762-3.536,1.874-4.625,2.324l-1.212-2.215c3.701-0.258,4.983-1.258,6.339-2.266c0.75-2.356,2.345-7.555,2.944-9.795l-6.212,0.373c-1.166,3.478-2.49,7.355-3.497,10.435c-0.083,0.253,0.043,1.222,0.427,1.252l1.212,2.215C-5.93,22.802-6.653,23.002-7.071,23c-0.543-0.002-3.439-0.188-3.896-3.028c-0.153-0.958,2.15-7.285,3.26-10.927L-13.636,9.041z";
+            break;
+
+        case "mordent":
+            ornPath = "M-17.566,9.225l8.755-9.197l7.844,6.712L5.551,0l8.424,6.877l3.591-3.922v2.928l-7.65,8.424l-8.23-6.739L-4.392,14.5l-8.341-6.96l-4.833,5.331V9.225z";
+            break;
+
+        case "mordent_inverted":
+            ornObj = $G.create("g");
+            var mordObj = DrawOrnament("mordent"),
+                lineObj = $G.create("path");
+            ornObj.appendChild(mordObj);
+            ornObj.appendChild(lineObj);
+            lineObj.setAttribute("d", "M-0.5,-3v22h1v-23z");
+            return ornObj;
+
+        case "turn":
+            ornPath = "M-6.542,12.188c-0.005,1.82-2.35,2.809-4.575,2.812c-5.525,0.004-7.892-3.022-7.905-6.521c0.01-3.83,3.783-8.468,9.073-8.479C-4.57,0.004-1.292,2.8,1.507,5.078c3.218,2.78,8.296,6.447,10.308,6.45c4.074,0,4.618-2.529,4.63-4.741c-0.015-1.553-0.558-3.603-2.756-3.583c-1.12-0.002-3.595,1.451-4.686,1.433c-2.6,0.007-2.706-1.381-2.701-2.095c0.013-2.012,2.921-2.536,4.931-2.539c3.75,0,7.809,2.527,7.788,7.526c0,5.556-4.725,7.476-8.685,7.464C4.859,15.007-0.371,10.656-2.131,9.377c-2.607-2.012-5.995-5.603-10.033-5.623c-2.333,0.028-4.366,3.079-4.354,4.961c-0.017,2.464,1.255,3.158,3.114,3.073c1.384-0.725,2.862-1.479,4.382-1.475C-7.63,10.313-6.554,10.864-6.542,12.188z";
+            break;
+
+        case "turn_inverted":
+            ornObj = $G.create("g");
+            var turnObj = DrawOrnament("turn"),
+                lineObj = $G.create("path");
+            ornObj.appendChild(turnObj);
+            ornObj.appendChild(lineObj);
+            lineObj.setAttribute("d", "M-0.5,-3v22h1v-23z");
+            return ornObj;
+
+        case "coda":
+            ornPath = "M1.271,7.62v13.73h6.507c0.159-2.064-0.105-4.815-0.794-8.254c-0.423-1.375-1.11-2.619-2.063-3.73C3.968,8.201,2.751,7.62,1.271,7.62 M14.444,16.191c0.741,1.904,1.165,3.624,1.27,5.159h5.556v2.778h-5.556c-0.105,1.375-0.528,3.016-1.27,4.92c-0.687,1.904-1.508,3.492-2.46,4.762c-1.905,2.856-5.476,4.894-10.714,6.11V45h-3.254v-5.08c-4.921-1.217-8.333-3.254-10.238-6.11c-1.059-1.271-1.905-2.858-2.54-4.762c-0.741-1.905-1.138-3.545-1.19-4.92h-5.317V21.35h5.317c0.053-1.535,0.45-3.254,1.19-5.159c0.635-2.011,1.481-3.625,2.54-4.842C-10.317,8.387-6.905,6.27-1.984,5V0h3.254v5c5.238,1.27,8.809,3.387,10.714,6.349C12.937,12.566,13.757,14.18,14.444,16.191 M-7.302,13.095c-0.635,3.439-0.925,6.19-0.873,8.254h6.19V7.62c-1.429,0-2.566,0.581-3.413,1.745C-6.349,10.476-6.984,11.72-7.302,13.095M-8.174,24.127c-0.053,1.904,0.238,4.524,0.873,7.856c0.318,1.429,0.953,2.699,1.905,3.81c0.846,1.058,1.984,1.587,3.413,1.587V24.127H-8.174 M1.271,24.127v13.254c1.481,0,2.698-0.529,3.65-1.587c0.953-1.111,1.64-2.381,2.063-3.81c0.688-3.333,0.953-5.952,0.794-7.856H1.271";
+            break;
+
+        case "segno":
+            ornPath = "M17.526,15.596c-0.206,1.853-1.364,2.831-3.474,2.934c-2.11-0.103-3.243-1.081-3.397-2.934c0.154-1.854,1.287-2.857,3.397-3.011C16.162,12.739,17.32,13.742,17.526,15.596 M11.658,0.463h3.86L2.316,18.529c2.934,1.441,5.713,3.191,8.338,5.25c2.625,2.11,4.015,4.813,4.169,8.106c-0.052,2.522-1.004,4.813-2.857,6.872C10.165,40.816,7.875,41.896,5.095,42c-1.904,0-3.654-0.438-5.25-1.313c-1.544-0.927-2.522-2.265-2.934-4.015c-0.051-1.029,0.283-1.956,1.004-2.779c0.721-0.772,1.647-1.132,2.779-1.081c1.854-0.155,3.063,0.901,3.629,3.165c0.258,1.184,0.644,1.93,1.158,2.239l1.699,0.386c2.007-0.206,3.165-1.621,3.474-4.246c-0.257-2.471-1.827-4.452-4.709-5.945c-2.831-1.492-5.431-2.754-7.798-3.783l-11.889,16.907h-3.784L-4.71,23.471c-2.934-1.441-5.713-3.217-8.338-5.328c-2.625-2.059-4.015-4.761-4.169-8.106c0.051-2.471,1.004-4.735,2.856-6.794C-12.507,1.235-10.191,0.155-7.412,0c1.853,0,3.578,0.438,5.173,1.313c1.595,0.927,2.574,2.264,2.934,4.015c0.104,1.08-0.231,2.007-1.003,2.779C-1.03,8.878-1.956,9.239-3.088,9.188c-1.904,0.206-3.139-0.85-3.706-3.166C-7,4.838-7.36,4.092-7.875,3.783l-1.621-0.386c-2.059,0.206-3.243,1.621-3.552,4.246c0.258,2.522,1.802,4.503,4.632,5.944l7.875,3.783L11.658,0.463 M-13.82,23.471c2.11,0.154,3.268,1.132,3.474,2.934c-0.206,1.853-1.364,2.857-3.474,3.011c-2.11-0.154-3.243-1.158-3.397-3.011C-17.063,24.603-15.93,23.625-13.82,23.471";
+            break;
+
+        case "tremolo":
+            ornPath = "M-10,0l20,-10v5l-20,10v-5 M-10,8l20,-10v5l-20,10v-5 M-10,16l20,-10v5l-20,10v-5";
+            break;
+
+        case "simile":
+            var circ1 = $G.createCircle(7,7.5,3),
+                circ2 = $G.createCircle(24,22.5,3);
+
+            ornPath = "M24,2 l-24,25 h8 l24,-25" + circ1 + circ2;
+            break;
+        case "":
+            ornPath = "";
+            break;
+
+        default:
+            throw "INVALID_ORNAMENT_TO_DRAW;";
+    }
+
+    ornObj.setAttribute("d", ornPath);
+    return ornObj;
+}
+
+function DrawRepeatText(text) {
+    var repeatText = $G.create("text");
+
+    repeatText.setAttribute("font-family", "times");
+    repeatText.setAttribute("font-size", 20);
+    repeatText.innerHTML = text;
+
+    var repeatBox = repeatText.getBBox();
+    console.log(repeatBox);
+    repeatText.setAttribute("y", -repeatBox.y);
+    repeatText.setAttribute("x", -repeatBox.width);    
+
+    return repeatText;
 }

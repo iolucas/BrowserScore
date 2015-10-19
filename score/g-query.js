@@ -10,13 +10,41 @@
 
 var $G = new function() {
 	//set namespaces
-	var gquery_xmlns = "http://www.w3.org/2000/svg",
+	var self = this,
+        gquery_xmlns = "http://www.w3.org/2000/svg",
 		gquery_xlink = "http://www.w3.org/1999/xlink";  
 
 	//function to create any graphic stuff
 	this.create = function(elemName) {
 		return document.createElementNS(gquery_xmlns, elemName);
 	}
+
+    this.createArc = function(x, y, radius, startAngle, endAngle) {
+
+        var start = polarToCartesian(x, y, radius, endAngle);
+        var end = polarToCartesian(x, y, radius, startAngle);
+
+        var arcSweep = endAngle - startAngle <= 180 ? "0" : "1";
+
+        var d = [
+            "M", start.x, start.y, 
+            "A", radius, radius, 0, arcSweep, 0, end.x, end.y
+        ].join(" ");
+
+        return d;       
+    }
+
+    this.createCircle = function(x,y, radius) {
+        return self.createArc(x, y, radius, 0, 359.9);
+    }
+
+    function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+        var angleInRadians = (angleInDegrees-90) * Math.PI / 180.0,
+            resultObj = {}
+        resultObj.x = centerX + (radius * Math.cos(angleInRadians));
+        resultObj.y = centerY + (radius * Math.sin(angleInRadians));
+        return resultObj;
+    }
 }
 
 //------------------------------------------------------------------
@@ -257,6 +285,67 @@ SVGGraphicsElement.prototype.getTransform = function (property) {
     return vArray;
 }
 
+SVGGraphicsElement.prototype.translateRel = function(relX, relY) {
+    var currTranslateValues = this.getTransform("translate");
+    if(!currTranslateValues)
+        currTranslateValues = [0,0];
+    else if(currTranslateValues.length == 1)
+        currTranslateValues.push(0);
+
+    this.translate(currTranslateValues[0] + relX, currTranslateValues[1] + relY);        
+}
+
+SVGGraphicsElement.prototype.enableDrag = function() {
+    //If the mouse drag routine has been set, means this function has already been called
+    if(this._objDragToken)  
+        return; //do nothig else and return
+
+    var self = this;
+
+    //Object to store information about the drag event
+    self._objDragToken = {}
+
+    //Use parent to fix bug case mouse move out the element because movement too fast
+    self._objDragToken.parent = self.parentElement;
+
+    self._objDragToken.mouseDownEvent = function(mouseEvent) {
+        self._objDragToken.mouseDown = true;
+        self._objDragToken.oldX = mouseEvent.clientX;
+        self._objDragToken.oldY = mouseEvent.clientY;
+        self._objDragToken.parent.style.cursor = "move";
+    }
+
+    self._objDragToken.mouseMoveEvent = function(mouseEvent) {
+        if(self._objDragToken.mouseDown) {
+            self.translateRel(mouseEvent.clientX - self._objDragToken.oldX, mouseEvent.clientY - self._objDragToken.oldY);
+            self._objDragToken.oldX = mouseEvent.clientX;
+            self._objDragToken.oldY = mouseEvent.clientY;
+        }
+    }
+
+    self._objDragToken.mouseUpEvent = function(mouseEvent) {
+        self._objDragToken.mouseDown = false;
+        self._objDragToken.parent.style.cursor = "";
+    }
+
+    self.addEventListener("mousedown", self._objDragToken.mouseDownEvent, true);
+    self._objDragToken.parent.addEventListener("mousemove", self._objDragToken.mouseMoveEvent, true);
+    self.addEventListener("mouseup", self._objDragToken.mouseUpEvent, true);
+    //self.addEventListener("mouseout", self._objDragToken.mouseUpEvent, true);
+}
+
+SVGGraphicsElement.prototype.disableDrag = function() {
+    //If the mouse drag token hasn't been set, means nothing to do
+    if(!this._objDragToken)  
+        return; //do nothig else and return
+
+    this.removeEventListener("mousedown", self._objDragToken.mouseDownEvent, true);
+    this._objDragToken.parent.removeEventListener("mousemove", self._objDragToken.mouseMoveEvent, true);
+    this.removeEventListener("mouseup", self._objDragToken.mouseUpEvent, true);
+    //this.removeEventListener("mouseout", self._objDragToken.mouseUpEvent, true);
+
+    delete this._objDragToken;  //delete obj drag token
+}
 
 
 //MAYBE THESE ARRAY FUNCTIONS SHOULDN'T BE HERE SINCE THIS IS ONLY FOR GRAPHICS
