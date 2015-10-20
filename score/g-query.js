@@ -19,6 +19,21 @@ var $G = new function() {
 		return document.createElementNS(gquery_xmlns, elemName);
 	}
 
+    this.createText = function(text, size, fontFace, color, weight) {
+        var newText = $G.create("text");
+
+        newText.setAttribute("font-family", fontFace);
+        newText.setAttribute("font-size", size);
+        newText.innerHTML = text;
+
+        /*var newTextBox = newText.getBBox();
+        //console.log(repeatBox);
+        newText.setAttribute("y", -newTextBox.y);
+        newText.setAttribute("x", -newTextBox.width);*/ 
+
+        return newText;
+    }
+
     this.createArc = function(x, y, radius, startAngle, endAngle) {
 
         var start = polarToCartesian(x, y, radius, endAngle);

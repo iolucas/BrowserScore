@@ -73,7 +73,7 @@
                 debRect1.setAttribute("height", 10);
                 debRect1.setAttribute("width", 1500);
                 debRect1.translate(10);
-                //svgContainer.appendChild(debRect1);
+                svgContainer.appendChild(debRect1);
 
                 /*var debRect11 = $G.create("rect");
                 debRect11.setAttribute("fill", "blue");
@@ -383,15 +383,11 @@
                 sGroup1.InsertPart(sPart2);
                 sGroup1.InsertPart(sPart3);
 
-                var deltaScore1 = new ScoreBuilder.Score();
-                deltaScore1.SetScoreGroup(sGroup1);
-                deltaScore1.Organize();
-                //sGroup1.MoveTo(10, 10.5);
-
                 
 
-                svgContainer.appendChild(deltaScore1.Draw());
-
+                svgContainer.appendChild(sGroup1.Draw());
+                sGroup1.Organize();
+                sGroup1.MoveTo(10, 10.5);
 
                 //svgContainer.appendChild(DrawBar("simple", 100));
 

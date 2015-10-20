@@ -69,6 +69,24 @@ ScoreBuilder.Measure = function() {
     this.GetStartBar = function() { return measureStartBar; }
     this.SetStartBar = function(value) { measureStartBar = value; }
 
+    //Var to store measure lines to be draw, such voltas, octaves or pedals
+    /*this.measureSymbols = {
+        dynamic: null,
+        repetition: null,
+        pedal: null
+    }
+
+    this.OrganizeSymbols = function(measureGroupWidth) {
+        var measureBox = measureGroup.getBBox(),
+            //measureWidth = measureBox.width;
+            verticalPointer = measureBox.height;
+
+        if(selfRef.measureSymbols.repetition == "prima") {
+            var primaObj = DrawVolta(measureGroupWidth - 10, 1, true);
+            measureGroup.appendChild(primaObj);
+            primaObj.translate(0, -8);
+        }
+    }*/
 
     this.InsertChord = function(chord, position) {
         //if the chord object already exists at this measure, return a message

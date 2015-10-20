@@ -942,7 +942,7 @@ function DrawRepeatText(text) {
     repeatText.innerHTML = text;
 
     var repeatBox = repeatText.getBBox();
-    console.log(repeatBox);
+    //console.log(repeatBox);
     repeatText.setAttribute("y", -repeatBox.y);
     repeatText.setAttribute("x", -repeatBox.width);    
 

@@ -281,6 +281,7 @@ function MeasureGroupLine(firstMeasureGroup) {
                 hPosPointer += startBarBox.width;
             }
 
+            var measureGroupWidth = currMeasureGroup.GetWidth();
             currMeasureGroup.ForEachMeasure(function(measure) {
                 measure.MoveX(hPosPointer);
             });
