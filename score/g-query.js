@@ -362,6 +362,14 @@ SVGGraphicsElement.prototype.disableDrag = function() {
     delete this._objDragToken;  //delete obj drag token
 }
 
+SVGTextElement.prototype.SetText = function(text) {
+    this.innerHTML = text;
+}
+
+SVGTextElement.prototype.GetText = function() {
+    return this.innerHTML;
+}
+
 
 //MAYBE THESE ARRAY FUNCTIONS SHOULDN'T BE HERE SINCE THIS IS ONLY FOR GRAPHICS
 

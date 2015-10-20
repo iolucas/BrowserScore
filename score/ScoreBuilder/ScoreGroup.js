@@ -11,7 +11,7 @@ var SCORE_LINE_LEFT_MARGIN = 10,
     SCORE_LINE_HEADER_MARGIN = 10,
     //SCORE_LINE_LENGTH = 1500,
     SCORE_TOP_MARGIN = 50, //min value for a top margin for the scores
-    LINE_WIDTH = 1480,  //constant value to be used to set the score line size
+    LINE_WIDTH = 1500,  //constant value to be used to set the score line size
     MIN_MEASURE_WIDTH = 300;//constante value to be used to set measure min width
 
 ScoreBuilder.ScoreGroup = function() {
@@ -27,7 +27,7 @@ ScoreBuilder.ScoreGroup = function() {
     debRect1.setAttribute("fill", "green");
     debRect1.setAttribute("height", 15);
     debRect1.setAttribute("width", 15);
-    generalGroup.appendChild(debRect1);
+    //generalGroup.appendChild(debRect1);
 
     this.Draw = function() {
         return generalGroup;
@@ -35,6 +35,11 @@ ScoreBuilder.ScoreGroup = function() {
 
     this.MoveTo = function(x, y) {
         generalGroup.translate(x, y);
+    }
+
+    var _tempoCoord = 0;
+    this.GetTempoCoord = function() {
+
     }
 
     this.InsertPart = function(scorePart, position) {
@@ -137,7 +142,7 @@ ScoreBuilder.ScoreGroup = function() {
             generalGroup.removeChild(groupChildren[0]);
 
         //append debug rect again
-        generalGroup.appendChild(debRect1);
+        //generalGroup.appendChild(debRect1);
 
         //translate the general group to a fit position (CHECK WHY NOT WORKING: PROBABLY ARE BEING TRANSLATED IN THE INDEX PAGE)
         //generalGroup.translate(-generalGroup.getBBox().x);
