@@ -99,13 +99,17 @@ ScoreBuilder.Score = function() {
 	}
 
 	function setScoreGroupPos() {
+		if(!_scoreGroup) return;
+		
 		var headerBox = headerGroup.getBBox();
-		_scoreGroup.Draw().translate(0, headerBox.height + 30.5);
+		_scoreGroup.Draw().translate(0, Math.ceil(headerBox.height) + 30.5);
 	}
 
 	this.Organize = function() {
 		if(_scoreGroup)
 			_scoreGroup.Organize();
+
+		setScoreGroupPos();
 
 		//Put header on the right position
 		//var headerBox = headerGroup.getBBox();

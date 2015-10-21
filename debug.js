@@ -262,4 +262,112 @@ function getDebugRect(width, height, x, y, parent) {
 	return debRect;
 }
 
+            function getRandomAccident() {
+                //return "";
+                var value = Math.round(Math.random() * 5),
+                    acc = "";
+                
+                switch(value) {
+
+                    case 1:
+                        acc = "natural";
+                        break;
+                    
+                    case 2:
+                        acc = "sharp";
+                        break;
+
+                    case 3:
+                        acc = "double-sharp";
+                        break;
+
+                    case 4:
+                        acc = "flat";
+                        break;
+
+                    case 5:
+                        acc = "flat-flat";
+                        break;
+                }
+
+                return acc;
+            }
+
+                        //debug();
+
+            function debug() {
+                var chord = new ScoreBuilder.Chord({ denominator: 1 });
+                chord.AddNote({n: 'G', o:3 });
+                chord.Organize();
+                svgContainer.appendChild(chord.Draw());
+                chord.Draw().translate(100, 100);
+
+
+            }
+
+                        function getMeasureR() {
+                var measureObj = new ScoreBuilder.Measure(),
+                    measureData = getMeasure();
+
+                var chords = measureData.chords ? measureData.chords : [];
+
+                for(var j = 0; j < chords.length; j++) {
+                    var chordObj = new ScoreBuilder.Chord(chords[j].den);
+                    
+                    var notes = chords[j].notes ? chords[j].notes : [];
+
+                    for(var k = 0; k < notes.length; k++)
+                        chordObj.AddNote(notes[k]);
+
+                    measureObj.InsertChord(chordObj);
+                }
+                measureObj.SetEndBar("simple");
+                //measureObj.SetEndBar("simple");
+
+                return measureObj;                
+            }
+
+            function getChordR() {
+                var chords = getRandomChord();
+
+                var chordObj = new ScoreBuilder.Chord(chords.den);
+                
+                var notes = chords.notes ? chords.notes : [];
+
+                for(var k = 0; k < notes.length; k++)
+                    chordObj.AddNote(notes[k]);
+
+                return chordObj;
+            }
+
+            function getInt(from, to) {
+                return Math.round(Math.random()*(to-from) + from);
+            }
+
+            function getMeasure() {
+                var measure = {
+                    chords: [
+                        getRandomChord(),
+                        getRandomChord(),
+                        //{ den: 1 , notes: [{n: 'B', o: 5, a: ""}] }
+                    ]
+                }
+                return measure;
+            }
+
+            function getRandomChord() {
+                var numberOfNotes = getInt(1,1),
+                    randDen = Math.pow(2, getInt(0,6));
+                    chord = { den: randDen , notes: [] };
+
+                for(var i = 0; i < numberOfNotes; i++) {
+                    var randomNote = String.fromCharCode(65 + getInt(0,6)),
+                        randomOctave = getInt(3,6);
+
+                    chord.notes.push({ n: randomNote, o: randomOctave, a: getRandomAccident() });
+                }
+                
+                return chord;
+            }
+
 function log(msg) { console.log(msg); }

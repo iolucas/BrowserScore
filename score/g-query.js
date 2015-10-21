@@ -19,11 +19,24 @@ var $G = new function() {
 		return document.createElementNS(gquery_xmlns, elemName);
 	}
 
-    this.createText = function(text, size, fontFace, color, weight) {
+    this.createText = function(text, size, fontFace, weight, color, decoration) {
         var newText = $G.create("text");
 
-        newText.setAttribute("font-family", fontFace);
-        newText.setAttribute("font-size", size);
+        if(fontFace)
+            newText.setAttribute("font-family", fontFace);
+        
+        if(size != undefined)
+            newText.setAttribute("font-size", size);
+        
+        if(decoration)
+            newText.setAttribute("font-decoration", decoration);
+
+        if(weight)
+            newText.setAttribute("font-weight", weight);
+
+        if(color)
+            newText.setAttribute("fill", color);
+
         newText.innerHTML = text;
 
         /*var newTextBox = newText.getBBox();

@@ -103,6 +103,9 @@ ScoreBuilder.ScoreGroup = function() {
             });
         });
        
+        //if no measure groups, return
+        if(measureGroups.length == 0)
+            return;
         
         //NOW WE DETERMINE WHICH LINE EACH MEASURE WILL BE PLACED ON
 
@@ -406,8 +409,9 @@ function DrawScoreLineHeader(clef, keySig, timeSig) {
         clefObj.translate(nextPos, 0);
         nextPos += clefObj.getBBox().width + SCORE_LINE_HEADER_MARGIN;
 
-        //if the clef key is specified and is diferent from 0 (value 0 at if statement is equal to false)
+        //if the clef key is specified and is different from 0 (value 0 at if statement is equal to false)
         if(keySig) {
+
             var keyObj = DrawKeySignature(keySig);
             //translate the key sig according to the clef
 

@@ -29,6 +29,7 @@ ScoreBuilder.Chord = function(chordDen, dots) {
         noteGroup = document.createElementNS(xmlns, "g"),   //group to add note related elements
         accidentGroup = document.createElementNS(xmlns, "g"),   //accident group to place accident related elements
         auxLinesGroup = document.createElementNS(xmlns, "g"),   //aux lines group to place the necessary aux lines up and down
+        //chordNameText = $G.createText("", 22, "times"),
         dotsGroup = $G.create("g"), //dots group to be used to set the notes dot that increase their times
         rest = DrawRest(chordDenominator),  //get the rest element draw
         flag = DrawNoteFlag(chordDenominator),   //get the note flag 
@@ -78,6 +79,7 @@ ScoreBuilder.Chord = function(chordDen, dots) {
     chordGroup.appendChild(accidentGroup);
     chordGroup.appendChild(noteGroup);
     chordGroup.appendChild(dotsGroup);
+    //chordGroup.appendChild(chordNameText);  
 
     //append aux lines to the aux lines group
     auxLinesGroup.appendChild(auxLines);
@@ -137,6 +139,16 @@ ScoreBuilder.Chord = function(chordDen, dots) {
     //Function to set a new denominator. TO BE IMPLEMENTED
     this.SetDenominator = function(newChordDen) {
         throw "SetDenominator function still to be implemented.";
+    }
+
+    //Function to set the chord notation (free text)
+    var _chordName = "";
+    this.SetChordName = function(value) {
+        _chordName = value;
+        //chordNameText.SetText(chordName);
+    }
+    this.GetChordName = function() {
+        return _chordName;
     }
 
     //Function to iterate thru all notes obj on this chord
@@ -408,7 +420,18 @@ ScoreBuilder.Chord = function(chordDen, dots) {
         }
 
         //Update the front width
-        chordFrontWidth = chordWidth - chordBackWidth;        
+        chordFrontWidth = chordWidth - chordBackWidth; 
+
+        //if(chordNameText.innerHTML == "")
+            //return;
+
+        //Put chord text over the chord
+        //chordNameText.style.display = "none";   //hide the chord name
+        //var chordNameYPos = chordGroup.getBBox().y - 5;
+
+
+        //chordNameText.translate(-5, chordNameYPos);   
+        //chordNameText.style.display = "";   //show the chord name 
     }
 
     function setAccidentPositions(lowValue) {

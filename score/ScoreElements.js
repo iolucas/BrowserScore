@@ -163,6 +163,9 @@ function DrawKeySignature(fifth) {
             currSymbol.translate(keySigGroup.getBBox().width + 2, 45);
             keySigGroup.appendChild(currSymbol);
             break;
+
+        default:
+            throw "INVALID_KEY_SIG_TO_DRAW: " + fifth + " (" + (typeof fifth) + ")";
     }
 
     return keySigGroup
