@@ -356,7 +356,7 @@ ScoreBuilder.Chord = function(chordDen, dots) {
         setDots();
 
         //set chord elements (accident group and notes group) correct places
-        setChordPositions(); 
+        setChordPositions(downStemFlag); 
 
         chordModified = false;  //clear the chord modified flag
     }
@@ -365,7 +365,7 @@ ScoreBuilder.Chord = function(chordDen, dots) {
     //----------------------- PRIVATE METHODS ----------------------------------------
     //--------------------------------------------------------------------------------
 
-    function setChordPositions() {
+    function setChordPositions(downStem) {
         //gets chord elements bboxes
         var noteWidth = 0,  //single note width valu
             noteHalfWidth = 0,  //single note half width value
@@ -380,6 +380,11 @@ ScoreBuilder.Chord = function(chordDen, dots) {
         chordWidth = 0;
         chordBackWidth = 0;
         //chordFrontWidth = 0; //update at the end
+
+        chordGroup.addEventListener("click", function(){
+            console.log("FrontWidth: " + chordFrontWidth);
+            console.log("BackWidth: " + chordBackWidth);
+        });
 
         //Get note group width
         noteGroupWidth = noteGroup.getBBox().width;
@@ -401,7 +406,11 @@ ScoreBuilder.Chord = function(chordDen, dots) {
         //place noteGroup Coord at the reference middle, since its from the middle that everything is referenced
         noteGroup.translate(-noteHalfWidth);
         chordWidth += noteGroupWidth;    //update the chord width
-        chordBackWidth += noteHalfWidth; //update the back width
+
+        if(downStem)
+            chordBackWidth += noteGroupWidth - noteHalfWidth; //update the back width
+        else
+            chordBackWidth += noteHalfWidth; //update the back width
 
         //place the aux lines group coord
         auxLinesGroup.translate(-noteHalfWidth);
