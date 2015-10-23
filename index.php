@@ -25,7 +25,7 @@
             <!--<nav id="score-menu"></nav>-->
             <div id="score-page">
                 <!--<object id="svgPage" type="image/svg+xml" data="debug.svg" height="3700" width="1520">Error</object>-->
-                <svg id="svgContainer" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1520" height="5000"></svg>
+                <svg id="svgContainer" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1520" height="10000"></svg>
             </div>
         </section>
         <script src="score/g-query.js"></script>
@@ -64,11 +64,11 @@
                 var chord2 = {
                     denominator: 4,
                     notes: [
-                        { n: "C", o: 6 },
-                        { n: "D", o: 6 },
-                        { n: "E", o: 6 },
-                        { n: "F", o: 6 },
-                        { n: "G", o: 6 }
+                        { n: "C", o: 4 },
+                        { n: "D", o: 4 },
+                        { n: "E", o: 4 },
+                        { n: "F", o: 4 },
+                        { n: "G", o: 4 }
                     ]
                 }
 
@@ -91,9 +91,9 @@
                     denominator: 2,
                     dotted: 1,
                     notes: [
-                        {n: "E", o: 6, a: "" },
-                        {n: "F", o: 6, a: "flat-flat" },
-                        {n: "F", o: 6, a: "" }
+                        {n: "E", o: 3, a: "" },
+                        {n: "F", o: 3, a: "flat-flat" },
+                        {n: "F", o: 5, a: "" }
                     ]
                 }
 
@@ -125,7 +125,7 @@
                 var measure2 = {
                     //keySig: 5,
                     clef: "F4",
-                    endBar: "end",
+                    endBar: "simple",
                     chords: [ chord2, { denominator: 4 }, { denominator: 4 }, { denominator: 4 }, ]
                 }
 
@@ -136,8 +136,31 @@
                     chords: [{ denominator: 4 }, chord3, { denominator: 4 }]
                 }
 
+                var betaDen = 8;
+                var betaChords = []
+                for(var a = 0; a < betaDen; a++) {
+                    betaChords.push({ denominator: betaDen , notes: [{ n:"G", o: 2 }]});   
+                }
+
                 var measure4 = {
-                    chords: [ { denominator: 4 }, { denominator: 4 }, { denominator: 4 }, { denominator: 4 }, ]
+                    chords: betaChords/*[ 
+                        { denominator: betaDen }, 
+                        { denominator: betaDen }, 
+                        { denominator: betaDen }, 
+                        { denominator: betaDen }, 
+                        { denominator: betaDen }, 
+                        { denominator: betaDen }, 
+                        { denominator: betaDen }, 
+                        { denominator: betaDen }, 
+                        { denominator: betaDen },
+                        { denominator: betaDen }, 
+                        { denominator: betaDen }, 
+                        { denominator: betaDen }, 
+                        { denominator: betaDen }, 
+                        { denominator: betaDen }, 
+                        { denominator: betaDen }, 
+                        { denominator: betaDen }
+                     ]*/
                 }
 
                 var measure5 = {

@@ -534,6 +534,12 @@ function DrawBar(bar, barCoords) {
             barPath += "M7,0v" + height + "M13,0v" + height + "h7v-" + height + "z";
             break;
 
+        case "repeat_bf":
+
+
+
+            break;
+
 
         default:
             throw "INVALID_BAR_TO_DRAW";

@@ -222,6 +222,10 @@ function MeasureGroupLine(firstMeasureGroup) {
 
         checkDenUnitValue = (LINE_WIDTH - checkFixedLength) / checkDenSum;
 
+
+        if(checkDenUnitValue <= 0)
+            return false;
+
         //Check whether this den unit value is not ok for the testing measureGroup
         if(checkDenUnitValue < measureGroup.GetMinDenUnitLength(MIN_MEASURE_WIDTH))
             return false; //If not, return false (not fit)

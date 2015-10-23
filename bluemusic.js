@@ -121,6 +121,7 @@ var BlueMusic = new function() {
                     //DEBUG PURPOSES
                     //if(newMeasure.clef && (newMeasure.clef == "TAB6" || newMeasure.clef == "percussion"))
                         //newMeasure.clef = "G2"; 
+                    
                     if(newMeasure.clef && newMeasure.clef.indexOf("G") != -1)
                         newMeasure.clef = "G2";  
 
