@@ -186,9 +186,20 @@ function MeasureGroupLine(firstMeasureGroup) {
     this.Add = function(measureGroup) {
         measureGroups.push(measureGroup);
 
-        //Update line values
-        if(measureGroup.GetStartBar())
-            lineFixedLength += DrawBar(measureGroup.GetStartBar(), [0, 1]).getBBox().width;
+        //Only update start bar length in case the start bar is repeat_f
+        if(measureGroup.GetStartBar() == "repeat_f") {
+            //If it is the first measure
+            if(measureGroups.length == 1) { //just add it
+                lineFixedLength += DrawBar("repeat_f", [0, 1]).getBBox().width;
+            } else {    //if not, check the previous one
+                //If the previous measure group end bar is repeat b
+                if(measureGroups[measureGroups.length - 2].GetEndBar() == "repeat_b") {
+                    //Subtract it and add the mixed forward and backward bar
+                    lineFixedLength -= DrawBar("repeat_b", [0, 1]).getBBox().width;
+                    lineFixedLength += DrawBar("repeat_bf", [0, 1]).getBBox().width;
+                }
+            }
+        }
 
         if(measureGroup.GetEndBar())
             lineFixedLength += DrawBar(measureGroup.GetEndBar(), [0, 1]).getBBox().width;
@@ -212,6 +223,10 @@ function MeasureGroupLine(firstMeasureGroup) {
         var checkFixedLength = lineFixedLength + measureGroup.GetFixedLength(),
             checkDenSum = lineDenominatorSum + measureGroup.GetDenominatorSum(),
             checkDenUnitValue;
+
+
+        //THIS BAR CHECK IS NOT COUNTING WHETHER THERE IS A BAR MIX, BUT ITS OK BECAUSE ITS COUTING MORE
+        //NO OVERLAPS WILL OCCURR
 
         //Add bars length
         if(measureGroup.GetStartBar())
@@ -282,10 +297,12 @@ function MeasureGroupLine(firstMeasureGroup) {
             denUnitValue = (LINE_WIDTH - lineFixedLength) / lineDenominatorSum;
         
         for(var i = 0; i < measureGroups.length; i++) {
-            currMeasureGroup = measureGroups[i];
+            var currMeasureGroup = measureGroups[i],
+                nextMeasureGroup = i + 1 < measureGroups.length ? measureGroups[i+1] : null;
             currMeasureGroup.SetChordsPositions(denUnitValue);
 
-            if(currMeasureGroup.GetStartBar()) {
+            //Only put start bar in case of first measure of the line
+            if(currMeasureGroup.GetStartBar() == "repeat_f" && i == 0) {
                 var startBar = DrawBar(currMeasureGroup.GetStartBar(), linesCoords),
                     startBarBox = startBar.getBBox();
                 linesGroup.appendChild(startBar);
@@ -317,10 +334,23 @@ function MeasureGroupLine(firstMeasureGroup) {
                 hPosPointer += clefChangeArr._width;
             }
 
-            //If there is any end bar
-            if(currMeasureGroup.GetEndBar()) {
-                var endBar = DrawBar(currMeasureGroup.GetEndBar(), linesCoords),
-                    endBarBox = endBar.getBBox();
+            //Check if this got a end bar, or the next got a start bar
+            if(currMeasureGroup.GetEndBar() || (nextMeasureGroup && nextMeasureGroup.GetStartBar())) {
+                var endBar;
+
+                if(nextMeasureGroup && nextMeasureGroup.GetStartBar() == "repeat_f") {
+                    if(currMeasureGroup.GetEndBar() == "repeat_b") {
+                        endBar = DrawBar("repeat_bf", linesCoords);
+                    } else {
+                        endBar = DrawBar("repeat_f", linesCoords);
+                    }
+                } else if(currMeasureGroup.GetEndBar()) {
+                    endBar = DrawBar(currMeasureGroup.GetEndBar(), linesCoords);                    
+                }
+
+                //var endBar = DrawBar(currMeasureGroup.GetEndBar(), linesCoords),
+                
+                var endBarBox = endBar.getBBox();
                 linesGroup.appendChild(endBar);
                 endBar.translate(hPosPointer - endBarBox.x, linesCoords[0]);
                 hPosPointer += endBarBox.width;

@@ -535,8 +535,15 @@ function DrawBar(bar, barCoords) {
             break;
 
         case "repeat_bf":
-
-
+            for(var coord = 0; coord < barCoords.length - 1; coord++) {
+                barPath += $G.createCircle(1, barCoords[coord] - topCoord + 22.5, 2);
+                barPath += $G.createCircle(1,barCoords[coord] - topCoord + 37.5,2);
+            }
+            barPath += "M7,0v" + height + "M13,0v" + height + "h7v-" + height + "M26,0v" + height + "z";
+            for(var coord = 0; coord < barCoords.length - 1; coord++) {
+                barPath += $G.createCircle(32, barCoords[coord] - topCoord + 22.5, 2);
+                barPath += $G.createCircle(32,barCoords[coord] - topCoord + 37.5,2);
+            }
 
             break;
 

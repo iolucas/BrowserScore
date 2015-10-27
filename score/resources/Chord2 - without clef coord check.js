@@ -36,9 +36,6 @@ ScoreBuilder.Chord = function(chordDen, dots) {
         auxLines = document.createElementNS(xmlns, "path"), //path to receive the aux lines to be draw
         stem =  document.createElementNS(xmlns, "line"),    //chord stem to be placed
 
-        POS0_NOTE,  //variable to store the position 0 (first space from up) note for correct positioning
-        POS0_OCTAVE,  //variable to store the position 0 (first space from up) octave for correct positioning
-
         LINE_LOW_POS = -2, //* OFFSET,   //min coordinate where a aux line is not necessary
         LINE_HIGH_POS = 8, // * OFFSET,  //max coordinate where a aux line is not necessary
 
@@ -158,19 +155,12 @@ ScoreBuilder.Chord = function(chordDen, dots) {
                 action(notes[i]);   //apply the specified action to it
     }*/
 
-    this.AddNote = function(note) {
-        //if the note object already exists at this chord, return message
-        if(notes.indexOf(note) != -1) return "NOTE_ALREADY_ON_CHORD_SAME_OBJ";
-
-        if(!note.n || typeof note.o != "number") return "INVALID_NOTE";
-
-        if(note.n.charCodeAt(0) < 65 || note.n.charCodeAt(0) > 71)
-            return "INVALID_NOTE_LETTER";                    
+    this.AddNote = function(note) {           
 
         //iterate thru all notes already placed to check if it is not equal to some of them
         for(var i = 0; i < notes.length; i++) { //iterate thru all the notes
             if(notes[i]) {   //if the note is valid
-                if((note.n == notes[i].n && note.o == notes[i].o))
+                if((note.y == notes[i].y))
                     return "NOTE_ALREADY_ON_CHORD_SAME_NOTE_AND_OCTAVE";
             }
         }
@@ -213,7 +203,7 @@ ScoreBuilder.Chord = function(chordDen, dots) {
             for(var i = 0; i < notes.length; i++) { //iterate thru all the notes
                 if(notes[i]) {   //if the note is valid
                     //check if it is the same
-                    if((note.n == notes[i].n && note.o == notes[i].o)) {
+                    if(note.y == notes[i].y) {
                         noteIndex = i;    //set the note index
                         note = notes[i];    //get the valid note reference for this note values
                         break;  //exit the iteration
@@ -241,9 +231,7 @@ ScoreBuilder.Chord = function(chordDen, dots) {
     }
 
     //Function to be called when you want to update the chord object positions 
-    this.Organize = function(clef) {
-        if(!chordModified && clef == lastClef)  //if the chord hasn't be modified and the clef is the same last time
-            return; //do nothing and return
+    this.Organize = function() {
 
         //If there is no more notes on this chord
         if(notes.getValidLength() == 0) {
@@ -254,51 +242,9 @@ ScoreBuilder.Chord = function(chordDen, dots) {
             setDots();  //set necessary dots
             setChordPositions();    //organize chord elements positions
             return; //do nothing else and return
-        }
-
-        //DEBUG PURPOSES
-        /*if(!clef)
-            clef = "G2";*/
-
-        if(clef)    //if a clef has been specified 
-            lastClef = clef;    //updates the last clef variable
-        else if(lastClef)//if not, if we already got a last clef
-            clef = lastClef;    //set the last as the current
-        else //if none of them
-            throw "NO_CLEF_HAS_BEEN_SET";  //crash with an error            
+        }       
 
         rest.setAttribute("opacity", 0);    //hide the rest element
-
-        //Set POS0_NOTE and POS0_OCTAVE according to the clef
-        switch(clef) {
-
-            case "G2":
-                POS0_NOTE = 'E'.charCodeAt(0);
-                POS0_OCTAVE = 5; 
-                break;
-
-            case "G2_OCT":
-                POS0_NOTE = 'E'.charCodeAt(0);
-                POS0_OCTAVE = 6; 
-                break;
-
-            case "F4":
-                POS0_NOTE = 'G'.charCodeAt(0);
-                POS0_OCTAVE = 3; 
-                break;
-
-            case "C3":
-                POS0_NOTE = 'F'.charCodeAt(0);
-                POS0_OCTAVE = 3; 
-                break;
-
-            case "C4":
-                throw "CLEF_TO_BE_IMPLEMENTED";
-                break;
-
-            default:
-                throw "INVALID_CHORD_CLEF_SET: " + clef;
-        }
         
         //DETECT THE LOWEST AND THE HIGHEST NOTES COORDINATES FOR THIS CHORD
         var lowValue = null,   //var to store the lowest value for y position
@@ -309,25 +255,12 @@ ScoreBuilder.Chord = function(chordDen, dots) {
         for(var i = 0; i < notes.length; i++) { //iterate thru all the notes
             if(notes[i]) {   //if the note is valid
 
-                //get the element y coordinate based on its values for note and octave
-                var yCoord,
-                    matchValue = 0;
-
-                //If the note is A or B, must add 1 to the octave to match the piano standard of notes and octaves
-                if(notes[i].n == "A" || notes[i].n == "B")
-                    matchValue = 1;
-
-                yCoord = -((notes[i].n.charCodeAt(0) - POS0_NOTE) + (notes[i].o + matchValue - POS0_OCTAVE) * 7);
-
-                //var yCoord = -((notes[i].n.charCodeAt(0) - POS0_NOTE) + (notes[i].o - POS0_OCTAVE) * 7); 
-                notes[i].yCoord = yCoord;   //register the y coord at the note element for note placement later
-
                 //if the current y position is low than the actual lowest value
-                if(lowValue == null || yCoord < lowValue)   
-                    lowValue = yCoord;  //update the lowest value
+                if(lowValue == null || notes[i].y < lowValue)   
+                    lowValue = notes[i].y;  //update the lowest value
 
-                if(highValue == null || yCoord > highValue)   
-                    highValue = yCoord;  //update the lowest value
+                if(highValue == null || notes[i].y > highValue)   
+                    highValue = notes[i].y;  //update the lowest value
             }
         }
 
@@ -424,7 +357,7 @@ ScoreBuilder.Chord = function(chordDen, dots) {
                 yCoord = -((notes[i].n.charCodeAt(0) - POS0_NOTE) + (notes[i].o + matchValue - POS0_OCTAVE) * 7);
 
                 //var yCoord = -((notes[i].n.charCodeAt(0) - POS0_NOTE) + (notes[i].o - POS0_OCTAVE) * 7); 
-                notes[i].yCoord = yCoord;   //register the y coord at the note element for note placement later
+                notes[i].y = yCoord;   //register the y coord at the note element for note placement later
 
                 //if the current y position is low than the actual lowest value
                 if(lowValue == null || yCoord < lowValue)   
@@ -526,7 +459,7 @@ ScoreBuilder.Chord = function(chordDen, dots) {
         for(var j = 0; j < notes.length; j++) { //iterate thru all the notes
             if(notes[j] && notes[j].accidentDraw) {   //if the note is valid and has an accident 
                 //get the current pos offseted by the lowest value to ensure positive values
-                var currPos = notes[j].yCoord - lowValue;   
+                var currPos = notes[j].y - lowValue;   
                 positionList[currPos] = notes[j];    //put the element at the index with same value than y coord offseted
             }
         }
@@ -549,7 +482,7 @@ ScoreBuilder.Chord = function(chordDen, dots) {
             //get the accident symbol bbox
             accidentBox = currNote.accidentDraw.getBBox();
             
-            var accYCoord = currNote.yCoord * LINE_OFFSET,  //get the y coord
+            var accYCoord = currNote.y * LINE_OFFSET,  //get the y coord
                 accTopCoord = accidentBox.y + accYCoord,   //get this accid obj top coord
                 accColumnSet = false;   //flag to signalize whether a column has been set to the current note
 
@@ -601,7 +534,7 @@ ScoreBuilder.Chord = function(chordDen, dots) {
             if(currNote == undefined || !currNote.accidentDraw)    
                 continue;   //proceed next iterations
 
-            var accYCoord = currNote.yCoord * LINE_OFFSET,  //get the y coord
+            var accYCoord = currNote.y * LINE_OFFSET,  //get the y coord
                 accXCoord = placeColumns[currNote.accColumn].xCoord,
                 accBox = currNote.accidentDraw.getBBox();
 
@@ -637,7 +570,7 @@ ScoreBuilder.Chord = function(chordDen, dots) {
 
             if(notes[j]) {   //if the note is valid  
                 //get the current pos offseted by the lowest value to ensure positive values
-                var currPos = notes[j].yCoord - lowValue;   
+                var currPos = notes[j].y - lowValue;   
                 
                 positionList[currPos] = notes[j];    //put the element at the index with same value than y coord offseted
             }
@@ -664,17 +597,17 @@ ScoreBuilder.Chord = function(chordDen, dots) {
             }
 
             var currNote = positionList[listIndex], //get the curr note reference
-                finalYCoord = currNote.yCoord * LINE_OFFSET,    //set the note Y position based on its coord and general offset factor
+                finalYCoord = currNote.y * LINE_OFFSET,    //set the note Y position based on its coord and general offset factor
                 finalXCoord = 0;    //set standard X pos as 0
 
             //if the immediatelly prev note were valid, means adjacent note
             if(prevValidNote) {
 
-                if(!lowAdjValue || currNote.yCoord < lowAdjValue)
-                    lowAdjValue = currNote.yCoord;
+                if(!lowAdjValue || currNote.y < lowAdjValue)
+                    lowAdjValue = currNote.y;
 
-                if(!highAdjValue || currNote.yCoord > highAdjValue)
-                    highAdjValue = currNote.yCoord;
+                if(!highAdjValue || currNote.y > highAdjValue)
+                    highAdjValue = currNote.y;
 
                 //xCoord must be offseted
                 //hard code note x offset for adjacent
@@ -806,7 +739,7 @@ ScoreBuilder.Chord = function(chordDen, dots) {
         for(var i = 0; i < notes.length; i++) {
             if(!notes[i]) continue; //if the current note is note valid, proceed next iteration
 
-            var currYCoord = notes[i].yCoord;   //get the y coordinate value of the note
+            var currYCoord = notes[i].y;   //get the y coordinate value of the note
             if(currYCoord.isEven())    //if the value is even 
                 currYCoord++;   //subtract one unit
             

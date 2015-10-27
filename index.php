@@ -43,6 +43,7 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
         <script src="xml2json/xml2json.js"></script>
         <script src="bluemusic.js"></script>
+        <script src="score/ScorePrerender.js"></script>
         <script>
 
             var svgContainer = document.getElementById("svgContainer"),
@@ -118,14 +119,15 @@
                     clef: "G2",
                     timeSig: "4,4",
                     keySig: 2,
-                    endBar: "simple",
+                    endBar: "repeat_b",
                     chords: [chord1, { denominator: 2 }]
                 }
 
                 var measure2 = {
-                    //keySig: 5,
+                    keySig: 5,
                     clef: "F4",
-                    endBar: "simple",
+                    startBar: "repeat_f",
+                    endBar: "end",
                     chords: [ chord2, { denominator: 4 }, { denominator: 4 }, { denominator: 4 }, ]
                 }
 
@@ -136,31 +138,77 @@
                     chords: [{ denominator: 4 }, chord3, { denominator: 4 }]
                 }
 
-                var betaDen = 8;
+function getInt(from, to) {
+    return Math.round(Math.random()*(to-from) + from);
+}
+
+
+function getRandomChord(myDen) {
+    var numberOfNotes = getInt(0,6),
+        randDen = myDen;//Math.pow(2, getInt(0,6));
+        chord = { denominator: randDen , notes: []};
+
+    for(var i = 0; i < numberOfNotes; i++) {
+        var randomNote = String.fromCharCode(65 + getInt(0,6)),
+            randomOctave = getInt(3,5);
+
+        chord.notes.push({ n: randomNote, o: randomOctave, a: getRandomAccident() });
+    }
+    
+    return chord;
+}
+
+function getRandomAccident() {
+    //return "DOUBLE_FLAT";
+    var value = Math.round(Math.random() * 5),
+        acc = "";
+    
+    switch(value) {
+
+        case 1:
+            acc = "natural";
+            break;
+        
+        case 2:
+            acc = "sharp";
+            break;
+
+        case 3:
+            acc = "double-sharp";
+            break;
+
+        case 4:
+            acc = "flat";
+            break;
+
+        case 5:
+            acc = "flat-flat";
+            break;
+    }
+
+    return acc;
+}
+
+                var betaDen = 1;
                 var betaChords = []
                 for(var a = 0; a < betaDen; a++) {
-                    betaChords.push({ denominator: betaDen , notes: [{ n:"G", o: 2 }]});   
+                    //betaChords.push({ denominator: betaDen , notes: [{ n:"G", o: 4 }]});
+                    betaChords.push(getRandomChord(betaDen));
                 }
 
                 var measure4 = {
-                    chords: betaChords/*[ 
-                        { denominator: betaDen }, 
-                        { denominator: betaDen }, 
-                        { denominator: betaDen }, 
-                        { denominator: betaDen }, 
-                        { denominator: betaDen }, 
-                        { denominator: betaDen }, 
-                        { denominator: betaDen }, 
-                        { denominator: betaDen }, 
-                        { denominator: betaDen },
-                        { denominator: betaDen }, 
-                        { denominator: betaDen }, 
-                        { denominator: betaDen }, 
-                        { denominator: betaDen }, 
-                        { denominator: betaDen }, 
-                        { denominator: betaDen }, 
-                        { denominator: betaDen }
-                     ]*/
+                    keySig: 1,
+                    clef: "G2",
+                    timeSig: "4,4",
+                    //startBar: "repeat_f",
+                    endBar: "end",
+                    chords: betaChords
+                    /*chords: [ 
+                        { denominator: 2 }, 
+                        { denominator: 4, dotted: 2 }, 
+                        //{ denominator: betaDen }, 
+                        { denominator: 16}
+                    ]*/
                 }
 
                 var measure5 = {
@@ -201,13 +249,20 @@
                     lyricist: "lyrics",
                     tempo: [8, 120],
                     scoreParts: [ scorePart1, scorePart2, scorePart3]
+                    //scoreParts: [ scorePart1 ]
                 }
-
 
                 var newMusicScore = BlueMusic.GetScore.FromMJSON(newMJson);
                 newMusicScore.Organize();
 
                 svgContainer.appendChild(newMusicScore.Draw());
+                //var prFile = ScorePrerender(newMJson);
+
+                //var newMusicScore = BlueMusic.GetScore.FromMJSON(prFile);
+                //newMusicScore.Organize();
+
+                //svgContainer.appendChild(newMusicScore.Draw());
+
             }
 
 

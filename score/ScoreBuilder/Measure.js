@@ -176,8 +176,57 @@ ScoreBuilder.Measure = function() {
         //if(runningClef == undefined || runningKeySig == undefined || runningTimeSig == undefined)
             //throw "INVALID_MEASURE_ATTRIBUTES: " + runningClef + " " + runningKeySig + " " + runningTimeSig;
 
-        if(runningClef == undefined)
-            throw "NO_CLEF_SET_AT_THE_MEASURE";      
+        if(runningClef == undefined || runningTimeSig == undefined)
+            throw "NO_CLEF_OR_NO_TIMESIG_SET_AT_THE_MEASURE. Clef: " + runningClef + " , Timesig: " + runningTimeSig; 
+   
+        
+/*
+        //-----Now we create chords groups based on time signature to place the chords beams-----
+
+        //Get the number of beats for each group
+        var GROUP_TOTAL_BEATS = runningTimeSig.split(",");
+        if(GROUP_TOTAL_BEATS.length < 2) {
+            if(runningTimeSig == "common")
+                GROUP_TOTAL_BEATS = 4;
+            else if(runningTimeSig == "cut") {
+                GROUP_TOTAL_BEATS = 2;
+            }
+        } else
+            GROUP_TOTAL_BEATS = parseInt(GROUP_TOTAL_BEATS[1]);
+        //Get the inverted value
+        GROUP_TOTAL_BEATS = 1 / GROUP_TOTAL_BEATS;  
+
+        
+
+        //Create and populate beam purposed chords group
+        var beamChordGroups = [], //inits the array with and array inside
+            bCGIndex = -1, //current chords groups index (inits -1 to ensure correct initiation)
+            chordBeatCounter = 0,   //chord beat counter 
+            beatsOverflow = true; //variable to check wether the chords beats has overflowed the group values 
+            //(inits overflowed to ensure first group are initiated)
+                    
+        //Populate the chord groups array
+        chords.ForEach(function(chord) {
+            while(chordBeatCounter >= GROUP_TOTAL_BEATS) {
+                chordBeatCounter -= GROUP_TOTAL_BEATS;
+                beatsOverflow = true;
+            }
+
+            //If overflowed, create new group
+            if(beatsOverflow) {
+                bCGIndex++
+                beamChordGroups[bCGIndex] = [];    
+                beatsOverflow = false;
+            }
+
+            beamChordGroups[bCGIndex].push(chord);
+            chordBeatCounter += 1 / chord.GetDenominator();
+        });*/
+
+
+
+
+
 
         //Organize all the chords on this measure
         chords.ForEach(function(chord) {

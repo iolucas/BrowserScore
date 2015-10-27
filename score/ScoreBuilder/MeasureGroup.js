@@ -96,8 +96,7 @@ ScoreBuilder.MeasureGroup = function() {
 
     //Function to set the chords positions of the measures within this measure group
     this.SetChordsPositions = function(denUnitLength) {
-//if(denUnitLength <= 0)
-    //console.log(denUnitLength);
+
         //Start the next position variable with the left margin value
         var nextPosition = MEASURE_LEFT_MARGIN;
 

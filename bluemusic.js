@@ -24,11 +24,10 @@ var BlueMusic = new function() {
         }
 
         this.FromMJSON = function(mJson) {
-            console.log(mJson);
+            //console.log(mJson);
             return getScoreFromMJSON(mJson);
         }
     }
-
 
 
     //PRIVATE MEMBERS
