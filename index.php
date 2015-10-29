@@ -315,6 +315,8 @@ function getRandomAccident() {
                 scoreObj = scoreDOM;
                 scoreObj.Organize();
 
+                //scoreObj.Draw().scale(0.2);
+
                 svgContainer.appendChild(scoreDOM.Draw());    
             }
 
@@ -382,6 +384,8 @@ function getRandomAccident() {
             function LoadAndOpenMusicXML(musicXML) {
                 //Convert file into a dom
                 var scoreDOM = BlueMusic.GetScore.FromMusicXML(musicXML);
+
+
 
                 //Open the DOM object at the screen
                 OpenScoreDOM(scoreDOM);
