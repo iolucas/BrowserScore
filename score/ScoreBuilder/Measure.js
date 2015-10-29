@@ -232,7 +232,7 @@ ScoreBuilder.Measure = function() {
                 prevIsRest = true;
             }
 
-            if(chord.GetDenominator() < 8) {
+            if(chord.GetDenominator() <= 4) {
                 beatsOverflow = true;        
             }
 
@@ -254,8 +254,6 @@ ScoreBuilder.Measure = function() {
             var currBeamChordGroup = beamChordGroups[i];
 
             currBeamChordGroup.Organize(runningClef);
-
-            //got to make chords group to later add the beam lines
         }
 
 

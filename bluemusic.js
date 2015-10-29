@@ -194,7 +194,11 @@ var BlueMusic = new function() {
 
                                     case "heavy-light":
                                         //if heavy light, only plausible is the repeat f, that is not catch here
-                                        break;    
+                                        break; 
+
+                                    case "heavy":
+                                        //A just "heavy" bar means nothing. Cased here cause it appears some times
+                                        break;   
 
                                     default:
                                         throw "NOT_IMPLEMENTED_BAR_TO_CONVERT: " + currBarLine["bar-style"];
@@ -245,8 +249,13 @@ var BlueMusic = new function() {
                             fileChord = fileMeasureChords[k];
 
                         for(var l = 0; l < fileChord.length; l++) {
-                            if(!neoChord.denominator)   //if the neochord den hasn't been set yet
+                            if(neoChord.denominator == undefined)   //if the neochord den hasn't been set yet
                                 neoChord.denominator = fileChord[l].denominator;    //set it
+
+                            //if the dotted hasn't been set and some not got a dot, set it to the chord
+                            if(neoChord.dotted == undefined && fileChord[l].dot) {
+                                neoChord.dotted = 1;    //set it
+                            }
                                 
                             if(fileChord[l].note) {   // if the file chord has a note (is not a rest)
                                 var neoNote = { n: fileChord[l].note, o: fileChord[l].octave }
@@ -383,7 +392,7 @@ function getNoteDen(type) {
 
 function getNoteObj(note) {
     var noteObj = {}    //note object to store note information
-    
+
     //Get note denominator
     noteObj.denominator = getNoteDen(note.type);
 
@@ -403,6 +412,10 @@ function getNoteObj(note) {
     //Check if it got a chord object
     if(note.hasOwnProperty("chord"))
         noteObj.chord = true;
+
+    //Check if it got a dot object
+    if(note.hasOwnProperty("dot"))
+        noteObj.dot = true;
 
     return noteObj;
 }

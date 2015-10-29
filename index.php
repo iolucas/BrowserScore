@@ -16,7 +16,7 @@
                 Compos.In
             </div>
             <div class="side-menu-but" onclick="openFile()">Open...</div>
-            <input type="file" id="files" accept=".xml" />
+            <input type="file" id="files" accept=".xml,.mxl" />
             <!--<input type="text"></input>-->
         </nav>
         
@@ -44,6 +44,7 @@
         <script src="xml2json/xml2json.js"></script>
         <script src="bluemusic.js"></script>
         <script src="score/ScorePrerender.js"></script>
+        <script src="musicXmlFileHandler.js"></script>
         <script>
 
             var svgContainer = document.getElementById("svgContainer"),
@@ -197,28 +198,29 @@ function getRandomAccident() {
                 }
 
                 var stemChord1 = { 
-                    denominator: 16,
+                    denominator: 8,
                     notes: [
-                        { n: "F", o: 5 }
+                        { n: "G", o: 4 }
                     ]
                 }
 
                 var stemChord2 = { 
                     denominator: 8,
+                    //dotted: 1,
                     notes: [
-                        { n: "E", o: 5 }
+                        { n: "G", o: 4 }
                     ]
                 }
 
                 var stemChord3 = { 
-                    denominator: 8,
+                    denominator: 32,
                     notes: [
-                        { n: "G", o: 2 }
+                        { n: "G", o: 4 }
                     ]
                 }
 
                 var stemChord4 = { 
-                    denominator: 16,
+                    denominator: 1,
                     notes: [
                         { n: "F", o: 2 }
                     ]
@@ -237,9 +239,9 @@ function getRandomAccident() {
                         stemChord1,//{ denominator: 2 }, 
                         stemChord2,//{ denominator: 4, dotted: 2 },
                         stemChord3,//{ denominator: betaDen },  
-                        //{ denominator: 8 },
+                        { denominator: 2 },
                         stemChord4,//{ denominator: 16}
-                        { denominator: 16 }
+                        { denominator: 2 }
                     ]
                 }
 
@@ -284,16 +286,19 @@ function getRandomAccident() {
                     scoreParts: [ scorePart2 ]
                 }
 
-                var newMusicScore = BlueMusic.GetScore.FromMJSON(newMJson);
-                newMusicScore.Organize();
+                //var newMusicScore = BlueMusic.GetScore.FromMJSON(newMJson);
+                //newMusicScore.Organize();
 
-                svgContainer.appendChild(newMusicScore.Draw());
+                //svgContainer.appendChild(newMusicScore.Draw());
                 //var prFile = ScorePrerender(newMJson);
 
                 //var newMusicScore = BlueMusic.GetScore.FromMJSON(prFile);
                 //newMusicScore.Organize();
 
                 //svgContainer.appendChild(newMusicScore.Draw());
+
+                //NOW LETS EXPLORE A LITTLE, TO FIND SOME BUGS, CHECKS A FEW NOTES IF THEY ARE ALREADY MADE
+                //THEN PLACE SLURS ETC CHECK DOTTED NOTES ON MUSIC XML
 
             }
 
@@ -348,27 +353,38 @@ function getRandomAccident() {
 
                 fileOpenBut.value = ""; //clear file value to be able to open the same file if needed
 
-                var reader = new FileReader();
+                //Check file extension
+                var fileExtension = file.name.substring(file.name.lastIndexOf(".") + 1);
 
-                reader.onloadend = function() {
-                    if(reader.readyState == 2) {
-                        //var xmlobj = parseXml(reader.result);
-                        //console.log(xmlobj.documentElement.getElementsByTagName("measure"));    
+                switch(fileExtension) {
 
-                        var scoreDOM = BlueMusic.GetScore.FromMusicXML(reader.result);
+                    case "mxl":
+                        OpenMXLFile(file, function(openResult) {
+                            if(openResult == "MXL_OPEN_ERROR")
+                                console.error("Error while opening mxl file.");
+                            else
+                                LoadAndOpenMusicXML(openResult);
+                        });
+                        break;
 
-                        OpenScoreDOM(scoreDOM);
-
-                        //var jsonstr = xml2json(xmlobj);
-                        //console.log(jsonstr);
-                        //console.log(JSON.parse(jsonstr.replace("undefined", "")));
-                        
-                        //postFile(replaceCreator(reader.result));
-                        //console.log(replaceCreator(reader.result));
-                    }
+                    case "xml":
+                        OpenXMLFile(file, function(openResult) {
+                            if(openResult == "XML_OPEN_ERROR")
+                                console.log("Error while opening xml file.");
+                            else
+                                LoadAndOpenMusicXML(openResult);
+                        });
+                        break;
                 }
+            }
 
-                reader.readAsText(file);
+
+            function LoadAndOpenMusicXML(musicXML) {
+                //Convert file into a dom
+                var scoreDOM = BlueMusic.GetScore.FromMusicXML(musicXML);
+
+                //Open the DOM object at the screen
+                OpenScoreDOM(scoreDOM);
             }
 
 
@@ -437,6 +453,12 @@ function getRandomAccident() {
                 // if the request failed or succeeded
                 request.always(function () {});
             }
+
+
+
+
+
+
 
             /*
             window.onresize = function() {
