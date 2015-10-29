@@ -117,6 +117,13 @@ ScoreBuilder.MeasureGroup = function() {
 
         //update curr length variable of this measure group with the end bar length
         currWidth = nextPosition;
+
+        //Now chords are positioned, place beams
+        for(var i = 0; i < measures.length; i++) {
+            measures[i].ForEachChordGroup(function(measureGroup) {
+                measureGroup.SetBeam(measures[i].Draw());
+            });
+        }
     }
 
     this.Organize = function() {

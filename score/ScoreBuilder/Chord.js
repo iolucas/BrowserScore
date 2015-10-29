@@ -127,8 +127,18 @@ ScoreBuilder.Chord = function(chordDen, dots) {
         return chordFrontWidth;
     }
 
-    this.MoveX = function(x) {
-        chordGroup.translate(x);
+    var _chordXCoord = 0;
+    this.MoveX = function(xCoord) {
+        chordGroup.translate(xCoord);
+        _chordXCoord = xCoord;
+    }
+
+    this.GetXCoord = function() {
+        return _chordXCoord;
+    }
+
+    this.IsRest = function() {
+        return notes.getValidLength() == 0;
     }
 
     //Function to get the Denominator of this chord
@@ -211,14 +221,15 @@ ScoreBuilder.Chord = function(chordDen, dots) {
         if(noteIndex == -1) { //if the note object is not found,
             //iterate thru all notes already placed to check if it is equal to the passed
             for(var i = 0; i < notes.length; i++) { //iterate thru all the notes
-                if(notes[i]) {   //if the note is valid
-                    //check if it is the same
-                    if((note.n == notes[i].n && note.o == notes[i].o)) {
-                        noteIndex = i;    //set the note index
-                        note = notes[i];    //get the valid note reference for this note values
-                        break;  //exit the iteration
-                    }                            
-                }
+                if(notes[i] == undefined)   //if the note is not valid
+                    continue;   //proceed next one
+
+                //check if it is the same
+                if((note.n == notes[i].n && note.o == notes[i].o)) {
+                    noteIndex = i;    //set the note index
+                    note = notes[i];    //get the valid note reference for this note values
+                    break;  //exit the iteration
+                }                            
             }
         }
 
@@ -240,8 +251,8 @@ ScoreBuilder.Chord = function(chordDen, dots) {
         return "REMOVE_SUCCESSFUL";
     }
 
-    //Function to be called when you want to update the chord object positions 
-    this.Organize = function(clef) {
+    //Function to be called when you want to update the chord object positions of a chord that do not belong to a group
+    this.OrganizeSingle = function(clef) {
         if(!chordModified && clef == lastClef)  //if the chord hasn't be modified and the clef is the same last time
             return; //do nothing and return
 
@@ -293,7 +304,7 @@ ScoreBuilder.Chord = function(chordDen, dots) {
                 break;
 
             case "C4":
-                throw "CLEF_TO_BE_IMPLEMENTED";
+                throw "C4_CLEF_TO_BE_IMPLEMENTED";
                 break;
 
             default:
@@ -361,11 +372,55 @@ ScoreBuilder.Chord = function(chordDen, dots) {
         chordModified = false;  //clear the chord modified flag
     }
 
-    /*this.GetChordExtremes = function(clef) {
-        //If there is no notes on this chord
-        if(notes.getValidLength() == 0)
-            return null;
 
+
+
+
+    var limitsLowValue, 
+        limitsHighValue;
+
+    this.Organize2 = function(downStemFlag, lowValue, highValue) {     
+        //This function can't be called if there is no note on the chord
+        //This verification belongs to the context which called it
+
+        lowValue = limitsLowValue;
+        highValue = limitsHighValue;
+
+        rest.setAttribute("opacity", 0);    //hide the rest element
+        
+        //put all the notes on their right positions
+        var adjCoord = setNotesPositions(downStemFlag, lowValue); 
+
+        //Must set the chord stem with the extreme coordinates
+        //var finalStemCoord = setStemLine(downStemFlag, lowValue, highValue);
+
+        //set aux lines if needed
+        setAuxLines(downStemFlag, lowValue, highValue, adjCoord[0], adjCoord[1]);
+
+        //set the accident symbols places (need the low value to generate the ordered list)
+        setAccidentPositions(lowValue);
+
+        //set the dots symbols position
+        setDots();
+
+        //set chord elements (accident group and notes group) correct places
+        setChordPositions(downStemFlag); 
+    }
+
+    /*this.SetChordFlag = function(downStemFlag, finalStemCoord) {
+        setChordFlag(downStemFlag, finalStemCoord);
+    }*/
+
+    this.SetStemLine = function(downStemFlag) {
+        return setStemLine(downStemFlag, limitsLowValue, limitsHighValue);
+    }
+
+    this.ExtendStemLine = function(newEndY) {
+        stem.setAttribute("y2", newEndY);    
+    }
+
+    this.GetChordLimits = function(clef) {
+    
         if(clef)    //if a clef has been specified 
             lastClef = clef;    //updates the last clef variable
         else if(lastClef)//if not, if we already got a last clef
@@ -411,32 +466,35 @@ ScoreBuilder.Chord = function(chordDen, dots) {
             highValue = null;   //var to store the higher position for aux lines
 
         for(var i = 0; i < notes.length; i++) { //iterate thru all the notes
-            if(notes[i]) {   //if the note is valid
+            if(notes[i] == undefined)   //if the note is not valid
+                continue;   //proceed next note
 
-                //get the element y coordinate based on its values for note and octave
-                var yCoord,
-                    matchValue = 0;
+            //get the element y coordinate based on its values for note and octave
+            var yCoord,
+                matchValue = 0;
 
-                //If the note is A or B, must add 1 to the octave to match the piano standard of notes and octaves
-                if(notes[i].n == "A" || notes[i].n == "B")
-                    matchValue = 1;
+            //If the note is A or B, must add 1 to the octave to match the piano standard of notes and octaves
+            if(notes[i].n == "A" || notes[i].n == "B")
+                matchValue = 1;
 
-                yCoord = -((notes[i].n.charCodeAt(0) - POS0_NOTE) + (notes[i].o + matchValue - POS0_OCTAVE) * 7);
+            yCoord = -((notes[i].n.charCodeAt(0) - POS0_NOTE) + (notes[i].o + matchValue - POS0_OCTAVE) * 7);
 
-                //var yCoord = -((notes[i].n.charCodeAt(0) - POS0_NOTE) + (notes[i].o - POS0_OCTAVE) * 7); 
-                notes[i].yCoord = yCoord;   //register the y coord at the note element for note placement later
+            //var yCoord = -((notes[i].n.charCodeAt(0) - POS0_NOTE) + (notes[i].o - POS0_OCTAVE) * 7); 
+            notes[i].yCoord = yCoord;   //register the y coord at the note element for note placement later
 
-                //if the current y position is low than the actual lowest value
-                if(lowValue == null || yCoord < lowValue)   
-                    lowValue = yCoord;  //update the lowest value
+            //if the current y position is low than the actual lowest value
+            if(lowValue == null || yCoord < lowValue)   
+                lowValue = yCoord;  //update the lowest value
 
-                if(highValue == null || yCoord > highValue)   
-                    highValue = yCoord;  //update the lowest value
-            }
+            if(highValue == null || yCoord > highValue)   
+                highValue = yCoord;  //update the lowest value
         }
 
+        limitsLowValue = lowValue;
+        limitsHighValue = highValue;
 
-    }*/
+        return [lowValue, highValue];
+    }
 
     //--------------------------------------------------------------------------------
     //----------------------- PRIVATE METHODS ----------------------------------------
@@ -697,7 +755,7 @@ ScoreBuilder.Chord = function(chordDen, dots) {
     function setStemLine(downStemFlag, lowValue, highValue) {
         if(downStemFlag == undefined || chordDenominator <= 1 || notes.getValidLength() == 0) {  //if the chord den is less than 2,
             setStemLineObj();   //void call to clear any stem line
-            return; //do not and proceed the next chord (return)
+            return; //do nothing and return
         }
 
         var xCoord,

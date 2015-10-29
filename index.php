@@ -150,7 +150,7 @@ function getRandomChord(myDen) {
 
     for(var i = 0; i < numberOfNotes; i++) {
         var randomNote = String.fromCharCode(65 + getInt(0,6)),
-            randomOctave = getInt(3,5);
+            randomOctave = getInt(2,6);
 
         chord.notes.push({ n: randomNote, o: randomOctave, a: getRandomAccident() });
     }
@@ -189,31 +189,63 @@ function getRandomAccident() {
     return acc;
 }
 
-                var betaDen = 1;
+                var betaDen = 8;
                 var betaChords = []
                 for(var a = 0; a < betaDen; a++) {
                     //betaChords.push({ denominator: betaDen , notes: [{ n:"G", o: 4 }]});
                     betaChords.push(getRandomChord(betaDen));
                 }
 
+                var stemChord1 = { 
+                    denominator: 8,
+                    notes: [
+                        { n: "B", o: 2 }
+                    ]
+                }
+
+                var stemChord2 = { 
+                    denominator: 16,
+                    notes: [
+                        { n: "A", o: 2 }
+                    ]
+                }
+
+                var stemChord3 = { 
+                    denominator: 8,
+                    notes: [
+                        { n: "G", o: 2 }
+                    ]
+                }
+
+                var stemChord4 = { 
+                    denominator: 16,
+                    notes: [
+                        { n: "F", o: 2 }
+                    ]
+                }
+
+
+
                 var measure4 = {
                     keySig: 1,
                     clef: "G2",
-                    timeSig: "4,4",
+                    timeSig: "2,2",
                     //startBar: "repeat_f",
                     endBar: "end",
-                    chords: betaChords
-                    /*chords: [ 
-                        { denominator: 2 }, 
-                        { denominator: 4, dotted: 2 }, 
-                        //{ denominator: betaDen }, 
-                        { denominator: 16}
-                    ]*/
+                    //chords: betaChords
+                    chords: [ 
+                        stemChord1,//{ denominator: 2 }, 
+                        stemChord2,//{ denominator: 4, dotted: 2 }, 
+                        { denominator: 16 },
+                        stemChord3,//{ denominator: betaDen }, 
+                        stemChord4,//{ denominator: 16}
+                        { denominator: 16 }
+                    ]
                 }
 
                 var measure5 = {
                     clef: "C3",
-                    timeSig: "4,4",
+                    timeSig: "2,2",
                     keySig: 5,
                     chords: [chord5, chord6, chord7]
                 }
@@ -231,7 +263,7 @@ function getRandomAccident() {
 
                 var scorePart2 = {
                     measures: [
-                        measure3,
+                        //measure3,
                         measure4
                     ]
                 }
@@ -248,8 +280,8 @@ function getRandomAccident() {
                     composer: "compos.in",
                     lyricist: "lyrics",
                     tempo: [8, 120],
-                    scoreParts: [ scorePart1, scorePart2, scorePart3]
-                    //scoreParts: [ scorePart1 ]
+                    //scoreParts: [ scorePart1, scorePart2, scorePart3]
+                    scoreParts: [ scorePart2 ]
                 }
 
                 var newMusicScore = BlueMusic.GetScore.FromMJSON(newMJson);

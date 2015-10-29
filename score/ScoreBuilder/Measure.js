@@ -11,7 +11,8 @@ ScoreBuilder.Measure = function() {
 
     var selfRef = this,
         measureGroup = document.createElementNS(xmlns, "g"),   //group to fit all the measure members
-        chords = new List();   //ordered list to fit all the chords @ this measure
+        chords = new List(),  //ordered list to fit all the chords @ this measure
+        beamChordGroups;    //collection to store dynamic chord groups
 
     //for debug, not really necessary due to group grows, but coodinates origin remains the same
     //reference rectangle to be used as a fixed reference point
@@ -38,6 +39,12 @@ ScoreBuilder.Measure = function() {
     this.ForEachChord = function(action, index) {
         //iterate thru all the chords and apply the specified action to it
         chords.ForEach(action, index);
+    }
+
+    this.ForEachChordGroup = function(action) {
+        for(var i = 0; i < beamChordGroups.length; i++) {
+            action(beamChordGroups[i]);
+        }
     }
 
 
@@ -180,17 +187,16 @@ ScoreBuilder.Measure = function() {
             throw "NO_CLEF_OR_NO_TIMESIG_SET_AT_THE_MEASURE. Clef: " + runningClef + " , Timesig: " + runningTimeSig; 
    
         
-/*
-        //-----Now we create chords groups based on time signature to place the chords beams-----
+
+        //----- Now we create chords groups based on time signature to place the chords beams -----
 
         //Get the number of beats for each group
         var GROUP_TOTAL_BEATS = runningTimeSig.split(",");
         if(GROUP_TOTAL_BEATS.length < 2) {
             if(runningTimeSig == "common")
                 GROUP_TOTAL_BEATS = 4;
-            else if(runningTimeSig == "cut") {
+            else if(runningTimeSig == "cut")
                 GROUP_TOTAL_BEATS = 2;
-            }
         } else
             GROUP_TOTAL_BEATS = parseInt(GROUP_TOTAL_BEATS[1]);
         //Get the inverted value
@@ -199,9 +205,11 @@ ScoreBuilder.Measure = function() {
         
 
         //Create and populate beam purposed chords group
-        var beamChordGroups = [], //inits the array with and array inside
-            bCGIndex = -1, //current chords groups index (inits -1 to ensure correct initiation)
+        beamChordGroups = []; //inits the array with and array inside
+        
+        var bCGIndex = -1, //current chords groups index (inits -1 to ensure correct initiation)
             chordBeatCounter = 0,   //chord beat counter 
+            prevIsRest = false; //flag to keep whether the previous chord were a rest
             beatsOverflow = true; //variable to check wether the chords beats has overflowed the group values 
             //(inits overflowed to ensure first group are initiated)
                     
@@ -212,25 +220,260 @@ ScoreBuilder.Measure = function() {
                 beatsOverflow = true;
             }
 
+            //if the previous chord were a rest
+            if(prevIsRest) {
+                beatsOverflow = true;
+                prevIsRest = false;
+            }
+
+            //if the chord is a rest, 
+            if(chord.IsRest()) {
+                beatsOverflow = true;
+                prevIsRest = true;
+            }
+
+            if(chord.GetDenominator() < 8) {
+                beatsOverflow = true;        
+            }
+
             //If overflowed, create new group
             if(beatsOverflow) {
                 bCGIndex++
-                beamChordGroups[bCGIndex] = [];    
+                //beamChordGroups[bCGIndex] = [];   
+                beamChordGroups[bCGIndex] = new BeamChordGroup();  
                 beatsOverflow = false;
             }
 
-            beamChordGroups[bCGIndex].push(chord);
+            //beamChordGroups[bCGIndex].push(chord);
+            beamChordGroups[bCGIndex].Add(chord);
             chordBeatCounter += 1 / chord.GetDenominator();
-        });*/
+        });
 
+        //Iterate thru chords group
+        for(var i = 0; i < beamChordGroups.length; i++) {
+            var currBeamChordGroup = beamChordGroups[i];
 
+            currBeamChordGroup.Organize(runningClef);
 
-
+            //got to make chords group to later add the beam lines
+        }
 
 
         //Organize all the chords on this measure
-        chords.ForEach(function(chord) {
-            chord.Organize(runningClef);
-        });
+        //chords.ForEach(function(chord) {
+          //  chord.Organize(runningClef);
+        //});
     }
 }
+
+
+function BeamChordGroup() {
+    var chords = [],
+        downStemFlag,     
+        beamY1,
+        beamY2,
+        beamOrientation;
+
+
+    this.Add = function(chord) {
+        chords.push(chord);
+    }
+
+    this.Organize = function(clef) {
+        //If the group got only one chord, 
+        if(chords.length == 1) {
+            //Organize it in the normal way
+            chords[0].OrganizeSingle(clef);
+            return;   //proceed next group    
+        }
+
+        //Variables to keep coordinates of the notes of the chord
+        var lowValue = null,
+            highValue = null;
+
+        //Iterate thru the chords of this group
+        for(var j = 0; j < chords.length; j++) {
+            var currChord = chords[j];
+
+            var chordLimits = currChord.GetChordLimits(clef),
+                currLowValue = chordLimits[0],
+                currHighValue = chordLimits[1];
+
+            //Update chord group lowest value if needed
+            if(lowValue == null || lowValue > currLowValue)
+                lowValue = currLowValue;
+
+            //Update chord group highest value if needed
+            if(highValue == null || highValue < currHighValue)
+                highValue = currHighValue;
+        }
+
+        //get the most far value from the middle
+        var farValue = (Math.abs(lowValue - 3) < Math.abs(highValue - 3)) ? highValue : lowValue; 
+
+        //Detect whether the stem is down or up based on the most far value
+        downStemFlag = farValue <= 3;
+
+
+        
+
+        //Reset beam orientation to down
+        beamOrientation = downStemFlag ? "up" : "down";
+
+        var tallestCoord;
+
+        //Iterate thru the chords of this group now to organize them with the down stem flag and get the beam positions
+        for(var j = 0; j < chords.length; j++) {
+            var currChord = chords[j];
+
+            currChord.Organize2(downStemFlag, lowValue, highValue);
+                
+            var stemYCoord = currChord.SetStemLine(downStemFlag);
+
+
+            //Beam position getter stuff
+
+            if(j == 0) {
+                tallestCoord = stemYCoord; 
+                continue;
+            }
+
+            if(downStemFlag) {
+
+                if(stemYCoord >= tallestCoord) {
+
+                    //if the coordinate is the last
+                    if((j == (chords.length - 1)) && (stemYCoord > tallestCoord))
+                        beamOrientation = "down";
+                    else
+                        beamOrientation = "straight";
+
+                    tallestCoord = stemYCoord;          
+                }
+
+            } else {    //Upstem case
+
+                if(stemYCoord <= tallestCoord) {
+
+                    //if the coordinate is the last
+                    if((j == (chords.length - 1)) && (stemYCoord < tallestCoord))
+                        beamOrientation = "up";
+                    else
+                        beamOrientation = "straight";
+
+                    tallestCoord = stemYCoord;          
+                }
+            }
+
+        }
+
+
+        if(beamOrientation == "down") {
+            beamY1 = tallestCoord - 7.5;
+            beamY2 = tallestCoord;
+        } else if(beamOrientation == "up") {
+            beamY1 = tallestCoord;
+            beamY2 = tallestCoord - 7.5;
+        } else if(beamOrientation == "straight") {
+            beamY1 = tallestCoord;
+            beamY2 = tallestCoord;
+        }
+    }
+
+    this.SetBeam = function(measureObj) {
+        if(chords.length <= 1)
+            return;
+
+        var xOffset = downStemFlag ? -8 : 8;
+
+        var beamX1 = chords[0].GetXCoord() + xOffset,
+            beamX2 = chords[chords.length - 1].GetXCoord() + xOffset;
+
+        var downStemFact = downStemFlag ? -1 : 1;
+            
+        //Get beam line function
+        var aFactor = (beamY2 - beamY1) / (beamX2 - beamX1),
+            bFactor = beamY1 - aFactor * beamX1;
+
+        //Extend chord group stem lines to the beam line
+        for(var i = 0; i < chords.length; i++) {
+            var currChord = chords[i];
+
+            var chordStemXPos = currChord.GetXCoord() + xOffset;
+
+            var debugStemCoord = (aFactor*chordStemXPos + bFactor);
+            currChord.debugStemCoord = debugStemCoord;
+
+            //Extend line to its position in the straight line (straight line equation used)
+            currChord.ExtendStemLine(debugStemCoord);
+        }
+
+        var beamGap = 7.5 * downStemFact;
+
+        var beamPath = "M" + beamX1 + "," + beamY1 + " L" + beamX2 + "," + beamY2 + " v" + 
+                beamGap + " L" + beamX1 + "," + (beamY1 + beamGap),
+
+            currChord,
+
+            prevChord,
+            prevBeamQty,
+
+            nextChord,
+            nextBeamQty;
+
+        //Draw beam lines
+        for(var i = 0; i < chords.length; i++) {
+            currChord = chords[i];
+
+            var currBeamQty = getBeamsQty(currChord.GetDenominator());
+
+            //If there is only one beam, it has already been placed, so proceed next iteration
+            if(currBeamQty == 1) {
+                prevChord = currChord;
+                prevBeamQty = currBeamQty;
+                continue;       
+            }
+
+            if(prevChord) {
+                if(prevBeamQty < currBeamQty) {
+                    //if the prev beam qty is less than the actual, so we need make a parcial beam mark
+                    var currStemCoord = currChord.GetXCoord() + xOffset;
+                    beamPath += "M" + currStemCoord + "," + (currChord.debugStemCoord + currBeamQty * beamGap) + "h-20v7.5h20z";
+
+                }
+            }
+
+            nextChord = chords[i + 1];
+
+
+        }
+
+
+
+        //beamPath += beamX1 + "," + beamY1 + " L" + beamX2 + "," + beamY2 + " v" + beamGap + " L" + beamX1 + "," + (beamY1 + beamGap);
+
+        var beamLine = $G.create("path");
+        beamLine.setAttribute("fill", "#000");
+        beamLine.setAttribute("d", beamPath);
+        beamLine.setAttribute("stroke", "#000");
+        measureObj.appendChild(beamLine);
+    }
+
+    function getBeamsQty(denominator) {
+        var beamsQty = 0;
+
+        if(denominator <= 4) {} //denominators less or equal to 4 don't have flags
+        else if(denominator <= 8) 
+            beamsQty = 1;
+        else if(denominator <= 16) 
+            beamsQty = 2;
+        else if(denominator <= 32) 
+            beamsQty = 3;
+        else if(denominator <= 64) 
+            beamsQty = 4;
+
+        return beamsQty;
+    }
+}
+
+
