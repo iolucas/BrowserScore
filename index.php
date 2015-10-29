@@ -197,16 +197,16 @@ function getRandomAccident() {
                 }
 
                 var stemChord1 = { 
-                    denominator: 8,
+                    denominator: 16,
                     notes: [
-                        { n: "B", o: 2 }
+                        { n: "F", o: 5 }
                     ]
                 }
 
                 var stemChord2 = { 
-                    denominator: 16,
+                    denominator: 8,
                     notes: [
-                        { n: "A", o: 2 }
+                        { n: "E", o: 5 }
                     ]
                 }
 
@@ -235,9 +235,9 @@ function getRandomAccident() {
                     //chords: betaChords
                     chords: [ 
                         stemChord1,//{ denominator: 2 }, 
-                        stemChord2,//{ denominator: 4, dotted: 2 }, 
-                        { denominator: 16 },
-                        stemChord3,//{ denominator: betaDen }, 
+                        stemChord2,//{ denominator: 4, dotted: 2 },
+                        stemChord3,//{ denominator: betaDen },  
+                        //{ denominator: 8 },
                         stemChord4,//{ denominator: 16}
                         { denominator: 16 }
                     ]

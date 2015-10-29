@@ -314,9 +314,6 @@ function BeamChordGroup() {
         //Detect whether the stem is down or up based on the most far value
         downStemFlag = farValue <= 3;
 
-
-        
-
         //Reset beam orientation to down
         beamOrientation = downStemFlag ? "up" : "down";
 
@@ -380,6 +377,8 @@ function BeamChordGroup() {
         }
     }
 
+
+    //Function to set the beam location, should be used after the notes got their final positions
     this.SetBeam = function(measureObj) {
         if(chords.length <= 1)
             return;
@@ -395,35 +394,27 @@ function BeamChordGroup() {
         var aFactor = (beamY2 - beamY1) / (beamX2 - beamX1),
             bFactor = beamY1 - aFactor * beamX1;
 
-        //Extend chord group stem lines to the beam line
+
+        var beamGap = 7.5 * downStemFact;
+
+        var beamPath = "M" + beamX1 + "," + beamY1 + " L" + beamX2 + "," + beamY2 + " v" + 
+                beamGap + " L" + beamX1 + "," + (beamY1 + beamGap);
+
+        var prevChord,
+            prevBeamQty,
+            prevChordStemXPos;
+
+
+        //Extend chord group stem lines to the beam line and draw the beams
         for(var i = 0; i < chords.length; i++) {
             var currChord = chords[i];
 
             var chordStemXPos = currChord.GetXCoord() + xOffset;
 
-            var debugStemCoord = (aFactor*chordStemXPos + bFactor);
-            currChord.debugStemCoord = debugStemCoord;
+            var chordStemYPos = (aFactor * chordStemXPos + bFactor);
 
             //Extend line to its position in the straight line (straight line equation used)
-            currChord.ExtendStemLine(debugStemCoord);
-        }
-
-        var beamGap = 7.5 * downStemFact;
-
-        var beamPath = "M" + beamX1 + "," + beamY1 + " L" + beamX2 + "," + beamY2 + " v" + 
-                beamGap + " L" + beamX1 + "," + (beamY1 + beamGap),
-
-            currChord,
-
-            prevChord,
-            prevBeamQty,
-
-            nextChord,
-            nextBeamQty;
-
-        //Draw beam lines
-        for(var i = 0; i < chords.length; i++) {
-            currChord = chords[i];
+            currChord.ExtendStemLine(chordStemYPos);
 
             var currBeamQty = getBeamsQty(currChord.GetDenominator());
 
@@ -431,26 +422,110 @@ function BeamChordGroup() {
             if(currBeamQty == 1) {
                 prevChord = currChord;
                 prevBeamQty = currBeamQty;
+                prevChordStemXPos = chordStemXPos;
                 continue;       
             }
 
-            if(prevChord) {
-                if(prevBeamQty < currBeamQty) {
-                    //if the prev beam qty is less than the actual, so we need make a parcial beam mark
-                    var currStemCoord = currChord.GetXCoord() + xOffset;
-                    beamPath += "M" + currStemCoord + "," + (currChord.debugStemCoord + currBeamQty * beamGap) + "h-20v7.5h20z";
+            //Flag to detect whether a partial forward beam line is needed
+            var partialNeeded = true;
 
+            if(prevChord) {
+
+                //get the number of the partial beams we need to draw back
+                var partialLines = (currBeamQty - prevBeamQty) < 0 ? 0 : (currBeamQty - prevBeamQty); 
+
+                if(partialLines == 0) {
+                    //If the previous measure got the same or more beam lines (diference 0), partial line is not needed
+                    partialNeeded = false;
+                
+
+                } else if(i == chords.length -1) {  //if partial lines are needed and we are in the last chord of the group
+                    //Drawn them
+
+                    var currX1 = chordStemXPos; //get the current X1 for drawn beams (new variable only for semantic purposes) 
+                    var currX2 = prevChordStemXPos + (currX1 - prevChordStemXPos) * 3 / 4;  //calc the currX2
+
+
+                    //vertical pointer to point where the next beam start at y position
+                    //get its value based on the previous number of beams
+                    var beamVPointer = (2 * beamGap) * prevBeamQty; 
+
+                    //partial value for Y2 to save process
+                    var partialY2 = aFactor * currX2 + bFactor;
+
+                    for(var j = 0; j < partialLines; j++) {
+                        var currY1 = chordStemYPos + beamVPointer;
+                        var currY2 = partialY2 + beamVPointer;
+
+                        beamPath += "M" + currX1 + "," + currY1 + " L" + currX2 + "," + currY2 + " v" + 
+                    beamGap + " L" + currX1 + "," + (currY1 + beamGap);
+
+                        //Update the beam vertical pointer
+                        beamVPointer += 2 * beamGap;  
+                    }
                 }
             }
 
-            nextChord = chords[i + 1];
+            var nextChord = chords[i + 1];
+
+            if(nextChord) {
+                var nextBeamQty = getBeamsQty(nextChord.GetDenominator());  //number of beam lines of the next chord
+
+                var nextChordStemXPos = nextChord.GetXCoord() + xOffset;    //stem x position of the next chord     
+                var nextChordStemYPos = aFactor * nextChordStemXPos + bFactor;  //stem y position of the next chord
+
+                //Get how many full beam lines will draw and how many partial
+                var partialLines = (currBeamQty - nextBeamQty) < 0 ? 0 : currBeamQty - nextBeamQty;  
+                var fullLines = currBeamQty - partialLines;
 
 
+                var currX1 = chordStemXPos; //get the current X1 for drawn beams (only semantic need)
+                var currX2 = nextChordStemXPos; //get the current X2 for drawn beam (only semantic need)
+
+                var beamVPointer = 2 * beamGap; //vertical pointer to point where the next beam start at y position
+
+                //Draw full lines (start 1 cause the first were already drawn)
+                for(var j = 1; j < fullLines; j++) {
+                    
+                    var currY1 = chordStemYPos + beamVPointer;
+                    var currY2 = nextChordStemYPos + beamVPointer;
+                    
+                    beamPath += "M" + currX1 + "," + currY1 + " L" + currX2 + "," + currY2 + " v" + 
+                beamGap + " L" + currX1 + "," + (currY1 + beamGap);
+
+                    //Update the beam vertical pointer
+                    beamVPointer += 2 * beamGap;
+                }
+
+                //Draw partial lines if needed
+
+                if(partialNeeded) {
+
+                    currX2 = currX1 + (currX2 - currX1) / 4;
+                    //currX2 = currX2 < 50 ? 50 : currX2;
+
+                    //partial value for Y2 to save process
+                    var partialY2 = aFactor * currX2 + bFactor;
+
+                    for(var j = 0; j < partialLines; j++) {
+
+                        var currY1 = chordStemYPos + beamVPointer;
+                        var currY2 = partialY2 + beamVPointer;
+
+                        beamPath += "M" + currX1 + "," + currY1 + " L" + currX2 + "," + currY2 + " v" + 
+                    beamGap + " L" + currX1 + "," + (currY1 + beamGap);
+
+                        //Update the beam vertical pointer
+                        beamVPointer += 2 * beamGap;                  
+                    }
+                }
+            }
+
+            //Update previous values
+            prevChord = currChord;
+            prevBeamQty = currBeamQty;
+            prevChordStemXPos = chordStemXPos;
         }
-
-
-
-        //beamPath += beamX1 + "," + beamY1 + " L" + beamX2 + "," + beamY2 + " v" + beamGap + " L" + beamX1 + "," + (beamY1 + beamGap);
 
         var beamLine = $G.create("path");
         beamLine.setAttribute("fill", "#000");
@@ -471,6 +546,8 @@ function BeamChordGroup() {
             beamsQty = 3;
         else if(denominator <= 64) 
             beamsQty = 4;
+        else if(denominator <= 128) 
+            beamsQty = 5;
 
         return beamsQty;
     }
