@@ -18,7 +18,10 @@ var BlueMusic = new function() {
             if(typeof musicXMLData == "string")
                 musicXMLObject = parseXml(musicXMLData);
             else
-                musicXMLObject = musicXMLData;     
+                musicXMLObject = musicXMLData; 
+
+                //console.log([musicXMLObject]); 
+                //console.log(musicXMLData);   
             
             return getScore.FromMJSON(convertMusicXmlToMJson(musicXMLObject));   
         }
@@ -37,13 +40,29 @@ var BlueMusic = new function() {
         var mJsonString = xml2json(musicXMLObject);
             mJsonObject = JSON.parse(mJsonString.replace("undefined", "")); //replace the undefined string that is appearing
 
-                console.log(mJsonObject); 
+                //console.log(mJsonObject); 
+
+        //Check if it got a score partwise object
+        for(var i = 0; i < musicXMLObject.children.length; i++) {
+            var currChild = musicXMLObject.children[i];
+
+            //if the current child is a score partwise
+            if(currChild.nodeName == "score-partwise") {
+                var newPartwise = parseScorePartwise(currChild);   //get it
+                return newPartwise;
+                console.log([currChild]);
+                console.log(newPartwise);
+                break;  //exit the iteration
+            }            
+        }
+
 
         if(mJsonObject["score-partwise"])
             return getMJson(mJsonObject["score-partwise"]);
 
         return new Object();
     }
+
 
     function getMJson(scorePartwise) {
         var newMJson = { scoreParts: [] };
@@ -420,9 +439,11 @@ function getNoteObj(note) {
     return noteObj;
 }
 
-
+    DELETE USELESS STUFF HERE
 
     function getScoreFromMJSON(mJson) {
+
+        console.log(mJson);
 
         //Create the new score
         var newScore = new ScoreBuilder.Score();
@@ -441,6 +462,9 @@ function getNoteObj(note) {
         if(mJson.lyricist)
             newScore.SetLyricist(mJson.lyricist);
 
+        if(mJson.poet)
+            newScore.SetLyricist(mJson.poet);
+
         if(mJson.tempo && mJson.tempo.length > 1) {
             if(mJson.tempo.length == 3)
                 newScore.SetTempo(mJson.tempo[0], mJson.tempo[1], mJson.tempo[2]);
@@ -448,14 +472,13 @@ function getNoteObj(note) {
                 newScore.SetTempo(mJson.tempo[0], 0, mJson.tempo[1]);
         }
 
-        if(mJson.scoreParts && mJson.scoreParts.length > 0)
-            newScore.SetScoreGroup(getScoreGroup(mJson.scoreParts));
+        if(mJson.parts && mJson.parts.length > 0)
+            newScore.SetScoreGroup(getScoreGroup(mJson.parts));
 
         return newScore;
     }
 
     function getScoreGroup(scoreParts) {
-
 
         var newScoreGroup = new ScoreBuilder.ScoreGroup();
         if(scoreParts && scoreParts.length > 0) {
@@ -468,6 +491,9 @@ function getNoteObj(note) {
     }
 
     function getScorePart(scorePart) {
+
+
+
         var newScorePart = new ScoreBuilder.ScorePart();
         if(scorePart && scorePart.measures && scorePart.measures.length > 0) {
             for(var i = 0; i < scorePart.measures.length; i++) {
@@ -510,7 +536,9 @@ function getNoteObj(note) {
 
     function getScoreChord(scoreChord) {
 
-        var newScoreChord = new ScoreBuilder.Chord(scoreChord.denominator, scoreChord.dotted);
+        //console.log(scoreChord);
+
+        var newScoreChord = new ScoreBuilder.Chord(scoreChord.denominator, scoreChord.dot);
 
         if(scoreChord.notes && scoreChord.notes.length > 0) {
             newScoreChord.AddNoteCollection(scoreChord.notes);

@@ -169,20 +169,22 @@ ScoreBuilder.Chord = function(chordDen, dots) {
     }*/
 
     this.AddNote = function(note) {
+
         //if the note object already exists at this chord, return message
         if(notes.indexOf(note) != -1) return "NOTE_ALREADY_ON_CHORD_SAME_OBJ";
 
-        if(!note.n || typeof note.o != "number") return "INVALID_NOTE";
+        if(!note.step || typeof note.octave != "number") return "INVALID_NOTE";
 
-        if(note.n.charCodeAt(0) < 65 || note.n.charCodeAt(0) > 71)
+        if(note.step.charCodeAt(0) < 65 || note.step.charCodeAt(0) > 71)
             return "INVALID_NOTE_LETTER";                    
 
         //iterate thru all notes already placed to check if it is not equal to some of them
         for(var i = 0; i < notes.length; i++) { //iterate thru all the notes
-            if(notes[i]) {   //if the note is valid
-                if((note.n == notes[i].n && note.o == notes[i].o))
-                    return "NOTE_ALREADY_ON_CHORD_SAME_NOTE_AND_OCTAVE";
-            }
+            if(notes[i] == undefined) //if the note is not valid
+                continue;   //proceed next            
+            
+            if((note.step == notes[i].step && note.octave == notes[i].octave))
+                return "NOTE_ALREADY_ON_CHORD_SAME_NOTE_AND_OCTAVE";
         }
 
         note.noteDraw = DrawNote(chordDenominator);  //get the note draw
@@ -190,8 +192,8 @@ ScoreBuilder.Chord = function(chordDen, dots) {
 
         //note.noteDraw.setAttribute("opacity", ".5");
 
-        if(note.a) {   //if the note has an accident, 
-            note.accidentDraw = DrawNoteAtt(note.a); //get its draw
+        if(note.accidental) {   //if the note has an accident, 
+            note.accidentDraw = DrawNoteAtt(note.accidental); //get its draw
             accidentGroup.appendChild(note.accidentDraw);   //append the accident drawing to the group if some
         }
 
@@ -225,7 +227,7 @@ ScoreBuilder.Chord = function(chordDen, dots) {
                     continue;   //proceed next one
 
                 //check if it is the same
-                if((note.n == notes[i].n && note.o == notes[i].o)) {
+                if((note.step == notes[i].step && note.octave == notes[i].octave)) {
                     noteIndex = i;    //set the note index
                     note = notes[i];    //get the valid note reference for this note values
                     break;  //exit the iteration
@@ -325,12 +327,11 @@ ScoreBuilder.Chord = function(chordDen, dots) {
                     matchValue = 0;
 
                 //If the note is A or B, must add 1 to the octave to match the piano standard of notes and octaves
-                if(notes[i].n == "A" || notes[i].n == "B")
+                if(notes[i].step == "A" || notes[i].step == "B")
                     matchValue = 1;
 
-                yCoord = -((notes[i].n.charCodeAt(0) - POS0_NOTE) + (notes[i].o + matchValue - POS0_OCTAVE) * 7);
+                yCoord = -((notes[i].step.charCodeAt(0) - POS0_NOTE) + (notes[i].octave + matchValue - POS0_OCTAVE) * 7);
 
-                //var yCoord = -((notes[i].n.charCodeAt(0) - POS0_NOTE) + (notes[i].o - POS0_OCTAVE) * 7); 
                 notes[i].yCoord = yCoord;   //register the y coord at the note element for note placement later
 
                 //if the current y position is low than the actual lowest value
@@ -474,12 +475,11 @@ ScoreBuilder.Chord = function(chordDen, dots) {
                 matchValue = 0;
 
             //If the note is A or B, must add 1 to the octave to match the piano standard of notes and octaves
-            if(notes[i].n == "A" || notes[i].n == "B")
+            if(notes[i].step == "A" || notes[i].step == "B")
                 matchValue = 1;
 
-            yCoord = -((notes[i].n.charCodeAt(0) - POS0_NOTE) + (notes[i].o + matchValue - POS0_OCTAVE) * 7);
+            yCoord = -((notes[i].step.charCodeAt(0) - POS0_NOTE) + (notes[i].octave + matchValue - POS0_OCTAVE) * 7);
 
-            //var yCoord = -((notes[i].n.charCodeAt(0) - POS0_NOTE) + (notes[i].o - POS0_OCTAVE) * 7); 
             notes[i].yCoord = yCoord;   //register the y coord at the note element for note placement later
 
             //if the current y position is low than the actual lowest value
@@ -745,7 +745,6 @@ ScoreBuilder.Chord = function(chordDen, dots) {
                 prevValidNote = true;   //just set the prev valid not to move the next one if it is valid
 
             //move the current note to its right position
-            //SetTransform(currNote.noteDraw, { translate: [finalXCoord, finalYCoord] });
             currNote.noteDraw.translate(finalXCoord, finalYCoord);
         }
 

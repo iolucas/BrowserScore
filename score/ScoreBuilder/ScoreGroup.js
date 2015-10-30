@@ -186,18 +186,20 @@ function MeasureGroupLine(firstMeasureGroup) {
     this.Add = function(measureGroup) {
         measureGroups.push(measureGroup);
 
-        //Only update start bar length in case the start bar is repeat_f
-        if(measureGroup.GetStartBar() == "repeat_f") {
+        //Only update start bar length in case the start bar is forward
+        if(measureGroup.GetStartBar() == "forward") {
             //If it is the first measure
             if(measureGroups.length == 1) { //just add it
-                lineFixedLength += DrawBar("repeat_f", [0, 1]).getBBox().width;
+                lineFixedLength += DrawBar("forward", [0, 1]).getBBox().width;
             } else {    //if not, check the previous one
-                //If the previous measure group end bar is repeat b
-                if(measureGroups[measureGroups.length - 2].GetEndBar() == "repeat_b") {
+                //If the previous measure group end bar is backward
+                if(measureGroups[measureGroups.length - 2].GetEndBar() == "backward") {
                     //Subtract it and add the mixed forward and backward bar
-                    lineFixedLength -= DrawBar("repeat_b", [0, 1]).getBBox().width;
+                    lineFixedLength -= DrawBar("backward", [0, 1]).getBBox().width;
                     lineFixedLength += DrawBar("repeat_bf", [0, 1]).getBBox().width;
-                }
+
+                } else //if it is not the backward, just add the start bar length
+                    lineFixedLength += DrawBar("forward", [0, 1]).getBBox().width;    
             }
         }
 
@@ -283,7 +285,7 @@ function MeasureGroupLine(firstMeasureGroup) {
 
         //Draw lines junction bar and bracket if more than one part
         if(groupLines.length > 1) {
-            var linesJunctionBar = DrawBar("simple", linesCoords);
+            var linesJunctionBar = DrawBar("light", linesCoords);
             linesJunctionBar.translate(0, linesCoords[0]);
             linesGroup.appendChild(linesJunctionBar);
 
@@ -302,7 +304,7 @@ function MeasureGroupLine(firstMeasureGroup) {
             currMeasureGroup.SetChordsPositions(denUnitValue);
 
             //Only put start bar in case of first measure of the line
-            if(currMeasureGroup.GetStartBar() == "repeat_f" && i == 0) {
+            if(currMeasureGroup.GetStartBar() == "forward" && i == 0) {
                 var startBar = DrawBar(currMeasureGroup.GetStartBar(), linesCoords),
                     startBarBox = startBar.getBBox();
                 linesGroup.appendChild(startBar);
@@ -338,11 +340,11 @@ function MeasureGroupLine(firstMeasureGroup) {
             if(currMeasureGroup.GetEndBar() || (nextMeasureGroup && nextMeasureGroup.GetStartBar())) {
                 var endBar;
 
-                if(nextMeasureGroup && nextMeasureGroup.GetStartBar() == "repeat_f") {
-                    if(currMeasureGroup.GetEndBar() == "repeat_b") {
+                if(nextMeasureGroup && nextMeasureGroup.GetStartBar() == "forward") {
+                    if(currMeasureGroup.GetEndBar() == "backward") {
                         endBar = DrawBar("repeat_bf", linesCoords);
                     } else {
-                        endBar = DrawBar("repeat_f", linesCoords);
+                        endBar = DrawBar("forward", linesCoords);
                     }
                 } else if(currMeasureGroup.GetEndBar()) {
                     endBar = DrawBar(currMeasureGroup.GetEndBar(), linesCoords);                    

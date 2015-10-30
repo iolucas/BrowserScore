@@ -393,10 +393,12 @@ function BeamChordGroup() {
             bFactor = beamY1 - aFactor * beamX1;
 
 
-        var beamGap = 7.5 * downStemFact;
+        var beamHeight = 7.5 * downStemFact,
+            beamGap = 4 * downStemFact;
+
 
         var beamPath = "M" + beamX1 + "," + beamY1 + " L" + beamX2 + "," + beamY2 + " v" + 
-                beamGap + " L" + beamX1 + "," + (beamY1 + beamGap);
+                beamHeight + " L" + beamX1 + "," + (beamY1 + beamHeight);
 
         var prevChord,
             prevBeamQty,
@@ -446,7 +448,7 @@ function BeamChordGroup() {
 
                     //vertical pointer to point where the next beam start at y position
                     //get its value based on the previous number of beams
-                    var beamVPointer = (2 * beamGap) * prevBeamQty; 
+                    var beamVPointer = (beamHeight + beamGap) * prevBeamQty;//(2 * beamHeight) * prevBeamQty; 
 
                     //partial value for Y2 to save process
                     var partialY2 = aFactor * currX2 + bFactor;
@@ -456,10 +458,10 @@ function BeamChordGroup() {
                         var currY2 = partialY2 + beamVPointer;
 
                         beamPath += "M" + currX1 + "," + currY1 + " L" + currX2 + "," + currY2 + " v" + 
-                    beamGap + " L" + currX1 + "," + (currY1 + beamGap);
+                    beamHeight + " L" + currX1 + "," + (currY1 + beamHeight);
 
                         //Update the beam vertical pointer
-                        beamVPointer += 2 * beamGap;  
+                        beamVPointer += (beamHeight + beamGap); //2 * beamHeight;  
                     }
                 }
             }
@@ -480,7 +482,7 @@ function BeamChordGroup() {
                 var currX1 = chordStemXPos; //get the current X1 for drawn beams (only semantic need)
                 var currX2 = nextChordStemXPos; //get the current X2 for drawn beam (only semantic need)
 
-                var beamVPointer = 2 * beamGap; //vertical pointer to point where the next beam start at y position
+                var beamVPointer = beamHeight + beamGap;//2 * beamHeight; //vertical pointer to point where the next beam start at y position
 
                 //Draw full lines (start 1 cause the first were already drawn)
                 for(var j = 1; j < fullLines; j++) {
@@ -489,10 +491,10 @@ function BeamChordGroup() {
                     var currY2 = nextChordStemYPos + beamVPointer;
                     
                     beamPath += "M" + currX1 + "," + currY1 + " L" + currX2 + "," + currY2 + " v" + 
-                beamGap + " L" + currX1 + "," + (currY1 + beamGap);
+                beamHeight + " L" + currX1 + "," + (currY1 + beamHeight);
 
                     //Update the beam vertical pointer
-                    beamVPointer += 2 * beamGap;
+                    beamVPointer += beamHeight + beamGap;//2 * beamHeight;
                 }
 
                 //Draw partial lines if needed
@@ -511,10 +513,10 @@ function BeamChordGroup() {
                         var currY2 = partialY2 + beamVPointer;
 
                         beamPath += "M" + currX1 + "," + currY1 + " L" + currX2 + "," + currY2 + " v" + 
-                    beamGap + " L" + currX1 + "," + (currY1 + beamGap);
+                    beamHeight + " L" + currX1 + "," + (currY1 + beamHeight);
 
                         //Update the beam vertical pointer
-                        beamVPointer += 2 * beamGap;                  
+                        beamVPointer += beamHeight + beamGap; //2 * beamHeight;                  
                     }
                 }
             }

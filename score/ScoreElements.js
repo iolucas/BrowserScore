@@ -501,11 +501,11 @@ function DrawBar(bar, barCoords) {
         height = bottomCoord - topCoord;
 
     switch(bar) {
-        case "simple":
+        case "light":
             barPath += "M0,0v" + height;
             break;
 
-        case "double":
+        case "light-light":
             barPath += "M0,0v" + height + "M6,0v" + height;
             break;
 
@@ -514,11 +514,11 @@ function DrawBar(bar, barCoords) {
             barPath += "M0,0v" + height;
             break;
 
-        case "end":
+        case "light-heavy":
             barPath += "M0,0v" + height + "M6,0v" + height + "h6v-" + height + "z";
             break;
 
-        case "repeat_f":
+        case "forward":
             barPath += "M0,0v" + height + "h6v-" + height + "zM12,0v" + height;
             for(var coord = 0; coord < barCoords.length - 1; coord++) {
                 barPath += $G.createCircle(18, barCoords[coord] - topCoord + 22.5, 2);
@@ -526,7 +526,7 @@ function DrawBar(bar, barCoords) {
             }
             break;
 
-        case "repeat_b":
+        case "backward":
             for(var coord = 0; coord < barCoords.length - 1; coord++) {
                 barPath += $G.createCircle(1, barCoords[coord] - topCoord + 22.5, 2);
                 barPath += $G.createCircle(1,barCoords[coord] - topCoord + 37.5,2);

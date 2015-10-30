@@ -46,7 +46,7 @@ div#logo {
 #general-content {
     margin-left: 300px;
     margin-bottom: 30px;
-    min-height: 100%;
+    min-height: calc(100% - 30px);
     background-color: #f0f0f0;
 }
 

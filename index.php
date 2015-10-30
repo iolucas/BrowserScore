@@ -25,7 +25,7 @@
             <!--<nav id="score-menu"></nav>-->
             <div id="score-page">
                 <!--<object id="svgPage" type="image/svg+xml" data="debug.svg" height="3700" width="1520">Error</object>-->
-                <svg id="svgContainer" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1520" height="10000"></svg>
+                <svg id="svgContainer" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1520" height="100"></svg>
             </div>
         </section>
         <script src="score/g-query.js"></script>
@@ -42,6 +42,7 @@
         <script src="score/ScoreBuilder/Score.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
         <script src="xml2json/xml2json.js"></script>
+        <script src="MusicXMLConversor.js"></script>
         <script src="bluemusic.js"></script>
         <script src="score/ScorePrerender.js"></script>
         <script src="musicXmlFileHandler.js"></script>
@@ -312,8 +313,14 @@ function getRandomAccident() {
                     
 
 
+
+
                 scoreObj = scoreDOM;
                 scoreObj.Organize();
+
+                var scoreObjHeight = scoreObj.Draw().getBBox().height;
+
+                svgContainer.setAttribute("height", scoreObjHeight + 20);
 
                 //scoreObj.Draw().scale(0.2);
 
@@ -322,7 +329,7 @@ function getRandomAccident() {
 
 
 
-            function OpenScore(jsonStr) {
+            function OpenScore2(jsonStr) {
                 //var composinObj = toComposinFormat(JSON.parse(jsonStr));
 
                 //console.log(JSON.parse(jsonStr));
@@ -335,6 +342,10 @@ function getRandomAccident() {
                 scoreObj = ScoreLoader.Open(jsonStr);
 
                 svgContainer.appendChild(scoreObj.Draw());
+
+                var scoreObjHeight = scoreObj.Draw().getBBox().height;
+
+                svgContainer.height = scoreObj.height + 0.5;
                 
                 scoreObj.Organize(1500, 300);
                 scoreObj.MoveTo(15.5, 0.5);
