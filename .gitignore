@@ -18,6 +18,10 @@ $RECYCLE.BIN/
 
 /imgs
 
+/obsolete
+
+/phpDebug
+
 # Excel sheet
 *.xlsx
 

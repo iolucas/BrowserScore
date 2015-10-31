@@ -28,266 +28,30 @@
                 <svg id="svgContainer" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1520" height="100"></svg>
             </div>
         </section>
-        <script src="score/g-query.js"></script>
-        <script src="score/ScoreConverter.js"></script>
-        <script src="ariajs/List.js"></script>
-        <script src="score/ScoreLoader.js"></script>
-        <script src="score/ScoreElements.js"></script>
+        <script src="g-query.js"></script>
+        <script src="List.js"></script>
+        <script src="ScoreBuilder/ScoreElements.js"></script>
         <!--<script src="score/ScoreBuilder/TabChord.js"></script>-->
-        <script src="score/ScoreBuilder/Chord.js"></script>
-        <script src="score/ScoreBuilder/Measure.js"></script>
-        <script src="score/ScoreBuilder/MeasureGroup.js"></script>
-        <script src="score/ScoreBuilder/ScorePart.js"></script>
-        <script src="score/ScoreBuilder/ScoreGroup.js"></script>
-        <script src="score/ScoreBuilder/Score.js"></script>
+        <script src="ScoreBuilder/Chord.js"></script>
+        <script src="ScoreBuilder/Measure.js"></script>
+        <script src="ScoreBuilder/MeasureGroup.js"></script>
+        <script src="ScoreBuilder/ScorePart.js"></script>
+        <script src="ScoreBuilder/ScoreGroup.js"></script>
+        <script src="ScoreBuilder/Score.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-        <script src="xml2json/xml2json.js"></script>
         <script src="MusicXMLConversor.js"></script>
         <script src="bluemusic.js"></script>
-        <script src="score/ScorePrerender.js"></script>
+        <script src="ScorePrerender.js"></script>
         <script src="musicXmlFileHandler.js"></script>
+        <script src="DEBUG_SCORE.js"></script>
         <script>
 
-            var svgContainer = document.getElementById("svgContainer"),
-                scoreObj = null;
+            //get svg container reference
+            var svgContainer = document.getElementById("svgContainer");
 
             window.onload = function() {
 
-                var chord1 = {
-                    denominator: 2,
-                    notes: [
-                        { n: "B", o: 4 },
-                        { n: "A", o: 4 },
-                        { n: "G", o: 4 },
-                        { n: "F", o: 4 },
-                        { n: "D", o: 4 }
-                    ]
-                }
-                
-                var chord2 = {
-                    denominator: 4,
-                    notes: [
-                        { n: "C", o: 4 },
-                        { n: "D", o: 4 },
-                        { n: "E", o: 4 },
-                        { n: "F", o: 4 },
-                        { n: "G", o: 4 }
-                    ]
-                }
-
-                var chord3 = {
-                    denominator: 2,
-                    notes: [
-                        {n: "E", o: 3, a: "flat-flat"  },
-                        {n: "F", o: 3, a: "flat-flat"  }
-                    ]
-                }
-
-                var chord4 = {
-                    denominator: 2,
-                    notes: [
-                        {n: "E", o: 3 , a: "flat-flat"}
-                    ]
-                }
-
-                var chord5 = {
-                    denominator: 2,
-                    dotted: 1,
-                    notes: [
-                        {n: "E", o: 3, a: "" },
-                        {n: "F", o: 3, a: "flat-flat" },
-                        {n: "F", o: 5, a: "" }
-                    ]
-                }
-
-                var chord6 = {
-                    denominator: 8,
-                    notes: [
-                        {n: "C", o: 4 }
-                    ]
-                }
-
-                var chord7 = {
-                    denominator: 4,
-                    dotted: 1,
-                    notes: [
-                        {n: "E", o: 3, a: "flat-flat"  },
-                        {n: "F", o: 3, a: "flat-flat"  }
-                    ]
-                }
-
-
-                var measure1 = {
-                    clef: "G2",
-                    timeSig: "4,4",
-                    keySig: 2,
-                    endBar: "repeat_b",
-                    chords: [chord1, { denominator: 2 }]
-                }
-
-                var measure2 = {
-                    keySig: 5,
-                    clef: "F4",
-                    startBar: "repeat_f",
-                    endBar: "end",
-                    chords: [ chord2, { denominator: 4 }, { denominator: 4 }, { denominator: 4 }, ]
-                }
-
-                var measure3 = {
-                    clef: "F4",
-                    timeSig: "4,4",
-                    keySig: 5,
-                    chords: [{ denominator: 4 }, chord3, { denominator: 4 }]
-                }
-
-function getInt(from, to) {
-    return Math.round(Math.random()*(to-from) + from);
-}
-
-
-function getRandomChord(myDen) {
-    var numberOfNotes = getInt(0,6),
-        randDen = myDen;//Math.pow(2, getInt(0,6));
-        chord = { denominator: randDen , notes: []};
-
-    for(var i = 0; i < numberOfNotes; i++) {
-        var randomNote = String.fromCharCode(65 + getInt(0,6)),
-            randomOctave = getInt(2,6);
-
-        chord.notes.push({ n: randomNote, o: randomOctave, a: getRandomAccident() });
-    }
-    
-    return chord;
-}
-
-function getRandomAccident() {
-    //return "DOUBLE_FLAT";
-    var value = Math.round(Math.random() * 5),
-        acc = "";
-    
-    switch(value) {
-
-        case 1:
-            acc = "natural";
-            break;
-        
-        case 2:
-            acc = "sharp";
-            break;
-
-        case 3:
-            acc = "double-sharp";
-            break;
-
-        case 4:
-            acc = "flat";
-            break;
-
-        case 5:
-            acc = "flat-flat";
-            break;
-    }
-
-    return acc;
-}
-
-                var betaDen = 8;
-                var betaChords = []
-                for(var a = 0; a < betaDen; a++) {
-                    //betaChords.push({ denominator: betaDen , notes: [{ n:"G", o: 4 }]});
-                    betaChords.push(getRandomChord(betaDen));
-                }
-
-                var stemChord1 = { 
-                    denominator: 8,
-                    notes: [
-                        { n: "G", o: 4 }
-                    ]
-                }
-
-                var stemChord2 = { 
-                    denominator: 8,
-                    //dotted: 1,
-                    notes: [
-                        { n: "G", o: 4 }
-                    ]
-                }
-
-                var stemChord3 = { 
-                    denominator: 32,
-                    notes: [
-                        { n: "G", o: 4 }
-                    ]
-                }
-
-                var stemChord4 = { 
-                    denominator: 1,
-                    notes: [
-                        { n: "F", o: 2 }
-                    ]
-                }
-
-
-
-                var measure4 = {
-                    keySig: 1,
-                    clef: "G2",
-                    timeSig: "2,2",
-                    //startBar: "repeat_f",
-                    endBar: "end",
-                    //chords: betaChords
-                    chords: [ 
-                        stemChord1,//{ denominator: 2 }, 
-                        stemChord2,//{ denominator: 4, dotted: 2 },
-                        stemChord3,//{ denominator: betaDen },  
-                        { denominator: 2 },
-                        stemChord4,//{ denominator: 16}
-                        { denominator: 2 }
-                    ]
-                }
-
-                var measure5 = {
-                    clef: "C3",
-                    timeSig: "2,2",
-                    keySig: 5,
-                    chords: [chord5, chord6, chord7]
-                }
-
-                var measure6 = {
-                    chords: [{ denominator: 2 }, { denominator: 2 }]
-                }
-
-                var scorePart1 = {
-                    measures: [
-                        measure1,
-                        measure2
-                    ]
-                }
-
-                var scorePart2 = {
-                    measures: [
-                        //measure3,
-                        measure4
-                    ]
-                }
-
-                var scorePart3 = {
-                    measures: [
-                        measure5,
-                        measure6
-                    ]
-                }
-
-                var newMJson = {
-                    title: "My Music",
-                    composer: "compos.in",
-                    lyricist: "lyrics",
-                    tempo: [8, 120],
-                    //scoreParts: [ scorePart1, scorePart2, scorePart3]
-                    scoreParts: [ scorePart2 ]
-                }
-
-                //var newMusicScore = BlueMusic.GetScore.FromMJSON(newMJson);
+                //var newMusicScore = BlueMusic.GetScore.FromMJSON(GetDebugScore());
                 //newMusicScore.Organize();
 
                 //svgContainer.appendChild(newMusicScore.Draw());
@@ -298,8 +62,7 @@ function getRandomAccident() {
 
                 //svgContainer.appendChild(newMusicScore.Draw());
 
-                //NOW LETS EXPLORE A LITTLE, TO FIND SOME BUGS, CHECKS A FEW NOTES IF THEY ARE ALREADY MADE
-                //THEN PLACE SLURS ETC CHECK DOTTED NOTES ON MUSIC XML
+                //console.log(newMusicScore)
 
             }
 
@@ -307,57 +70,15 @@ function getRandomAccident() {
 
 
 //-------------------------- OUTTER FILE OPENING -----------------------------------
-            function OpenScoreDOM(scoreDOM) {
-                if(scoreObj && scoreObj.parentElement)
-                    scoreObj.parentElement.removeChild(scoreObj);
-                    
-
-
-
-
-                scoreObj = scoreDOM;
-                scoreObj.Organize();
-
-                var scoreObjHeight = scoreObj.Draw().getBBox().height;
-
-                svgContainer.setAttribute("height", scoreObjHeight + 20);
-
-                //scoreObj.Draw().scale(0.2);
-
-                svgContainer.appendChild(scoreDOM.Draw());    
-            }
-
-
-
-            function OpenScore2(jsonStr) {
-                //var composinObj = toComposinFormat(JSON.parse(jsonStr));
-
-                //console.log(JSON.parse(jsonStr));
-                //console.log(composinObj);
-
-                if(scoreObj)
-                    svgContainer.removeChild(scoreObj.Draw());
-                    
-                //scoreObj = ScoreLoader.Open(composinObj);
-                scoreObj = ScoreLoader.Open(jsonStr);
-
-                svgContainer.appendChild(scoreObj.Draw());
-
-                var scoreObjHeight = scoreObj.Draw().getBBox().height;
-
-                svgContainer.height = scoreObj.height + 0.5;
-                
-                scoreObj.Organize(1500, 300);
-                scoreObj.MoveTo(15.5, 0.5);
-            }
-
             //FILE OPEN STUFF
             var fileOpenBut = document.getElementById('files');
             fileOpenBut.addEventListener('change', handleFileSelect, false);
 
+
             function openFile() {
                 fileOpenBut.click();
             }
+
 
             function handleFileSelect(evt) {
                 var file = evt.target.files[0]; // FileList object
@@ -372,16 +93,18 @@ function getRandomAccident() {
                 switch(fileExtension) {
 
                     case "mxl":
-                        OpenMXLFile(file, function(openResult) {
+                        ReadMXLFile(file, function(openResult) {
+
+                            //console.log(openResult);
                             if(openResult == "MXL_OPEN_ERROR")
-                                console.error("Error while opening mxl file.");
+                                console.log("Error while opening mxl file.");
                             else
                                 LoadAndOpenMusicXML(openResult);
                         });
                         break;
 
                     case "xml":
-                        OpenXMLFile(file, function(openResult) {
+                        ReadXMLFile(file, function(openResult) {
                             if(openResult == "XML_OPEN_ERROR")
                                 console.log("Error while opening xml file.");
                             else
@@ -394,84 +117,24 @@ function getRandomAccident() {
 
             function LoadAndOpenMusicXML(musicXML) {
                 //Convert file into a dom
-                var scoreDOM = BlueMusic.GetScore.FromMusicXML(musicXML);
+                var scoreObject = BlueMusic.GetScore.FromMusicXML(musicXML),
+                    scoreDOM = scoreObject.Draw();
+
+                //Organize the score object
+                scoreObject.Organize();    
+
+                //Clear svg container
+                while(svgContainer.children.length > 0)
+                    svgContainer.removeChild(svgContainer.children[0]);
 
 
+                var scoreHeight = scoreDOM.getBBox().height + 20;
 
-                //Open the DOM object at the screen
-                OpenScoreDOM(scoreDOM);
+                svgContainer.setAttribute("height", scoreHeight);    
+
+                svgContainer.appendChild(scoreDOM);  
+                
             }
-
-
-
-            //function to replace the creator from music xml to easily find composer and lyricist
-            function replaceCreator(xmlString) {
-                //return xmlString;
-
-                var changeArray = [];
-                    composerIndex = xmlString.indexOf("<creator type=\"composer\">"),
-                    poetIndex = xmlString.indexOf("<creator type=\"poet\">"),
-                    lyricistIndex = xmlString.indexOf("<creator type=\"lyricist\">"),
-                    artistIndex = xmlString.indexOf("<creator type=\"artist\">"),
-                    tabberIndex = xmlString.indexOf("<creator type=\"tabber\">");
-
-                if(composerIndex > -1)
-                    changeArray[composerIndex] = "composer";
-
-                if(poetIndex > -1)
-                    changeArray[poetIndex] = "poet";
-
-                if(lyricistIndex > -1)
-                    changeArray[lyricistIndex] = "lyricist";
-
-                if(artistIndex > -1)
-                    changeArray[artistIndex] = "artist";
-
-                if(tabberIndex > -1)
-                    changeArray[tabberIndex] = "tabber";
-
-                for(var i = 0; i < changeArray.length; i++) {
-                    if(changeArray[i] == undefined)
-                        continue;
-
-                    xmlString = xmlString
-                        .replace("<creator type=\"" + changeArray[i] + "\">", "<" + changeArray[i] + ">")
-                        .replace("</creator>", "</" + changeArray[i] + ">");    
-                }
-
-                return xmlString;
-            }
-
-            //FILE POST STUFF
-            function postFile(fileText) {
-                var request = $.ajax({
-                    url: "openFile.php",
-                    type: "post",
-                    data: { file: fileText}
-                });
-
-                // Callback handler that will be called on success
-                request.done(function (response, textStatus, jqXHR){
-                    OpenScore(response);
-                });
-
-                // Callback handler that will be called on failure
-                request.fail(function (jqXHR, textStatus, errorThrown){
-                    // Log the error to the console
-                    console.error(
-                        "The following error occurred: "+
-                        textStatus, errorThrown
-                    );
-                });
-
-                // Callback handler that will be called regardless
-                // if the request failed or succeeded
-                request.always(function () {});
-            }
-
-
-
-
 
 
 

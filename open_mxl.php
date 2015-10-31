@@ -9,12 +9,10 @@
 	$type = $_FILES["mxlFile"]["type"];	//Get its type
 
 	
-	//MUST CREATE FUNCTION TO CREATE AND DELETE TEMP STUFF
+	$rootDir = "phpDebug/";
+	$tempDir = $rootDir."tempDir/";
 
-	//$rootDir = "phpDebug/";
-	//$tempDir = "tempDir/";
-
-	//mkdir($rootDir . $tempDir, 0777);
+	@mkdir($tempDir, 0777);
 
 	//Check if the type matches one of the valid types
 	switch($type) {
@@ -36,31 +34,52 @@
 
 		//If it doesn't match any of the cases, it will fall here
 		default:
-			exit("MXL_OPEN_ERROR");	//exit script signling error
+			ClearAndExit("MXL_OPEN_ERROR");	//exit script signling error
 	}
 
 	//place and file to extract the zip file
-	$targetPath = "phpDebug/".$filename;
+	$targetPath = $tempDir.$filename;
 
 	
 	//Move the uploaded temporary file to the target location
 	$moveResult = move_uploaded_file($source, $targetPath);
 	if(!$moveResult)
-		exit("MXL_OPEN_ERROR");	//exit script signling error
+		ClearAndExit("MXL_OPEN_ERROR");	//exit script signling error
 	
 	//Open and extract the zip file
-	$extractResult = OpenAndExtractFile($targetPath, "phpDebug/");
+	$extractResult = OpenAndExtractFile($targetPath, $tempDir);
 	if($extractResult == "EXTRACT_ERROR")
-		exit("MXL_OPEN_ERROR");	//exit script signling error
+		ClearAndExit("MXL_OPEN_ERROR");	//exit script signling error
 
+	//Open the meta data of the mxl file and read it
+	$xmlMetaData = OpenAndReadFile($tempDir."META-INF/container.xml");
+	if($xmlMetaData == "OPENREAD_ERROR")
+		ClearAndExit("MXL_OPEN_ERROR");	//exit script signling error
+
+	$xmlMetaObj = simplexml_load_string($xmlMetaData);
+	$xmlFileName = (string) $xmlMetaObj->rootfiles->rootfile["full-path"];
+
+	//If no valid name were get
+	if(!$xmlFileName)
+		ClearAndExit("MXL_OPEN_ERROR");	//exit script signling error
 
 	//Open and read the musicxml file
-	$readResult = OpenAndReadFile("phpDebug/musicXML.xml");
+	$readResult = OpenAndReadFile($tempDir.$xmlFileName);
 	if($readResult == "OPENREAD_ERROR")
-		exit("MXL_OPEN_ERROR");	//exit script signling error
+		ClearAndExit("MXL_OPEN_ERROR");	//exit script signling error
 
-	echo $readResult;
-	//print_r($readResult);
+	ClearAndExit($readResult);
+
+
+	//----------------- Script End -----------------
+
+	//------------------------Functions-----------------
+
+
+	function ClearAndExit($exitMessage) {
+		//deleteDirectory($tempDir);
+		exit($exitMessage);	//exit script signling error
+	}
 
 
 	function OpenAndExtractFile($targetFile, $extractPlace) {
@@ -72,7 +91,7 @@
 			$zip->extractTo($extractPlace); //Extract the files to the specified location
 			$zip->close();	//close the zip file
 
-			@unlink($targetFile);	//Delete the zip file
+			//@unlink($targetFile);	//Delete the zip file
 
 		} else {
 			return "EXTRACT_ERROR";
@@ -92,7 +111,7 @@
 			$openResult = "OPENREAD_ERROR";
 
 		//Delete the read file
-		@unlink($fileName);
+		//@unlink($fileName);
 
 		return $openResult;
 	}

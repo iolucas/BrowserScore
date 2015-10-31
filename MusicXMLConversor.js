@@ -81,8 +81,6 @@ function parseScorePart(scorePart) {
 
 function parseScoreMeasure(scoreMeasure) {
 
-    //console.log(scoreMeasure);
-
     var newMeasure = { chords: [] , endBar: "light" }   //declare new measure object, with standard light bar
 
     var chordPointer = -1;   //variable to point to the current chord (start -1 for correct initiation)

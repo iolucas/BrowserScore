@@ -549,7 +549,7 @@ function DrawBar(bar, barCoords) {
 
 
         default:
-            throw "INVALID_BAR_TO_DRAW";
+            throw "INVALID_BAR_TO_DRAW: " + bar;
     }
 
     barObj.setStrokeColor("#000");

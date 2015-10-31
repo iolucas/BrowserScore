@@ -1,5 +1,5 @@
 
-function OpenMXLFile(mxlFile, loadCallback) {
+function ReadMXLFile(mxlFile, loadCallback) {
 
 	//Create form data object
 	var formData = new FormData();
@@ -32,7 +32,7 @@ function OpenMXLFile(mxlFile, loadCallback) {
     request.always(function () {});
 }
 
-function OpenXMLFile(xmlFile, loadCallback) {
+function ReadXMLFile(xmlFile, loadCallback) {
 
     //Create reader object to read the file
     var reader = new FileReader();
