@@ -147,9 +147,6 @@ ScoreBuilder.ScoreGroup = function() {
         //append debug rect again
         //generalGroup.appendChild(debRect1);
 
-        //translate the general group to a fit position (CHECK WHY NOT WORKING: PROBABLY ARE BEING TRANSLATED IN THE INDEX PAGE)
-        //generalGroup.translate(-generalGroup.getBBox().x);
-
         //Organize lines groups vertically
         for(var i = 0, nextVPos = 0; i < measureGroupLines.length; i++) {
             var currLineGroup = measureGroupLines[i].GetLinesGroup();    //get the line group reference
@@ -217,9 +214,6 @@ function MeasureGroupLine(firstMeasureGroup) {
 
     this.CheckFit = function(measureGroup) {
         //Check whether these values fits inside this line without crossing the max and min values
-
-        //WE MUST CHECK ATTRIBUTES CHANGES THAT CHANGES LINES BEFORE, SUCH CLEF, TIME AND KEY CHANGES, AND BARS
-        //(CHECK HOW HANDLE BARS PRIORITY, CAUSE A PREVIOUS MEASURE SAYS A DOUBLE BAR AND THE NEXT, A REPEAT FORWARD BAR)
 
         //Values for checking purposes
         var checkFixedLength = lineFixedLength + measureGroup.GetFixedLength(),

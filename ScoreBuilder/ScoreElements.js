@@ -505,6 +505,10 @@ function DrawBar(bar, barCoords) {
             barPath += "M0,0v" + height;
             break;
 
+        case "heavy": //Bar fallback for strange cases that has a "heavy" named bar
+            barPath += "M0,0v" + height;
+            break;
+
         case "light-light":
             barPath += "M0,0v" + height + "M6,0v" + height;
             break;
@@ -550,6 +554,7 @@ function DrawBar(bar, barCoords) {
 
         default:
             throw "INVALID_BAR_TO_DRAW: " + bar;
+
     }
 
     barObj.setStrokeColor("#000");

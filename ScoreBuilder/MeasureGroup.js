@@ -7,22 +7,6 @@ if(!ScoreBuilder) var ScoreBuilder = new Object();
 //-----------------------------------------------------------
 //-----------------------------------------------------------
 
-/*
-
--------> DO IT!
-
-WE WILL USE THE MEASURE GROUP LAYOUT TO PLACE A CLEF, TIME AND KEY CHANGE SYSTEM
-
-HOW WILL STORE CLEF CHANGES @ MEASURE GROUP, SINCE THEY DO NOT CHANGE FOR ALL? SAME FOR KEYS WHEN USING TABS
-
-FOR TIME signature ITS OK CAUSE TABS FOLLOW THE SAME TIME SIGNATURES
-
-SYSTEM THAT WILL GENERATE BARS ACCORDING TO MEASURE PROPERTIES
-
-*/
-
-/*add repeat label bars and other measure stuff
-add measure symbol that means repeat*/
 
 ScoreBuilder.MeasureGroup = function() {
     var measures = [],
