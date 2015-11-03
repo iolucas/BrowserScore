@@ -188,15 +188,18 @@ function MeasureGroupLine(firstMeasureGroup) {
             //If it is the first measure
             if(measureGroups.length == 1) { //just add it
                 lineFixedLength += DrawBar("forward", [0, 1]).getBBox().width;
-            } else {    //if not, check the previous one
-                //If the previous measure group end bar is backward
-                if(measureGroups[measureGroups.length - 2].GetEndBar() == "backward") {
-                    //Subtract it and add the mixed forward and backward bar
-                    lineFixedLength -= DrawBar("backward", [0, 1]).getBBox().width;
-                    lineFixedLength += DrawBar("repeat_bf", [0, 1]).getBBox().width;
+            } else {    //if not, get the previous one
 
-                } else //if it is not the backward, just add the start bar length
-                    lineFixedLength += DrawBar("forward", [0, 1]).getBBox().width;    
+                var previousBar = measureGroups[measureGroups.length - 2].GetEndBar();
+
+                //Remove its length
+                lineFixedLength -= DrawBar(previousBar, [0, 1]).getBBox().width;
+                
+                //If the previous measure group end bar is backward
+                if(previousBar == "backward")
+                    lineFixedLength += DrawBar("repeat_bf", [0, 1]).getBBox().width; //add the repeat b and f length
+                else //if it is not the backward, just add the start bar length
+                    lineFixedLength += DrawBar("forward", [0, 1]).getBBox().width;  
             }
         }
 

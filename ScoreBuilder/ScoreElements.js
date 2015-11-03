@@ -501,11 +501,11 @@ function DrawBar(bar, barCoords) {
         height = bottomCoord - topCoord;
 
     switch(bar) {
-        case "light":
+        case "light2":
             barPath += "M0,0v" + height;
             break;
 
-        case "heavy": //Bar fallback for strange cases that has a "heavy" named bar
+        case "heavy2": //Bar fallback for strange cases that has a "heavy" named bar
             barPath += "M0,0v" + height;
             break;
 
@@ -553,7 +553,8 @@ function DrawBar(bar, barCoords) {
 
 
         default:
-            throw "INVALID_BAR_TO_DRAW: " + bar;
+            barPath += "M0,0v" + height;
+            //throw "INVALID_BAR_TO_DRAW: " + bar;
 
     }
 

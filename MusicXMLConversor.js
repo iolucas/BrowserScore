@@ -49,7 +49,13 @@ function parseScorePartwise(scorePartwise) {
                 break;
 
             case "part":
-                newPartwise.parts.push(parseScorePart(currChild));
+                //Get the parts of the score
+                var partsColl = parseScorePart(currChild);
+
+                //Push all the parts to the new partwise parts array
+                for(var j = 0; j < partsColl.length; j++)
+                    newPartwise.parts.push(partsColl[j]);
+
                 break;
         }
 
@@ -60,7 +66,9 @@ function parseScorePartwise(scorePartwise) {
 
 function parseScorePart(scorePart) {
 
-    var newPart = { measures: [] }
+    //var newPart = { measures: [] }
+
+    var partsCollection = [];
 
     //if(scorePart.id != undefined)
         //newPart.id = scorePart.id;
@@ -71,12 +79,149 @@ function parseScorePart(scorePart) {
 
         switch(currChild.nodeName) {
             case "measure":
-                newPart.measures.push(parseScoreMeasure(currChild));
+                var measuresCollection = parseScoreMeasure2(currChild); 
+
+                for(var j = 0; j < measuresCollection.length; j++) {
+                    //create the part object if doesn't exists
+                    if(partsCollection[j] == undefined)
+                        partsCollection[j] = { measures: [] }
+
+                    partsCollection[j].measures.push(measuresCollection[j]);    
+
+                }
+                    //newPartwise.parts.push(partsColl[j]);
+
+
+                //newPart.measures.push(parseScoreMeasure(currChild));
+                //parseScoreMeasure2(currChild);   
                 break;
         }
     }
 
-    return newPart;
+    //return newPart;
+    return partsCollection
+}
+
+function parseScoreMeasure2(scoreMeasure) {
+
+    function createMeasure() {
+        return { chords: [] , chordPointer: -1, endBar: "light" } 
+    }
+
+    var measuresCollection = [],
+        measuresMetadata = {}
+
+    //Iterate thru scoreMeasure childs
+    for(var i = 0; i < scoreMeasure.children.length; i++) {
+        var currChild = scoreMeasure.children[i];
+
+        switch(currChild.nodeName) {
+            case "attributes":
+                //iterate thru the attributes children
+                for(var j = 0; j < currChild.children.length; j++) {
+                    var attrChild = currChild.children[j];
+
+                    switch(attrChild.nodeName) {
+                        case "clef":
+                            var clefObj = parseClef(attrChild);
+
+                            if(clefObj == null) //If the clef obj is not found,
+                                break;  //exit
+
+                            var clefAttr = getNodeAttributes(attrChild),
+                                partInd = clefAttr.number == undefined ? 0 : clefAttr.number - 1;
+
+                            //Check if the measure specified by the clef has already been created, if not create it
+                            if(measuresCollection[partInd] == undefined)
+                                measuresCollection[partInd] = createMeasure();
+
+                            measuresCollection[partInd].clef = clefObj;       
+                            
+                            break;
+
+                        case "key":
+                            var keySigObj = parseKeySig(attrChild);
+                            if(keySigObj != null)
+                                measuresMetadata.keySig = keySigObj; 
+                            break;
+
+                        case "time":
+                            var timeSigObj = parseTimeSig(attrChild);
+                            if(timeSigObj != null)
+                                measuresMetadata.timeSig = timeSigObj;
+                            break;
+                    }
+                }
+                break;
+
+            case "direction": //measure tempo will be found here
+                var tempoObj = parseTempo(currChild);
+                if(tempoObj != null)
+                    measuresMetadata.tempo = tempoObj;
+                break;
+
+            case "barline":
+                var barObj = parseBar(currChild);
+                if(barObj != undefined && barObj.name != undefined) {
+                    if(barObj.place == "start")
+                        measuresMetadata.startBar = barObj.name;    
+                    else if(barObj.place == "end")
+                        measuresMetadata.endBar = barObj.name;   
+                }
+                break;
+
+            case "note":
+
+                var noteObj = parseScoreNote(currChild);
+
+                //get the part index of the note
+                var partInd = noteObj.partInd;
+                delete noteObj.partInd; //delete part index member from the note obj
+
+                if(measuresCollection[partInd] == undefined)
+                    measuresCollection[partInd] = createMeasure();
+
+                //Get the note measure reference
+                var measureRef = measuresCollection[partInd];
+
+                if(noteObj.chordFlag == undefined || measureRef.chordPointer == -1) { 
+                    measureRef.chordPointer++; //increase chord pointer 
+                    measureRef.chords[measureRef.chordPointer] = { notes:[] , denominator: 1}  //inits the new chord object
+                } else {
+                    delete noteObj.chordFlag;   //if it is a chord, only delete this member
+                }
+
+                var currChord = measureRef.chords[measureRef.chordPointer];
+
+                if(noteObj.dot != undefined) {
+                    currChord.dot = noteObj.dot;
+                    delete noteObj.dot;
+                }
+
+                if(noteObj.denominator != undefined) {
+                    currChord.denominator = noteObj.denominator;
+                    delete noteObj.denominator;
+                }
+
+                if(noteObj.step != undefined && noteObj.octave != undefined)
+                    currChord.notes.push(noteObj);
+
+                break;
+        }
+    }
+
+    //Add metadata to the measures and remove unecessary members
+    for(var i = 0; i < measuresCollection.length; i++) {
+        var currMeasure = measuresCollection[i];
+        
+        delete currMeasure.chordPointer;  
+
+        //Copy all properties of the measure metadata to the measures on the measure collection
+        for(prop in measuresMetadata)
+            currMeasure[prop] = measuresMetadata[prop];    
+    }
+
+    return measuresCollection;
 }
 
 function parseScoreMeasure(scoreMeasure) {
@@ -125,7 +270,7 @@ function parseScoreMeasure(scoreMeasure) {
 
             case "barline":
                 var barObj = parseBar(currChild);
-                if(barObj != null) {
+                if(barObj != undefined && barObj.name != undefined) {
                     if(barObj.place == "start")
                         newMeasure.startBar = barObj.name;    
                     else if(barObj.place == "end")
@@ -168,7 +313,7 @@ function parseScoreMeasure(scoreMeasure) {
 
 function parseScoreNote(scoreNote) {
     
-    var noteObj = {}    //note object to store note information
+    var noteObj = { partInd: 0 }    //note object to store note information with the part index of the note
 
     for(var i = 0; i < scoreNote.children.length; i++) {
         var noteChild = scoreNote.children[i];
@@ -213,6 +358,15 @@ function parseScoreNote(scoreNote) {
 
             case "chord":
                 noteObj.chordFlag = true;
+                break;
+
+            case "voice":
+                var noteVoice = parseInt(noteChild.textContent);                    
+
+                //If the note voice is a valid number, get the part index from it
+                if(!isNaN(noteVoice))
+                    noteObj.partInd = (noteVoice - 1) / 4; 
+
                 break;
         }
     }
