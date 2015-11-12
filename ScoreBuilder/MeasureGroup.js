@@ -81,6 +81,8 @@ ScoreBuilder.MeasureGroup = function() {
     //Function to set the chords positions of the measures within this measure group
     this.SetChordsPositions = function(denUnitLength) {
 
+        var ligatureChords = [];
+
         //Start the next position variable with the left margin value
         var nextPosition = MEASURE_LEFT_MARGIN;
 
@@ -90,9 +92,19 @@ ScoreBuilder.MeasureGroup = function() {
                 continue;   //keep going
 
             //iterate thru the chords @ this current time
-            for(var chordInd = 0; chordInd < chordsTimeArray[chordTime].length; chordInd++)
+            for(var chordInd = 0; chordInd < chordsTimeArray[chordTime].length; chordInd++) {
+                var currChord = chordsTimeArray[chordTime][chordInd];
+
+                if(currChord.slur != undefined || currChord.tied != undefined) {
+                    if(ligatureChords[chordInd] == undefined)
+                        ligatureChords[chordInd] = [];
+                        
+                    ligatureChords[chordInd].push(currChord);    
+                }
+
                 //Move the chord to the chord time specified position + the next position
-                chordsTimeArray[chordTime][chordInd].MoveX(chordsTimeArray[chordTime].backLength + nextPosition);
+                currChord.MoveX(chordsTimeArray[chordTime].backLength + nextPosition);
+            }
 
             //update the next position pointer
             nextPosition += denUnitLength / chordsTimeArray[chordTime].highDen + 
@@ -108,6 +120,8 @@ ScoreBuilder.MeasureGroup = function() {
                 measureGroup.SetBeam(measures[i].Draw());
             });
         }
+
+        return ligatureChords;
     }
 
     this.Organize = function() {

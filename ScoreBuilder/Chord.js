@@ -151,6 +151,16 @@ ScoreBuilder.Chord = function(chordDen, dots) {
         throw "SetDenominator function still to be implemented.";
     }
 
+
+    //Ligature stuff
+    /*var _slur;
+    this.SetSlur = function(slur) { _slur = slur; }
+    this.GetSlur = function() { return _slur; }
+
+    var _tied;
+    this.SetTied = function(tied) { _tied = tied; }
+    this.GetTied = function() { return _tied; }*/    
+
     //Function to set the chord notation (free text)
     var _chordName = "";
     this.SetChordName = function(value) {
@@ -516,10 +526,10 @@ ScoreBuilder.Chord = function(chordDen, dots) {
         chordBackWidth = 0;
         //chordFrontWidth = 0; //update at the end
 
-        chordGroup.addEventListener("click", function(){
-            console.log("FrontWidth: " + chordFrontWidth);
-            console.log("BackWidth: " + chordBackWidth);
-        });
+        //chordGroup.addEventListener("click", function(){
+            //console.log("FrontWidth: " + chordFrontWidth);
+            //console.log("BackWidth: " + chordBackWidth);
+        //});
 
         //Get note group width
         noteGroupWidth = noteGroup.getBBox().width;

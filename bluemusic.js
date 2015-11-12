@@ -148,6 +148,11 @@ var BlueMusic = new function() {
 
         var newScoreChord = new ScoreBuilder.Chord(scoreChord.denominator, scoreChord.dot);
 
+        if(scoreChord.slur != undefined)
+            newScoreChord.slur = scoreChord.slur;
+        else if(scoreChord.tied != undefined)     
+            newScoreChord.tied = scoreChord.tied;
+
         if(scoreChord.notes && scoreChord.notes.length > 0) {
             newScoreChord.AddNoteCollection(scoreChord.notes);
         }

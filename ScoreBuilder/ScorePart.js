@@ -67,10 +67,11 @@ ScoreBuilder.ScorePart = function() {
         //Iterate thru all measures and organize them passing the attribute pointer to update score attributes
         var prevMeasure = null;
         measures.ForEach(function(measure) {
-            //console.log(measure.attr);
-            //measure.OrganizeChords(scoreAttr);
+
             measure.OrganizeChords(prevMeasure);
+
             prevMeasure = measure;
         });
+
     }
 }

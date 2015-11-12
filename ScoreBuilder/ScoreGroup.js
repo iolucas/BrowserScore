@@ -163,6 +163,7 @@ function MeasureGroupLine(firstMeasureGroup) {
     var measureGroups = [],
         lineFixedLength = 0,
         lineDenominatorSum = 0,
+        highestDenValue = 0,    //variable to store the highest denominator 
         headerMargin = 0,
         groupLines = [];    //Array to store the lines of this measure group line
 
@@ -170,6 +171,7 @@ function MeasureGroupLine(firstMeasureGroup) {
 
     this.GetHeaderMargin = function() { return headerMargin; }
     this.GetDenUnitValue = function() { return (LINE_WIDTH - lineFixedLength) / lineDenominatorSum; }
+
 
     this.ForEachMeasureGroup = function(action) {
         var groupLength = measureGroups.length;
@@ -211,6 +213,10 @@ function MeasureGroupLine(firstMeasureGroup) {
 
         //Add the measures of this measure group to the correpondent lines
         measureGroup.ForEachMeasure(function(measure, index) {
+            var measureHighDen = measure.GetHighDenominator();
+            if(measureHighDen > highestDenValue)
+                highestDenValue = measureHighDen;
+
             groupLines[index].appendChild(measure.Draw());
         });
     }
@@ -221,7 +227,15 @@ function MeasureGroupLine(firstMeasureGroup) {
         //Values for checking purposes
         var checkFixedLength = lineFixedLength + measureGroup.GetFixedLength(),
             checkDenSum = lineDenominatorSum + measureGroup.GetDenominatorSum(),
-            checkDenUnitValue;
+            checkDenUnitValue,
+            checkHighDenominator = highestDenValue;
+
+        //Iterate thru the measure of the measure group and update the check high denominator
+        measureGroup.ForEachMeasure(function(measure) {
+            var measureHighDen = measure.GetHighDenominator();
+            if(measureHighDen > checkHighDenominator)
+                checkHighDenominator = measureHighDen;
+        });    
 
 
         //THIS BAR CHECK IS NOT COUNTING WHETHER THERE IS A BAR MIX, BUT ITS OK BECAUSE ITS COUTING MORE
@@ -236,8 +250,8 @@ function MeasureGroupLine(firstMeasureGroup) {
 
         checkDenUnitValue = (LINE_WIDTH - checkFixedLength) / checkDenSum;
 
-
-        if(checkDenUnitValue <= 0)
+        //If the minimal space (highest denominator space) is less than the specified value, means not fit (return false)
+        if((checkDenUnitValue / checkHighDenominator) <= 10)
             return false;
 
         //Check whether this den unit value is not ok for the testing measureGroup
@@ -295,10 +309,17 @@ function MeasureGroupLine(firstMeasureGroup) {
         var hPosPointer = headerMargin, //horizontal position pointer
             denUnitValue = (LINE_WIDTH - lineFixedLength) / lineDenominatorSum;
         
+        //Collection to store chords that has to be made ligatures
+        var ligatureChordsColl = [],
+            measuresXCoords = [];
+
         for(var i = 0; i < measureGroups.length; i++) {
             var currMeasureGroup = measureGroups[i],
                 nextMeasureGroup = i + 1 < measureGroups.length ? measureGroups[i+1] : null;
-            currMeasureGroup.SetChordsPositions(denUnitValue);
+
+            //Organize chords and get the relation of chords that has to be made ligatures
+            var ligatureChords = currMeasureGroup.SetChordsPositions(denUnitValue);
+            ligatureChordsColl.push(ligatureChords);
 
             //Only put start bar in case of first measure of the line
             if(currMeasureGroup.GetStartBar() == "forward" && i == 0) {
@@ -313,6 +334,8 @@ function MeasureGroupLine(firstMeasureGroup) {
             currMeasureGroup.ForEachMeasure(function(measure) {
                 measure.MoveX(hPosPointer);
             });
+
+            measuresXCoords.push(hPosPointer);
 
             hPosPointer += currMeasureGroup.GetWidth();
 
@@ -392,6 +415,69 @@ function MeasureGroupLine(firstMeasureGroup) {
             }  
         }
 
+        //---- Create and place ligatures -----
+
+        //Populate ligatureLines objects
+        var ligatureLines = [],
+            ligatureLinesIndex = 0;
+
+        var lineGroupWidth = linesGroup.getBBox().width;
+
+        //Store how much score parts is on the score
+        var partQty = groupLines.length;
+
+        for(var partLine = 0; partLine < partQty; partLine++) {
+            for(var measureInd = 0; measureInd < ligatureChordsColl.length; measureInd++) {
+                var ligMeasure = ligatureChordsColl[measureInd][partLine],
+                    ligatureValue,
+                    ligatureXOffset = measuresXCoords[measureInd]; 
+                
+                if(ligMeasure == undefined)
+                    continue;
+
+                for(var k = 0; k < ligMeasure.length; k++) {
+                    var ligChord = ligMeasure[k];
+
+                    if(ligChord.slur != undefined)
+                        ligatureValue = ligChord.slur;
+                    else if(ligChord.tied != undefined)
+                        ligatureValue = ligChord.tied;
+                    else
+                        continue;
+
+                    if(ligatureLines[ligatureLinesIndex] == undefined)
+                        ligatureLines[ligatureLinesIndex] = { 
+                            start: headerMargin,
+                            stop: lineGroupWidth - 12,
+                            lineInd: partLine 
+                        }
+
+                    if(ligatureValue == "start") { 
+                        ligatureLines[ligatureLinesIndex].start = ligChord.GetXCoord() + ligatureXOffset;
+                    } else if(ligatureValue == "stop") {
+                        ligatureLines[ligatureLinesIndex].stop = ligChord.GetXCoord() + ligatureXOffset;
+                        ligatureLinesIndex++; 
+                    }
+
+                }
+
+            }
+        }
+
+
+        //Iterate thru the lig lines and draw the ligatures
+        for(var i = 0; i < ligatureLines.length; i++) {
+            var ligLine = ligatureLines[i];
+
+
+            var slurObj = DrawSlur(0, 0, -10, ligLine.stop - ligLine.start, 0);
+
+            groupLines[ligLine.lineInd].appendChild(slurObj);
+
+            slurObj.translate(ligLine.start, 0);     
+        }
+
+        
         return linesGroup;
     }
 

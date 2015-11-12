@@ -66,8 +66,6 @@ function parseScorePartwise(scorePartwise) {
 
 function parseScorePart(scorePart) {
 
-    //var newPart = { measures: [] }
-
     var partsCollection = [];
 
     //if(scorePart.id != undefined)
@@ -79,7 +77,7 @@ function parseScorePart(scorePart) {
 
         switch(currChild.nodeName) {
             case "measure":
-                var measuresCollection = parseScoreMeasure2(currChild); 
+                var measuresCollection = parseScoreMeasure(currChild); 
 
                 for(var j = 0; j < measuresCollection.length; j++) {
                     //create the part object if doesn't exists
@@ -89,20 +87,15 @@ function parseScorePart(scorePart) {
                     partsCollection[j].measures.push(measuresCollection[j]);    
 
                 }
-                    //newPartwise.parts.push(partsColl[j]);
 
-
-                //newPart.measures.push(parseScoreMeasure(currChild));
-                //parseScoreMeasure2(currChild);   
                 break;
         }
     }
 
-    //return newPart;
     return partsCollection
 }
 
-function parseScoreMeasure2(scoreMeasure) {
+function parseScoreMeasure(scoreMeasure) {
 
     function createMeasure() {
         return { chords: [] , chordPointer: -1, endBar: "light" } 
@@ -128,15 +121,21 @@ function parseScoreMeasure2(scoreMeasure) {
                             if(clefObj == null) //If the clef obj is not found,
                                 break;  //exit
 
-                            var clefAttr = getNodeAttributes(attrChild),
-                                partInd = clefAttr.number == undefined ? 0 : clefAttr.number - 1;
+                            var clefAttr = getNodeAttributes(attrChild);
 
-                            //Check if the measure specified by the clef has already been created, if not create it
-                            if(measuresCollection[partInd] == undefined)
-                                measuresCollection[partInd] = createMeasure();
+                            //if there is no number attribute at the clef, 
+                            if(clefAttr.number == undefined) {
+                                measuresMetadata.clef = clefObj;
+                            } else {  //if there is number attr
+                                var partInd = clefAttr.number - 1;  //set its number subtracting 1
 
-                            measuresCollection[partInd].clef = clefObj;       
-                            
+                                //Check if the measure specified by the clef has already been created, if not create it
+                                if(measuresCollection[partInd] == undefined)
+                                    measuresCollection[partInd] = createMeasure();
+
+                                measuresCollection[partInd].clef = clefObj;   
+                            }
+
                             break;
 
                         case "key":
@@ -203,6 +202,16 @@ function parseScoreMeasure2(scoreMeasure) {
                     delete noteObj.denominator;
                 }
 
+                if(noteObj.slur != undefined) {
+                    currChord.slur = noteObj.slur;
+                    delete noteObj.slur;
+                }
+
+                if(noteObj.tied != undefined) {
+                    currChord.tied = noteObj.tied;
+                    delete noteObj.tied;
+                }
+
                 if(noteObj.step != undefined && noteObj.octave != undefined)
                     currChord.notes.push(noteObj);
 
@@ -224,92 +233,6 @@ function parseScoreMeasure2(scoreMeasure) {
     return measuresCollection;
 }
 
-function parseScoreMeasure(scoreMeasure) {
-
-    var newMeasure = { chords: [] , endBar: "light" }   //declare new measure object, with standard light bar
-
-    var chordPointer = -1;   //variable to point to the current chord (start -1 for correct initiation)
-
-    //Iterate thru scoreMeasure childs
-    for(var i = 0; i < scoreMeasure.children.length; i++) {
-        var currChild = scoreMeasure.children[i];
-
-        switch(currChild.nodeName) {
-            case "attributes":
-                //iterate thru the attributes children
-                for(var j = 0; j < currChild.children.length; j++) {
-                    var attrChild = currChild.children[j];
-
-                    switch(attrChild.nodeName) {
-                        case "clef":
-                            var clefObj = parseClef(attrChild);
-                            if(clefObj != null)
-                                newMeasure.clef = clefObj;  
-                            break;
-
-                        case "key":
-                            var keySigObj = parseKeySig(attrChild);
-                            if(keySigObj != null)
-                                newMeasure.keySig = keySigObj; 
-                            break;
-
-                        case "time":
-                            var timeSigObj = parseTimeSig(attrChild);
-                            if(timeSigObj != null)
-                                newMeasure.timeSig = timeSigObj;
-                            break;
-                    }
-                }
-                break;
-
-            case "direction": //measure tempo will be found here
-                var tempoObj = parseTempo(currChild);
-                if(tempoObj != null)
-                    newMeasure.tempo = tempoObj;
-                break;
-
-            case "barline":
-                var barObj = parseBar(currChild);
-                if(barObj != undefined && barObj.name != undefined) {
-                    if(barObj.place == "start")
-                        newMeasure.startBar = barObj.name;    
-                    else if(barObj.place == "end")
-                        newMeasure.endBar = barObj.name;   
-                }
-                break;
-
-            case "note":
-                var noteObj = parseScoreNote(currChild);
-
-                if(noteObj == null || noteObj.chordFlag == undefined || chordPointer == -1) { 
-                    chordPointer++; //increase chord pointer 
-                    newMeasure.chords[chordPointer] = { notes:[] , denominator: 1}  //inits the new chord object
-                } else {
-                    delete noteObj.chordFlag;   //if it is a chord, only delete this member
-                }
-
-                var currChord = newMeasure.chords[chordPointer]
-
-                if(noteObj.dot != undefined) {
-                    currChord.dot = noteObj.dot;
-                    delete noteObj.dot;
-                }
-
-                if(noteObj.denominator != undefined) {
-                    currChord.denominator = noteObj.denominator;
-                    delete noteObj.denominator;
-                }
-
-                if(noteObj.step != undefined && noteObj.octave != undefined)
-                    currChord.notes.push(noteObj);
-
-                break;
-        }
-    }
-
-
-    return newMeasure;
-}
 
 function parseScoreNote(scoreNote) {
     
@@ -365,7 +288,31 @@ function parseScoreNote(scoreNote) {
 
                 //If the note voice is a valid number, get the part index from it
                 if(!isNaN(noteVoice))
-                    noteObj.partInd = (noteVoice - 1) / 4; 
+                    noteObj.partInd = parseInt((noteVoice - 1) / 4); 
+
+                break;
+
+            case "notations":
+                for(var j = 0; j < noteChild.children.length; j++) {
+                    var notationsChild = noteChild.children[j];
+
+                    switch(notationsChild.nodeName) {
+
+                        case "slur":
+                            var slurAttr = getNodeAttributes(notationsChild);
+                            if(slurAttr.type != undefined)
+                                noteObj.slur = slurAttr.type;    
+
+                            break;
+
+                        case "tied":
+                            var tiedAttr = getNodeAttributes(notationsChild);
+                            if(tiedAttr.type != undefined)
+                                noteObj.tied = tiedAttr.type;                               
+
+                            break;
+                    }
+                }
 
                 break;
         }

@@ -120,6 +120,8 @@
                 var scoreObject = BlueMusic.GetScore.FromMusicXML(musicXML),
                     scoreDOM = scoreObject.Draw();
 
+                //scoreDOM.scale(0.75);
+
                 //Organize the score object
                 scoreObject.Organize();    
 

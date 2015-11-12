@@ -47,6 +47,11 @@ ScoreBuilder.Measure = function() {
         }
     }
 
+    var _highDenominator = 0;
+    this.GetHighDenominator = function() {
+        return _highDenominator;
+    }
+
 
     this.changes;
 
@@ -213,8 +218,16 @@ ScoreBuilder.Measure = function() {
             beatsOverflow = true; //variable to check wether the chords beats has overflowed the group values 
             //(inits overflowed to ensure first group are initiated)
                     
+
         //Populate the chord groups array
         chords.ForEach(function(chord) {
+
+            //Update the high denominator of this measure
+            _highDenominator = 0;
+            var chordDen = chord.GetDenominator();
+            if(chordDen > _highDenominator)
+                _highDenominator = chordDen;
+
             while(chordBeatCounter >= GROUP_TOTAL_BEATS) {
                 chordBeatCounter -= GROUP_TOTAL_BEATS;
                 beatsOverflow = true;
@@ -255,7 +268,6 @@ ScoreBuilder.Measure = function() {
 
             currBeamChordGroup.Organize(runningClef);
         }
-
 
         //Organize all the chords on this measure
         //chords.ForEach(function(chord) {
