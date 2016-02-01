@@ -54,6 +54,7 @@ https.get('https://www.letras.mus.br/jorge-mateus/os-anjos-cantam-nosso-amor/', 
 });
 
 craw by artists
+check which sites are you going to use on this start and the purpose you want (lyrics cognitive, harmony classification)
 
 function getHtmlEntity(entity) {
 
