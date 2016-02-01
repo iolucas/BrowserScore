@@ -22,6 +22,8 @@ $RECYCLE.BIN/
 
 /phpDebug
 
+/creator/node_modules
+
 # Excel sheet
 *.xlsx
 
