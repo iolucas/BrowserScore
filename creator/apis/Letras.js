@@ -1,60 +1,134 @@
+module.exports = this;
+
 var https = require('https');
 var cheerio = require('cheerio');
+var Promise = require('promise');
 
-https.get('https://www.letras.mus.br/jorge-mateus/os-anjos-cantam-nosso-amor/', function(res) {
+//craw by artists
+//check which sites are you going to use on this start and the purpose you want (lyrics cognitive, harmony classification)
 
-	var allData = "";
+this.query = function(url) {
 
-	res.on('data', function(recData) {
-		if(recData)
-			allData += recData.toString();
-	});
+	return new Promise(function (resolve, reject) {
 
-	res.on('end', function() {
+		https.get(url, function(res) {
 
-		$ = cheerio.load(allData);
+			var allData = "";
 
-		var musicMeta = {
-			pageTitle: $('title').text(),
-			title: $('h1','.cnt-head_title').text(),
-			artist: $('a[itemprop=url]','.cnt-head_title').text(),
-			composer: $('.letra-info_comp').text()
-				.replace('Composição:  ','')
-				.replace('Sabe quem é o compositor? Envie pra gente.','')
-				.replace(' · Esse não é o compositor? Nos avise.',''),
-			avatar: $('a[itemprop=url] img','.cnt-head_title').attr('src'),
-			views: $('b','.cnt-info_exib').text(),
-			url: $('[itemprop=url]','.g-pr').prop('content'),
-			album: $('[itemprop=inAlbum]','.g-pr').prop('content'),
-			duration: $('[itemprop=duration]','.g-pr').prop('content')
-		}
-
-		musicMeta.lyric = $('.cnt-letra','.g-pr').html()
-			.replace(/<br>/g, '\n')
-			.replace(/<p>/g, '\n')
-			.replace(/<\/p>/g, '\n')
-			.replace(/&#(\w+);/g, function (m, n) { 
-				return String.fromCharCode(parseInt('0'+ n,16)); 
-			})
-			.replace(/&(\w+);/g, function (m, n) { 
-				return getHtmlEntity(m);
+			res.on('data', function(recData) {
+				if(recData)
+					allData += recData.toString();
 			});
 
-		$('script').each(function(index){
-			var content = $(this).html();
-			if(content.indexOf('window.__pageArgs') != -1)
-				musicMeta.pageArgs = content.substr(0,content.indexOf('var Survey'));
+			res.on('end', function() {
+
+				$ = cheerio.load(allData);
+
+				var musicMeta = {
+					pageTitle: $('title').text(),
+					title: $('h1','.cnt-head_title').text(),
+					artist: $('a[itemprop=url]','.cnt-head_title').text(),
+					composer: $('.letra-info_comp').text()
+						.replace('Composição:  ','')
+						.replace('Sabe quem é o compositor? Envie pra gente.','')
+						.replace(' · Esse não é o compositor? Nos avise.',''),
+					avatar: $('a[itemprop=url] img','.cnt-head_title').attr('src'),
+					views: $('b','.cnt-info_exib').text(),
+					url: $('[itemprop=url]','.g-pr').prop('content'),
+					album: $('[itemprop=inAlbum]','.g-pr').prop('content'),
+					duration: $('[itemprop=duration]','.g-pr').prop('content')
+				}
+
+				musicMeta.lyric = $('.cnt-letra','.g-pr').html()
+					.replace(/<br>/g, '\n')
+					.replace(/<p>/g, '\n')
+					.replace(/<\/p>/g, '\n')
+					.replace(/&#(\w+);/g, function (m, n) { 
+						return String.fromCharCode(parseInt('0'+ n,16)); 
+					})
+					.replace(/&(\w+);/g, function (m, n) { 
+						return getHtmlEntity(m);
+					});
+
+				var scriptString = '';
+
+				$('script').each(function(index){
+					var content = $(this).html();
+					if(content.indexOf('window.__pageArgs') != -1)
+						scriptString = content.substr(0,content.indexOf('var Survey'));
+				});
+
+				//Get objects appended
+				var scriptObjs = getTextObjects(scriptString);
+
+				for(var i = 0; i < scriptObjs.length; i++) {
+					var obj = eval("("+scriptObjs[i]+")");
+					
+					for(key in obj) {
+						var newKey = key.toLowerCase();
+
+						if(musicMeta[newKey] == undefined) {
+							musicMeta[newKey] = obj[key];	
+						} else {
+							musicMeta[newKey + ''+ i] = obj[key];
+						}
+						delete obj[key];
+					}
+
+					//console.log(obj);
+					//console.log('');
+
+					//musicMeta['obj' + i] = scriptObjs[i];
+				}
+
+				resolve(musicMeta);
+
+			})
+
+			res.resume();
+
+		}).on('error', function() {
+			reject(arguments);
 		});
+	});
+}
 
-		console.log(musicMeta);
-	})
 
-	res.resume();
 
-});
 
-craw by artists
-check which sites are you going to use on this start and the purpose you want (lyrics cognitive, harmony classification)
+function getTextObjects(text) {
+	var objectsFound = [];
+
+	var startInd = null;
+	var endInd = null;
+
+	var leftSum = 0;
+	//var rightSum = 0;
+
+	for(var i = 0; i < text.length; i++) {
+		var caract = text.charAt(i);
+
+		if(caract == '{') {
+			leftSum++;
+			if(leftSum == 1)
+				startInd = i;
+		}
+
+		if(caract == '}') {
+			leftSum--;
+			if(leftSum == 0)
+				endInd = i;
+		}
+
+		if(startInd != null && endInd != null) {
+			objectsFound.push(text.substring(startInd,endInd+1));
+			startInd = null;
+			endInd = null;
+		}
+	}
+
+	return objectsFound;
+}
 
 function getHtmlEntity(entity) {
 
