@@ -17,8 +17,9 @@ this.connect = function(collection) {
 
 		db.once('open', function() {
 			//Connection made
-			var musicDataSchema = mongoose.Schema({},{ strict: false });
-			var MusicData = mongoose.model('MusicData', musicDataSchema);	
+			var dataSchema = mongoose.Schema({},{ strict: false });
+			var MusicData = mongoose.model('MusicData', dataSchema);
+			var KeywordIndex = mongoose.model('KeywordIndex', dataSchema);	
 
 			resolve({insert:function insert(newEntry) {
 				
@@ -34,7 +35,7 @@ this.connect = function(collection) {
 
 				});
 
-			},mongoose:mongoose, musicData: MusicData});
+			},mongoose:mongoose, musicData: MusicData, keywordIndex: KeywordIndex});
 		});
 
 	});

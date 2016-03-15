@@ -4,10 +4,12 @@ var database = require('./apis/dbconnection.js');
 var fs = require('fs');
 
 var MusicData = null;
+var KeywordIndex = null;
 
 database.connect('composindb')
 	.then(function(functions) {
 		MusicData = functions.musicData;
+		KeywordIndex = functions.keywordIndex;
 
 		app.listen(3000, function () {
 			console.log('Example app listening on port 3000!');
@@ -24,6 +26,8 @@ String.prototype.replaceAll = function(search, replacement) {
 };
 
 app.get('/key', function (req, res) {
+
+	var keywordMap = {}
 
 	MusicData.find({language: 'en'}).then(function(results){
 
@@ -50,7 +54,17 @@ app.get('/key', function (req, res) {
 					if(keywordsColl[keywordText] == undefined)
 						keywordsColl[keywordText] = 0;
 
+					if(keywordMap[keywordText] == undefined)
+						keywordMap[keywordText] = [];
+
 					keywordsColl[keywordText]++;
+
+					keywordMap[keywordText].push({
+						url: result.get('url'),
+						relevance: keyword.relevance,
+						sentiment: keyword.sentiment.type,
+						sentimentScore: keyword.sentiment.score 
+					});
 
 					//watson += keyword.text + ' ' + keyword.relevance + '<br>';
 				}
@@ -82,6 +96,21 @@ app.get('/key', function (req, res) {
 		console.log('Created.');
 
 		res.send(resString);
+
+		console.log('Adding keywords map array...');
+		var keywordMapArr = [];
+		for(kw in keywordMap){
+			var kwref = keywordMap[kw];
+			//console.log(kwref);
+			var newKw = new KeywordIndex({
+				text:kw,
+				members:kwref
+			});
+
+			newKw.save();
+			console.log(newKw);
+		}
+		console.log('Keywords added');
 
 	}, function(){
 		res.send('ERROR');	
