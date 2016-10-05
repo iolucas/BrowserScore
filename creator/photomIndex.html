@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<title>PHOTOM</title>
+	<style>
+		.but {
+			height: 100px;
+			width: 300px;
+		}
+
+		html,body {
+			width: 100%;
+			height: 100%;
+			margin: 0;
+		}
+
+		section {
+			-webkit-align-content: center;
+    		text-align: center;
+		}
+	</style>
+</head>
+<body>
+	<section>
+		<form action="/post" method="post" enctype="multipart/form-data">
+			<input type="file" name="img-file" class="but" id="input" onchange="handleFiles();" /><br>
+			<!-- <input type="submit" value="ENVIAR" class="but"/> -->
+		</form>
+		<div id="result">
+			<img src="" id="image"><br><br>
+		</div>
+	</section>
+	<script src="//code.jquery.com/jquery-1.12.0.min.js"></script>
+	<script>
+		function handleFiles()
+		{
+			$('#resultData').remove();
+			$('#resultVideo').remove();
+			$('#result').prepend('<h1 id="loading">CARREGANDO VIDEO...</h1>');
+		    var filesToUpload = document.getElementById('input').files;
+		    var file = filesToUpload[0];
+
+		    // Create an image
+		    var img = document.createElement("img");
+		    // Create a file reader
+		    var reader = new FileReader();
+		    // Set the image once loaded into file reader
+		    reader.onload = function(e)
+		    {
+		        img.src = e.target.result;
+
+		        var canvas = document.createElement("canvas");
+		        //var canvas = $("<canvas>", {"id":"testing"})[0];
+		        var ctx = canvas.getContext("2d");
+		        ctx.drawImage(img, 0, 0);
+
+		        var MAX_WIDTH = 400;
+		        var MAX_HEIGHT = 300;
+		        var width = img.width;
+		        var height = img.height;
+
+		        if (width > height) {
+		          if (width > MAX_WIDTH) {
+		            height *= MAX_WIDTH / width;
+		            width = MAX_WIDTH;
+		          }
+		        } else {
+		          if (height > MAX_HEIGHT) {
+		            width *= MAX_HEIGHT / height;
+		            height = MAX_HEIGHT;
+		          }
+		        }
+		        canvas.width = width;
+		        canvas.height = height;
+		        var ctx = canvas.getContext("2d");
+		        ctx.drawImage(img, 0, 0, width, height);
+
+		        var dataurl = canvas.toDataURL("image/png");
+		        document.getElementById('image').src = dataurl; 
+		    
+		    	var fd = new FormData();
+		    	fd.append("img", dataurl);
+
+		    	jQuery.ajax({
+				    url: '/post',
+				    data: fd,
+				    cache: false,
+				    contentType: false,
+				    processData: false,
+				    type: 'POST',
+				    success: function(data){
+				    	$('#loading').remove();
+				        $('#result').prepend(data);
+				        var frameWidth = window.innerWidth - 0;
+				        $('#resultVideo').attr('width', frameWidth)
+				        	.attr('height', 9*frameWidth/16);
+				    }
+				});
+
+		    }
+		    // Load files into file reader
+		    reader.readAsDataURL(file);
+	    
+		}
+	</script>
+</body>
+</html>

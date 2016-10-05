@@ -62,4 +62,5 @@ Temporary Items
 .apdisk
 
 
-/creator
+*/node_modules
+*/public
