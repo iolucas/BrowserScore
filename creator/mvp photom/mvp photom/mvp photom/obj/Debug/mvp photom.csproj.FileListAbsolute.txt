@@ -1,9 +1,0 @@
-C:\Users\Du0X\Desktop\mvp photom\mvp photom\mvp photom\bin\Debug\mvp photom.exe.config
-C:\Users\Du0X\Desktop\mvp photom\mvp photom\mvp photom\bin\Debug\mvp photom.exe
-C:\Users\Du0X\Desktop\mvp photom\mvp photom\mvp photom\bin\Debug\mvp photom.pdb
-C:\Users\Du0X\Desktop\mvp photom\mvp photom\mvp photom\obj\Debug\mvp photom.csprojResolveAssemblyReference.cache
-C:\Users\Du0X\Desktop\mvp photom\mvp photom\mvp photom\obj\Debug\mvp_photom.Form1.resources
-C:\Users\Du0X\Desktop\mvp photom\mvp photom\mvp photom\obj\Debug\mvp_photom.Properties.Resources.resources
-C:\Users\Du0X\Desktop\mvp photom\mvp photom\mvp photom\obj\Debug\mvp photom.csproj.GenerateResource.Cache
-C:\Users\Du0X\Desktop\mvp photom\mvp photom\mvp photom\obj\Debug\mvp photom.exe
-C:\Users\Du0X\Desktop\mvp photom\mvp photom\mvp photom\obj\Debug\mvp photom.pdb
